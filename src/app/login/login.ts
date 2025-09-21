@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { LoginResponse } from '../interfaces/LoginResponse .interface';
 import { LoginErrorResponse } from '../interfaces/ErrorDetail.interface';
+import { Router } from '@angular/router';
+import { ConfigService } from '../core/config.service';
 
 @Component({
   selector: 'app-login',
@@ -20,7 +22,7 @@ export class Login {
 
   readonly currentYear = new Date().getFullYear();
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private router: Router, private cfg: ConfigService) {}
 
   get isFormValid() { return !!this.usuario().trim() && !!this.password().trim(); }
 
@@ -38,14 +40,17 @@ export class Login {
     };
 
     try {
+      const apiBase = this.cfg.get<string>('apiBaseUrl');
       const response = await this.http
-        .post<LoginResponse>('http://localhost:8081/auth/login', body)
+        .post<LoginResponse>(`${apiBase}/auth/login`, body)
         .toPromise(); // ⬅️ convertir Observable a Promise (modo async/await)
 
       console.log('Login exitoso:', response);
 
       // Ejemplo: guardar token en localStorage
       localStorage.setItem('token', response?.data.token ?? '');
+
+      this.router.navigate(['/modules'])
     } catch (e: any) {
       console.error('Error login', e);
 
