@@ -1,6 +1,8 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { LoginResponse } from '../interfaces/LoginResponse .interface';
+import { LoginErrorResponse } from '../interfaces/ErrorDetail.interface';
 
 @Component({
   selector: 'app-login',
@@ -37,20 +39,21 @@ export class Login {
 
     try {
       const response = await this.http
-        .post<{ token: string }>('http://localhost:8081/auth/login', body)
+        .post<LoginResponse>('http://localhost:8081/auth/login', body)
         .toPromise(); // ⬅️ convertir Observable a Promise (modo async/await)
 
       console.log('Login exitoso:', response);
 
       // Ejemplo: guardar token en localStorage
-      localStorage.setItem('token', response?.token ?? '');
+      localStorage.setItem('token', response?.data.token ?? '');
     } catch (e: any) {
       console.error('Error login', e);
 
+      const err: LoginErrorResponse | undefined = e?.error;
       const backendError =
-        e?.error?.error?.[0]?.descError ?? // nuestro descError
-        e?.error?.message ??               // si el backend manda message
-        'No se pudo iniciar sesión.';      // fallback
+        err?.error?.[0]?.descError ??
+        e?.error?.message ??
+        'No se pudo iniciar sesión.';
 
       this.error.set(backendError);
     } finally {
