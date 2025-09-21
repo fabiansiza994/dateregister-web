@@ -5,15 +5,24 @@ import { LoginResponse } from '../interfaces/LoginResponse .interface';
 import { LoginErrorResponse } from '../interfaces/ErrorDetail.interface';
 import { Router } from '@angular/router';
 import { ConfigService } from '../core/config.service';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, HttpClientModule],
+  imports: [CommonModule, HttpClientModule, RouterLink],
   templateUrl: './login.html',
   styleUrls: ['./login.css']
 })
 export class Login {
+  successFlash = signal<string | null>(history.state?.flash ?? null);
+
+  ngOnInit() {
+    if (this.successFlash()) {
+      setTimeout(() => this.successFlash.set(null), 4000);
+    }
+  }
+
   usuario = signal('');
   password = signal('');
   showPassword = signal(false);

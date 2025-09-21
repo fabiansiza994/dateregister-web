@@ -2,6 +2,12 @@
   <div class="card login-card shadow-lg border-0 rounded-4" style="max-width: 420px; width: 100%;">
     <div class="card-body p-4 p-sm-5">
 
+        @if(successFlash()) {
+          <div class="alert alert-success d-flex align-items-start gap-2" role="alert">
+            <span class="fw-bold mt-1">✅</span>
+            <div>{{ successFlash() }}</div>
+          </div>
+          }
       <!-- Encabezado -->
       <div class="text-center mb-4">
         <div class="logo-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
@@ -22,17 +28,8 @@
             <span class="input-group-text" aria-hidden="true">
               <i class="bi bi-person"></i>
             </span>
-            <input
-              id="usuario"
-              type="text"
-              class="form-control"
-              placeholder="Tu usuario"
-              [value]="usuario()"
-              (input)="usuario.set(txtUsuario.value)"
-              #txtUsuario
-              autocomplete="username"
-              required
-            >
+            <input id="usuario" type="text" class="form-control" placeholder="Tu usuario" [value]="usuario()"
+              (input)="usuario.set(txtUsuario.value)" #txtUsuario autocomplete="username" required>
           </div>
         </div>
 
@@ -43,24 +40,12 @@
             <span class="input-group-text" aria-hidden="true">
               <i class="bi bi-key"></i>
             </span>
-            <input
-              id="password"
-              [type]="showPassword() ? 'text' : 'password'"
-              class="form-control"
-              placeholder="••••••••"
-              [value]="password()"
-              (input)="password.set(txtPassword.value)"
-              #txtPassword
-              autocomplete="current-password"
-              required
-            >
-            <button
-              type="button"
-              class="btn btn-outline-secondary"
-              (click)="toggleShowPassword()"
+            <input id="password" [type]="showPassword() ? 'text' : 'password'" class="form-control"
+              placeholder="••••••••" [value]="password()" (input)="password.set(txtPassword.value)" #txtPassword
+              autocomplete="current-password" required>
+            <button type="button" class="btn btn-outline-secondary" (click)="toggleShowPassword()"
               [attr.aria-pressed]="showPassword()"
-              [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Ver contraseña'"
-            >
+              [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Ver contraseña'">
               <i class="bi" [ngClass]="showPassword() ? 'bi-eye-slash' : 'bi-eye'"></i>
             </button>
           </div>
@@ -79,33 +64,29 @@
 
         <!-- Error -->
         @if(error() !== null) {
-          <div class="alert alert-danger d-flex align-items-start gap-2 py-2" role="alert">
-            <i class="bi bi-exclamation-triangle mt-1"></i>
-            <div>{{ error() }}</div>
-          </div>
+        <div class="alert alert-danger d-flex align-items-start gap-2 py-2" role="alert">
+          <i class="bi bi-exclamation-triangle mt-1"></i>
+          <div>{{ error() }}</div>
+        </div>
         }
 
         <!-- Botones -->
         <div class="d-grid gap-2">
-          <button
-            type="submit"
-            class="btn btn-primary py-2"
-            [disabled]="!isFormValid || loading()"
-          >
+          <button type="submit" class="btn btn-primary py-2" [disabled]="!isFormValid || loading()">
             @if(loading()) {
-              <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
             }
             {{ loading() ? 'Ingresando…' : 'Ingresar' }}
           </button>
 
-          <button
-            type="button"
-            class="btn btn-outline-secondary"
-            (click)="reset()"
-            [disabled]="loading()"
-          >
+          <button type="button" class="btn btn-outline-secondary" (click)="reset()" [disabled]="loading()">
             Limpiar
           </button>
+          <!-- Registro -->
+          <div class="text-center mt-3 small">
+            ¿No tienes cuenta?
+            <a class="text-decoration-none fw-semibold" routerLink="/register">Regístrate aquí</a>
+          </div>
         </div>
       </form>
     </div>
