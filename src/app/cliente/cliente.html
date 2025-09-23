@@ -1,0 +1,258 @@
+<!-- Header + Acciones -->
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="fw-semibold mb-0">Clientes</h3>
+        <small class="text-secondary">Busca por nombre o identificación y administra tus clientes</small>
+    </div>
+</div>
+
+<!-- Filtros -->
+<form class="card border-0 shadow-sm rounded-4 mb-4" (submit)="$event.preventDefault(); onSearch()">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-5">
+                <label for="searchName" class="form-label">Nombre</label>
+                <input id="searchName" type="text" class="form-control" placeholder="Ej: Juan Pérez"
+                    [(ngModel)]="searchName" name="searchName" (keyup.enter)="onSearch()" autocomplete="off">
+            </div>
+
+            <div class="col-md-5">
+                <label for="searchDoc" class="form-label">N.º de identificación</label>
+                <input id="searchDoc" type="text" class="form-control" placeholder="Ej: 123456789"
+                    [(ngModel)]="searchDoc" name="searchDoc" (keyup.enter)="onSearch()" autocomplete="off">
+            </div>
+
+            <div class="col-md-2 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-outline-primary w-100" [disabled]="loading()">
+                    <i class="bi bi-search me-1"></i> Buscar
+                </button>
+                <button type="button" class="btn btn-outline-secondary w-100" (click)="clearFilters()"
+                    [disabled]="loading()">
+                    Limpiar
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+<!-- Header + Acciones -->
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+
+    <div class="mt-2 mt-sm-0">
+        <a class="btn btn-primary" routerLink="/clientes/nuevo">
+            <i class="bi bi-person-plus me-1"></i>
+            Crear cliente
+        </a>
+    </div>
+</div>
+<!-- 🔴 Alert de error -->
+@if (error()) {
+  <div class="alert alert-danger d-flex align-items-start gap-2 rounded-4 shadow-sm" role="alert">
+    <i class="bi bi-exclamation-triangle mt-1"></i>
+    <div class="flex-grow-1">
+      {{ error() }}
+    </div>
+    <button type="button" class="btn-close" aria-label="Cerrar" (click)="error.set(null)"></button>
+  </div>
+}
+<!-- DESKTOP / TABLE (md y arriba) -->
+<div class="table-responsive shadow-sm rounded-4 d-none d-md-block">
+    <table class="table table-hover align-middle mb-0 client-table">
+        <thead class="table-light sticky-top">
+            <tr>
+                <th style="width: 70px;">#</th>
+                <th>Identificación</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+
+                <th>Email</th>
+                <th>Dirección</th>
+                <th>Teléfono</th>
+                <th>Estado</th>
+                <th style="width: 140px;">Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (loading()) {
+            <tr>
+                <td colspan="9" class="text-center py-4">
+                    <div class="d-inline-flex align-items-center gap-2 text-secondary">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Cargando…
+                    </div>
+                </td>
+            </tr>
+            } @else {
+            @if (visibleWithRow().length === 0) {
+            <tr>
+                <td colspan="9" class="text-center py-4 text-secondary">
+                    No se encontraron clientes en esta página con los filtros aplicados.
+                </td>
+            </tr>
+            } @else {
+            @for (c of visibleWithRow(); track c.id) {
+            <tr class="align-middle">
+                <td class="text-secondary">{{ c.rowNumber }}</td>
+                <td><span class="text-monospace">{{ c.identificacion }}</span></td>
+                <td class="fw-semibold">
+                    <i class="bi bi-person me-1 text-muted"></i>{{ c.nombre }}
+                </td>
+                <td>{{ c.apellido || '—' }}</td>
+                <td>
+                    <a *ngIf="c.email" [href]="'mailto:' + c.email" class="text-decoration-none">
+                        {{ c.email }}
+                    </a>
+                    <span *ngIf="!c.email">—</span>
+                </td>
+                <td>{{ c.direccion || '—' }}</td>
+                <td>{{ c.telefono || '—' }}</td>
+                <td>
+                    <span class="badge rounded-pill" [ngClass]="c.estado==='ACTIVO' ? 'bg-success' : 'bg-secondary'">
+                        {{ c.estado }}
+                    </span>
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button class="btn btn-outline-info" (click)="verCliente(c)">
+                            <i class="bi bi-eye"></i> Ver
+                        </button>
+                        <button class="btn btn-outline-primary" (click)="editarCliente(c)">
+                            <i class="bi bi-pencil"></i> Editar
+                        </button>
+                        <button class="btn btn-outline-danger" (click)="openConfirm(c)" [disabled]="loading()">
+                            <i class="bi bi-trash"></i> Eliminar
+                        </button>
+                    </div>
+                </td>
+
+            </tr>
+            }
+            }
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- MOBILE / CARDS (debajo de md) -->
+<div class="d-md-none">
+    @if (loading()) {
+    <div class="text-center py-4 text-secondary">
+        <div class="d-inline-flex align-items-center gap-2">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Cargando…
+        </div>
+    </div>
+    } @else {
+    @if (visibleWithRow().length === 0) {
+    <div class="alert alert-light border text-center text-secondary">
+        No se encontraron clientes en esta página con los filtros aplicados.
+    </div>
+    } @else {
+    <div class="row g-3">
+        @for (c of visibleWithRow(); track c.id) {
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <div class="small text-secondary">#{{ c.rowNumber }}</div>
+                            <h6 class="mb-0 fw-semibold">
+                                <i class="bi bi-person me-1 text-muted"></i>{{ c.nombre }} <span class="fw-normal">{{
+                                    c.apellido || '' }}</span>
+                            </h6>
+                        </div>
+                        <span class="badge rounded-pill"
+                            [ngClass]="c.estado==='ACTIVO' ? 'bg-success' : 'bg-secondary'">
+                            {{ c.estado }}
+                        </span>
+                    </div>
+
+                    <ul class="list-unstyled mb-0 small">
+                        <li class="mb-1">
+                            <span class="text-secondary">Identificación:</span>
+                            <span class="text-monospace ms-1">{{ c.identificacion }}</span>
+                        </li>
+                        <li class="mb-1" *ngIf="c.email">
+                            <span class="text-secondary">Email:</span>
+                            <a [href]="'mailto:' + c.email" class="ms-1 text-decoration-none">{{ c.email }}</a>
+                        </li>
+                        <li class="mb-1" *ngIf="c.telefono">
+                            <span class="text-secondary">Teléfono:</span>
+                            <span class="ms-1">{{ c.telefono }}</span>
+                        </li>
+                        <li class="mb-1" *ngIf="c.direccion">
+                            <span class="text-secondary">Dirección:</span>
+                            <span class="ms-1">{{ c.direccion }}</span>
+                        </li>
+
+                    </ul>
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <button class="btn btn-sm btn-outline-info" (click)="verCliente(c)">
+                            <i class="bi bi-eye"></i> Ver
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" (click)="editarCliente(c)">
+                            <i class="bi bi-pencil"></i> Editar
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" (click)="openConfirm(c)" [disabled]="loading()">
+                            <i class="bi bi-trash"></i> Eliminar
+                        </button>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        }
+    </div>
+    }
+    }
+
+
+</div>
+
+<!-- Modal de confirmación (Angular-controlled, sin JS de Bootstrap) -->
+<div class="modal fade" tabindex="-1" [class.show]="confirmOpen()" [style.display]="confirmOpen() ? 'block' : 'none'"
+    aria-modal="true" role="dialog">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg rounded-4 border-0">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">
+                    <i class="bi bi-trash me-2 text-danger"></i>
+                    Confirmar eliminación
+                </h5>
+                <button type="button" class="btn-close" aria-label="Close" (click)="closeConfirm()"></button>
+            </div>
+
+            <div class="modal-body">
+                @if (clientToDelete()) {
+                <p class="mb-1">
+                    ¿Seguro que deseas eliminar al cliente
+                    <span class="fw-semibold">{{ clientToDelete()?.nombre }} {{ clientToDelete()?.apellido || ''
+                        }}</span>?
+                </p>
+                <p class="small text-secondary mb-0">
+                    Esta acción no se puede deshacer.
+                </p>
+                } @else {
+                <p>¿Seguro que deseas eliminar este cliente?</p>
+                }
+            </div>
+
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light" (click)="closeConfirm()" [disabled]="loading()">
+                    Cancelar
+                </button>
+
+                <button type="button" class="btn btn-danger" (click)="confirmDelete()" [disabled]="loading()">
+                    @if (loading()) {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    }
+                    Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backdrop -->
+<div class="modal-backdrop fade" [class.show]="confirmOpen()" *ngIf="confirmOpen()"></div>

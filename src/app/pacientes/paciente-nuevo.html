@@ -1,0 +1,142 @@
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="fw-semibold mb-0">Crear paciente</h3>
+    <a routerLink="/pacientes" class="btn btn-link text-decoration-none px-0">&larr; Volver al listado</a>
+  </div>
+
+  @if (errorGlobal()) {
+    <div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
+      <i class="bi bi-exclamation-triangle mt-1"></i>
+      <div>{{ errorGlobal() }}</div>
+    </div>
+  }
+
+  <form class="card border-0 shadow-sm rounded-4" (submit)="$event.preventDefault(); create()">
+    <div class="card-body">
+      <div class="row g-3">
+        <!-- Documento -->
+        <div class="col-md-6">
+          <label class="form-label">Documento <span class="text-danger">*</span></label>
+          <input type="text" class="form-control"
+                 [class.is-invalid]="fieldErrors()['documento']"
+                 [ngModel]="model().documento"
+                 (ngModelChange)="onField('documento', $event)" name="documento"
+                 placeholder="123456789" autocomplete="off" />
+          @if (fieldErrors()['documento']) {
+            <div class="invalid-feedback">{{ fieldErrors()['documento'] }}</div>
+          }
+        </div>
+
+        <!-- Nombre -->
+        <div class="col-md-6">
+          <label class="form-label">Nombre <span class="text-danger">*</span></label>
+          <input type="text" class="form-control"
+                 [class.is-invalid]="fieldErrors()['nombre']"
+                 [ngModel]="model().nombre"
+                 (ngModelChange)="onField('nombre', $event)" name="nombre"
+                 placeholder="Ana" autocomplete="off" />
+          @if (fieldErrors()['nombre']) {
+            <div class="invalid-feedback">{{ fieldErrors()['nombre'] }}</div>
+          }
+        </div>
+
+        <!-- Apellido -->
+        <div class="col-md-6">
+          <label class="form-label">Apellido</label>
+          <input type="text" class="form-control"
+                 [class.is-invalid]="fieldErrors()['apellido']"
+                 [ngModel]="model().apellido"
+                 (ngModelChange)="onField('apellido', $event)" name="apellido"
+                 placeholder="Pérez" autocomplete="off" />
+          @if (fieldErrors()['apellido']) {
+            <div class="invalid-feedback">{{ fieldErrors()['apellido'] }}</div>
+          }
+        </div>
+
+        <!-- Teléfono -->
+        <div class="col-md-6">
+          <label class="form-label">Teléfono</label>
+          <input type="text" class="form-control"
+                 [class.is-invalid]="fieldErrors()['telefono']"
+                 [ngModel]="model().telefono"
+                 (ngModelChange)="onField('telefono', $event)" name="telefono"
+                 placeholder="(+57) 300 000 0000" autocomplete="off" />
+          @if (fieldErrors()['telefono']) {
+            <div class="invalid-feedback">{{ fieldErrors()['telefono'] }}</div>
+          }
+        </div>
+
+        <!-- Email -->
+        <div class="col-md-6">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control"
+                 [class.is-invalid]="fieldErrors()['email']"
+                 [ngModel]="model().email"
+                 (ngModelChange)="onField('email', $event)" name="email"
+                 placeholder="paciente@correo.com" autocomplete="off" />
+          @if (fieldErrors()['email']) {
+            <div class="invalid-feedback">{{ fieldErrors()['email'] }}</div>
+          }
+        </div>
+
+        <!-- Dirección -->
+        <div class="col-md-6">
+          <label class="form-label">Dirección</label>
+          <input type="text" class="form-control"
+                 [class.is-invalid]="fieldErrors()['direccion']"
+                 [ngModel]="model().direccion"
+                 (ngModelChange)="onField('direccion', $event)" name="direccion"
+                 placeholder="Calle 123 #45-67" autocomplete="off" />
+          @if (fieldErrors()['direccion']) {
+            <div class="invalid-feedback">{{ fieldErrors()['direccion'] }}</div>
+          }
+        </div>
+
+        <!-- Buscar cliente -->
+        <div class="col-md-4">
+          <label class="form-label">Buscar cliente</label>
+          <div class="input-group">
+            <input type="text" class="form-control"
+                   [(ngModel)]="qCliente" name="qCliente"
+                   (keyup.enter)="buscarClientes()"
+                   placeholder="Nombre o identificación del cliente" autocomplete="off" />
+            <button type="button" class="btn btn-outline-secondary" (click)="buscarClientes()">
+              <i class="bi bi-search"></i>
+            </button>
+          </div>
+          <div class="form-text" *ngIf="totalClientes() > 0">
+            {{ totalClientes() }} resultado(s)
+          </div>
+        </div> 
+
+        <!-- Seleccionar cliente -->
+        <div class="col-md-4">
+          <label class="form-label">Cliente asociado <span class="text-danger">*</span></label>
+          <select class="form-select"
+                  name="clienteId"
+                  [class.is-invalid]="fieldErrors()['clienteId']"
+                  [ngModel]="model().clienteId"
+                  (ngModelChange)="onField('clienteId', $event)">
+            <option [ngValue]="null" disabled>— Selecciona —</option>
+            <option *ngFor="let c of clientes()" [ngValue]="c.id">
+              {{ c.nombre }} {{ c.apellido || '' }} — {{ c.identificacion || 's/ID' }}
+            </option>
+          </select>
+          @if (fieldErrors()['clienteId']) {
+            <div class="invalid-feedback">{{ fieldErrors()['clienteId'] }}</div>
+          }
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <a routerLink="/pacientes" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-success" [disabled]="loading() || !isValid()">
+          @if (loading()) {
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+          }
+          Crear paciente
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

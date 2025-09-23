@@ -1,0 +1,209 @@
+<!-- Header -->
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+  <div>
+    <h3 class="fw-semibold mb-0">Detalle de cliente</h3>
+    <small class="text-secondary">Información del cliente y sus pacientes asociados</small>
+  </div>
+  <div class="mt-2 mt-sm-0">
+    <a class="btn btn-outline-secondary" (click)="volver()">
+      &larr; Volver a clientes
+    </a>
+  </div>
+</div>
+
+<!-- Alert error -->
+@if (error()) {
+  <div class="alert alert-danger d-flex align-items-start gap-2 rounded-4 shadow-sm" role="alert">
+    <i class="bi bi-exclamation-triangle mt-1"></i>
+    <div class="flex-grow-1">
+      {{ error() }}
+    </div>
+    <button type="button" class="btn-close" aria-label="Cerrar" (click)="error.set(null)"></button>
+  </div>
+}
+
+<!-- Loading -->
+@if (loading()) {
+  <div class="text-center py-4 text-secondary">
+    <div class="d-inline-flex align-items-center gap-2">
+      <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      Cargando…
+    </div>
+  </div>
+} @else {
+
+  @if (cliente()) {
+    <!-- Card datos del cliente -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h5 class="mb-1 fw-semibold">
+              <i class="bi bi-person me-1 text-muted"></i>
+              {{ cliente()?.nombre }} <span class="fw-normal">{{ cliente()?.apellido }}</span>
+            </h5>
+            <div class="small text-secondary">ID: {{ cliente()?.id }} · Identificación:
+              <span class="text-monospace">{{ cliente()?.identificacion }}</span>
+            </div>
+          </div>
+          <span class="badge rounded-pill" [ngClass]="cliente()?.estado==='ACTIVO' ? 'bg-success' : 'bg-secondary'">
+            {{ cliente()?.estado }}
+          </span>
+        </div>
+
+        <hr>
+
+        <div class="row g-3 small">
+          <div class="col-md-4">
+            <div class="text-secondary">Email</div>
+            <div>
+              <a *ngIf="cliente()?.email" [href]="'mailto:' + cliente()?.email" class="text-decoration-none">
+                {{ cliente()?.email }}
+              </a>
+              <span *ngIf="!cliente()?.email">—</span>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="text-secondary">Teléfono</div>
+            <div>{{ cliente()?.telefono || '—' }}</div>
+          </div>
+          <div class="col-md-4">
+            <div class="text-secondary">Dirección</div>
+            <div>{{ cliente()?.direccion || '—' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pacientes -->
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h5 class="fw-semibold mb-0">Pacientes</h5>
+      <small class="text-secondary">
+        Total: {{ totalPacientes() }}
+      </small>
+    </div>
+
+    <!-- Tabla (md y arriba) -->
+    <div class="table-responsive shadow-sm rounded-4 d-none d-md-block">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light sticky-top">
+          <tr>
+            <th style="width: 70px;">#</th>
+            <th>Documento</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Teléfono</th>
+            <th>Email</th>
+            <th>Dirección</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (visibles().length === 0) {
+            <tr>
+              <td colspan="8" class="text-center py-4 text-secondary">
+                Este cliente no tiene pacientes.
+              </td>
+            </tr>
+          } @else {
+            @for (p of visibles(); track p.id) {
+              <tr>
+                <td class="text-secondary">
+                  {{ (page()-1)*pageSize() + $index + 1 }}
+                </td>
+                <td><span class="text-monospace">{{ p.documento }}</span></td>
+                <td class="fw-semibold">{{ p.nombre }}</td>
+                <td>{{ p.apellido || '—' }}</td>
+                <td>{{ p.telefono || '—' }}</td>
+                <td>
+                  <a *ngIf="p.email" [href]="'mailto:' + p.email" class="text-decoration-none">
+                    {{ p.email }}
+                  </a>
+                  <span *ngIf="!p.email">—</span>
+                </td>
+                <td>{{ p.direccion || '—' }}</td>
+                <td>
+                  <span class="badge rounded-pill" [ngClass]="p.estado==='ACTIVO' ? 'bg-success' : 'bg-secondary'">
+                    {{ p.estado }}
+                  </span>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Cards (debajo de md) -->
+    <div class="d-md-none">
+      @if (visibles().length === 0) {
+        <div class="alert alert-light border text-center text-secondary">
+          Este cliente no tiene pacientes.
+        </div>
+      } @else {
+        <div class="row g-3">
+          @for (p of visibles(); track p.id) {
+            <div class="col-12">
+              <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                      <div class="small text-secondary">
+                        #{{ (page()-1)*pageSize() + $index + 1 }}
+                      </div>
+                      <h6 class="mb-0 fw-semibold">
+                        <i class="bi bi-person me-1 text-muted"></i>{{ p.nombre }}
+                        <span class="fw-normal">{{ p.apellido || '' }}</span>
+                      </h6>
+                      <div class="small">
+                        <span class="text-secondary">Documento:</span>
+                        <span class="text-monospace ms-1">{{ p.documento }}</span>
+                      </div>
+                    </div>
+                    <span class="badge rounded-pill"
+                      [ngClass]="p.estado==='ACTIVO' ? 'bg-success' : 'bg-secondary'">
+                      {{ p.estado }}
+                    </span>
+                  </div>
+
+                  <ul class="list-unstyled mb-0 small">
+                    <li class="mb-1" *ngIf="p.telefono">
+                      <span class="text-secondary">Teléfono:</span>
+                      <span class="ms-1">{{ p.telefono }}</span>
+                    </li>
+                    <li class="mb-1" *ngIf="p.email">
+                      <span class="text-secondary">Email:</span>
+                      <a [href]="'mailto:' + p.email" class="ms-1 text-decoration-none">{{ p.email }}</a>
+                    </li>
+                    <li class="mb-1" *ngIf="p.direccion">
+                      <span class="text-secondary">Dirección:</span>
+                      <span class="ms-1">{{ p.direccion }}</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Paginación pacientes -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+      <div class="small text-secondary">
+        Mostrando
+        <strong>{{ visibles().length }}</strong> de
+        <strong>{{ totalPacientes() }}</strong>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-outline-secondary btn-sm" (click)="prevPage()" [disabled]="page()<=1">Anterior</button>
+        <button class="btn btn-outline-secondary btn-sm disabled">
+          Página {{ page() }} / {{ totalPages() }}
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" (click)="nextPage()" [disabled]="page()>=totalPages()">Siguiente</button>
+      </div>
+    </div>
+  } @else {
+    <div class="alert alert-light border text-center text-secondary">No se encontró el cliente.</div>
+  }
+}

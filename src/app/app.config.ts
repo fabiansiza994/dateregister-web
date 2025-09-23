@@ -6,6 +6,8 @@ import { firstValueFrom } from 'rxjs';
 
 import { routes } from './app.routes';
 import { ConfigService } from './core/config.service';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { authInterceptor } from './core/auth.interceptor';
 
 // Carga el JSON de configuración antes de bootstrap
 export function loadAppConfig(http: HttpClient, cfg: ConfigService) {
@@ -17,6 +19,7 @@ export function loadAppConfig(http: HttpClient, cfg: ConfigService) {
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideHttpClient(withInterceptors([authInterceptor])),
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideRouter(routes),

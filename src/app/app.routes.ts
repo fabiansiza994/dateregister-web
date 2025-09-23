@@ -1,18 +1,27 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './guards/auth.guard'; 
+import { authGuard } from './guards/auth.guard';
 import { Layout } from './layout/layout';
 
 export const routes: Routes = [
   // Ruta pública
   { path: 'login', loadComponent: () => import('./login/login').then(m => m.Login) },
-  { path: 'register', loadComponent: () => import('./register/register').then(m => m.Register) }, 
+  { path: 'register', loadComponent: () => import('./register/register').then(m => m.Register) },
   // Grupo protegido por el layout + guard
   {
     path: '',
     component: Layout,           // ⬅️ layout global
     canActivate: [authGuard],    // ⬅️ protege todo lo de adentro
     children: [
+      { path: 'clientes', loadComponent: () => import('./cliente/cliente').then(m => m.ClientesComponent) },
+      { path: 'pacientes', loadComponent: () => import('./pacientes/pacientes').then(m => m.Pacientes) },
+      { path: 'pacientes/nuevo', loadComponent: () => import('./pacientes/paciente-nuevo').then(m => m.PacienteNuevoComponent) },
+      { path: 'clientes/nuevo', loadComponent: () => import('./cliente/cliente-nuevo').then(m => m.ClienteNuevoComponent) },
       { path: 'modules', loadComponent: () => import('./modules/modules').then(m => m.Modules) },
+      {
+        path: 'clientes/:id',
+        loadComponent: () => import('./cliente/cliente-detalle.component').then(m => m.ClienteDetalleComponent)
+      },
+
       // Si luego creas estas páginas:
       // { path: 'clientes', loadComponent: () => import('./clientes/clientes').then(m => m.Clientes) },
       // { path: 'trabajos', loadComponent: () => import('./trabajos/trabajos').then(m => m.Trabajos) },

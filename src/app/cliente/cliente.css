@@ -1,0 +1,32 @@
+/* Tabla más agradable en desktop */
+.client-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f8f9fa; /* table-light */
+  z-index: 1;
+}
+
+.client-table tbody tr:hover {
+  background-color: rgba(13, 110, 253, 0.04); /* azul suave */
+}
+
+.client-table td,
+.client-table th {
+  vertical-align: middle;
+}
+
+/* tipografía monoespaciada para identificaciones */
+.text-monospace {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+/* Cards móviles: bordes y separación sutil */
+@media (max-width: 767.98px) {
+  .card.rounded-4 {
+    border-radius: 1rem !important;
+  }
+  .badge.rounded-pill {
+    font-weight: 600;
+    letter-spacing: .2px;
+  }
+}

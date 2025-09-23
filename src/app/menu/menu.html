@@ -2,31 +2,27 @@
   <div class="container-fluid">
     <!-- Marca -->
     <a class="navbar-brand fw-bold" routerLink="/modules">
-      DataRegister
+      {{ empresa() }}
     </a>
 
     <!-- Botón hamburguesa -->
-    <button
-      class="navbar-toggler"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#navbarContent"
-      aria-controls="navbarContent"
-      aria-expanded="false"
-      aria-label="Toggle navigation"
-    >
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+      aria-controls="navbarContent" [attr.aria-expanded]="isOpen()" (click)="toggle()" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
     <!-- Contenido -->
-    <div class="collapse navbar-collapse" id="navbarContent">
+    <div class="collapse navbar-collapse" [class.collapse]="true" [class.show]="isOpen()" id="navbarContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/modules">Inicio</a>
-        </li>
+
         <li class="nav-item">
           <a class="nav-link" routerLink="/clientes">Clientes</a>
         </li>
+            @if (sector() === 'SALUD') {
+          <li class="nav-item">
+          <a class="nav-link" routerLink="/pacientes">Pacientes</a>
+        </li>
+        }
         <li class="nav-item">
           <a class="nav-link" routerLink="/trabajos">Trabajos</a>
         </li>
