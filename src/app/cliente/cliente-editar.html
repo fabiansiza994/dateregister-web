@@ -1,0 +1,102 @@
+<div class="container py-4">
+  <!-- Header -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+    <div>
+      <h3 class="fw-semibold mb-0">Editar cliente</h3>
+      <small class="text-secondary">Actualiza los datos básicos del cliente</small>
+    </div>
+    <div class="mt-2 mt-sm-0">
+      <a class="btn btn-outline-secondary" (click)="volver()">
+        &larr; Volver a clientes
+      </a>
+    </div>
+  </div>
+
+  <!-- Alert error -->
+  @if (error()) {
+    <div class="alert alert-danger d-flex align-items-start gap-2 rounded-4 shadow-sm" role="alert">
+      <i class="bi bi-exclamation-triangle mt-1"></i>
+      <div class="flex-grow-1">
+        {{ error() }}
+      </div>
+      <button type="button" class="btn-close" aria-label="Cerrar" (click)="error.set(null)"></button>
+    </div>
+  }
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="text-center py-4 text-secondary">
+      <div class="d-inline-flex align-items-center gap-2">
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        Cargando…
+      </div>
+    </div>
+  } @else {
+
+    @if (cliente()) {
+      <!-- Formulario -->
+      <form (ngSubmit)="actualizar()" class="card border-0 shadow-sm rounded-4">
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Identificación <span class="text-danger">*</span></label>
+              <input [(ngModel)]="cliente()!.identificacion" name="identificacion" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Nombre <span class="text-danger">*</span></label>
+              <input [(ngModel)]="cliente()!.nombre" name="nombre" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Apellido</label>
+              <input [(ngModel)]="cliente()!.apellido" name="apellido" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email</label>
+              <input [(ngModel)]="cliente()!.email" name="email" type="email" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Dirección</label>
+              <input [(ngModel)]="cliente()!.direccion" name="direccion" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Teléfono</label>
+              <input [(ngModel)]="cliente()!.telefono" name="telefono" class="form-control">
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 d-flex align-items-center">
+  <div class="form-check form-switch">
+    <input
+      class="form-check-input"
+      type="checkbox"
+      id="estadoSwitch"
+      [checked]="cliente()?.estado === 'ACTIVO'"
+      (change)="toggleEstado($event)"
+      [disabled]="loading()"
+    />
+    <label class="form-check-label ms-2" for="estadoSwitch">
+      Estado:
+      <span class="badge rounded-pill"
+            [ngClass]="(cliente()?.estado === 'ACTIVO') ? 'bg-success' : 'bg-secondary'">
+        {{ cliente()?.estado || 'INACTIVO' }}
+      </span>
+    </label>
+  </div>
+</div>
+
+        <div class="card-footer d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-light" (click)="volver()">Cancelar</button>
+          <button type="submit" class="btn btn-primary" [disabled]="loading() || !formOk()">
+            <span *ngIf="loading()" class="spinner-border spinner-border-sm me-2"></span>
+            Guardar cambios
+          </button>
+        </div>
+      </form>
+    } @else {
+      <div class="alert alert-light border text-center text-secondary">
+        No se encontró el cliente.
+      </div>
+    }
+  }
+</div>

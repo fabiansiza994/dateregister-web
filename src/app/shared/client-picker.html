@@ -1,0 +1,150 @@
+<!-- Modal (controlado por el padre con [isOpen]) -->
+<div class="modal fade" tabindex="-1"
+     [class.show]="isOpen"
+     [style.display]="isOpen ? 'block' : 'none'"
+     aria-modal="true" role="dialog">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content shadow-lg rounded-4 border-0">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">
+          <i class="bi bi-people me-2"></i> Seleccionar o crear cliente
+        </h5>
+        <button type="button" class="btn-close" (click)="close()"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-3">
+          <li class="nav-item">
+            <button class="nav-link" [class.active]="tab()==='buscar'" (click)="tab.set('buscar')">Buscar</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" [class.active]="tab()==='crear'" (click)="tab.set('crear')">Crear</button>
+          </li>
+        </ul>
+
+        <!-- Error -->
+        @if (error()) {
+          <div class="alert alert-danger py-2">
+            {{ error() }}
+          </div>
+        }
+
+        <!-- Buscar -->
+        @if (tab()==='buscar') {
+          <form class="row g-2 mb-3" (submit)="$event.preventDefault(); onSearch()">
+            <div class="col-md-8">
+              <input class="form-control" placeholder="Nombre, identificación, email…"
+                     [(ngModel)]="q" name="q" (keyup.enter)="onSearch()">
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+              <button class="btn btn-outline-primary" [disabled]="loading()">Buscar</button>
+              <button type="button" class="btn btn-light" (click)="q=''; onSearch()" [disabled]="loading()">Limpiar</button>
+            </div>
+          </form>
+
+          <div class="table-responsive border rounded-3">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th style="width:70px;">#</th>
+                  <th>Identificación</th>
+                  <th>Nombre</th>
+                  <th>Email</th>
+                  <th>Teléfono</th>
+                  <th style="width:120px;">Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (loading()) {
+                  <tr>
+                    <td colspan="6" class="text-center py-4">
+                      <span class="spinner-border spinner-border-sm me-2"></span> Cargando…
+                    </td>
+                  </tr>
+                } @else {
+                  @if (visibleWithRow().length===0) {
+                    <tr>
+                      <td colspan="6" class="text-center py-4 text-secondary">Sin resultados.</td>
+                    </tr>
+                  } @else {
+                    @for (c of visibleWithRow(); track c.id) {
+                      <tr>
+                        <td class="text-secondary">{{ c.row }}</td>
+                        <td class="text-monospace">{{ c.identificacion || '—' }}</td>
+                        <td class="fw-semibold">{{ c.nombre }} {{ c.apellido || '' }}</td>
+                        <td>{{ c.email || '—' }}</td>
+                        <td>{{ c.telefono || '—' }}</td>
+                        <td>
+                          <button class="btn btn-sm btn-primary" (click)="choose(c)">Seleccionar</button>
+                        </td>
+                      </tr>
+                    }
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Paginación -->
+          <div class="d-flex justify-content-between align-items-center mt-2">
+            <div class="small text-secondary">Total: {{ total() }}</div>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-secondary" (click)="prev()" [disabled]="page()<=1 || loading()">«</button>
+              <button class="btn btn-outline-secondary" disabled>{{ page() }}/{{ totalPages() }}</button>
+              <button class="btn btn-outline-secondary" (click)="next()" [disabled]="page()>=totalPages() || loading()">»</button>
+            </div>
+          </div>
+        }
+
+        <!-- Crear -->
+        @if (tab()==='crear') {
+          <form class="row g-3" (submit)="$event.preventDefault(); createClient()">
+            <div class="col-md-6">
+              <label class="form-label">Nombre *</label>
+              <input class="form-control" [(ngModel)]="createForm.nombre" name="nombre" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Apellido</label>
+              <input class="form-control" [(ngModel)]="createForm.apellido" name="apellido">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Identificación</label>
+              <input class="form-control" [(ngModel)]="createForm.identificacion" name="identificacion">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" [(ngModel)]="createForm.email" name="email">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Teléfono</label>
+              <input class="form-control" [(ngModel)]="createForm.telefono" name="telefono">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Dirección</label>
+              <input class="form-control" [(ngModel)]="createForm.direccion" name="direccion">
+            </div>
+            <div class="col-12 d-flex justify-content-end gap-2">
+              <button type="button" class="btn btn-light" (click)="createForm={}" [disabled]="creating()">Limpiar</button>
+              <button class="btn btn-primary" [disabled]="creating()">
+                @if (creating()) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                Crear y seleccionar
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+
+      <div class="modal-footer border-0">
+        <button class="btn btn-light" (click)="close()" [disabled]="loading()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Backdrop -->
+@if (isOpen) {
+  <div class="modal-backdrop fade show"></div>
+}

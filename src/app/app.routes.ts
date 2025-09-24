@@ -17,11 +17,12 @@ export const routes: Routes = [
       { path: 'pacientes/nuevo', loadComponent: () => import('./pacientes/paciente-nuevo').then(m => m.PacienteNuevoComponent) },
       { path: 'clientes/nuevo', loadComponent: () => import('./cliente/cliente-nuevo').then(m => m.ClienteNuevoComponent) },
       { path: 'modules', loadComponent: () => import('./modules/modules').then(m => m.Modules) },
-      {
-        path: 'clientes/:id',
-        loadComponent: () => import('./cliente/cliente-detalle.component').then(m => m.ClienteDetalleComponent)
-      },
+      { path: 'clientes/:id/editar', loadComponent: () => import('./cliente/cliente-editar').then(m => m.ClienteEditarComponent) },
+      { path: 'clientes/:id', loadComponent: () => import('./cliente/cliente-detalle.component').then(m => m.ClienteDetalleComponent) },
 
+      // dentro de children (mantén este orden)
+      { path: 'trabajos', loadComponent: () => import('./trabajos/trabajos').then(m => m.JobsComponent) },
+      { path: 'trabajos/nuevo', loadComponent: () => import('./trabajos/create-job.component').then(m => m.CreateJobComponent)  },
       // Si luego creas estas páginas:
       // { path: 'clientes', loadComponent: () => import('./clientes/clientes').then(m => m.Clientes) },
       // { path: 'trabajos', loadComponent: () => import('./trabajos/trabajos').then(m => m.Trabajos) },

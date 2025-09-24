@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom, TimeoutError } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 import { ConfigService } from '../core/config.service';
+import { AuthService } from '../core/auth.service';
 
 interface Paciente {
   id: number;
@@ -43,11 +44,14 @@ interface DetailOk {
 })
 export class ClienteDetalleComponent implements OnInit {
 
+  private readonly _claims = signal<any | null>(null);
   loading = signal(false);
   error = signal<string | null>(null);
 
   cliente = signal<ClienteDetalle | null>(null);
   pacientes = signal<Paciente[]>([]);
+
+  sector = computed(() => (this._claims()?.sector ?? '').toUpperCase());
 
   // Paginación simple para la tabla de pacientes (opcional)
   page = signal(1);
@@ -66,8 +70,9 @@ export class ClienteDetalleComponent implements OnInit {
     private http: HttpClient,
     private cfg: ConfigService,
     private route: ActivatedRoute,
-    private router: Router
-  ) {}
+    private router: Router,
+    private auth: AuthService
+  ) {   this._claims.set(this.auth.claims());}
 
   ngOnInit(): void {
     this.apiBase = this.cfg.get<string>('apiBaseUrl', '');
