@@ -110,8 +110,8 @@
                 <a *ngIf="u.email" [href]="'mailto:' + u.email" class="text-decoration-none">{{ u.email }}</a>
                 <span *ngIf="!u.email">—</span>
               </td>
-              <td>{{ u.grupo?.nombre || '—' }}</td>
-              <td>{{ u.rol?.nombre || '—' }}</td>
+              <td>{{ u.grupoNombre || '—' }}</td>
+              <td>{{ u.rolNombre || '—' }}</td>
               <td>
                 <div class="btn-group btn-group-sm">
                   <button class="btn btn-outline-info" (click)="verUsuario(u)">
@@ -169,11 +169,11 @@
                   </li>
                   <li class="mb-1">
                     <span class="text-secondary">Grupo:</span>
-                    <span class="ms-1">{{ u.grupo?.nombre || '—' }}</span>
+                    <span class="ms-1">{{ u.grupoNombre?.nombre || '—' }}</span>
                   </li>
                   <li class="mb-0">
                     <span class="text-secondary">Rol:</span>
-                    <span class="ms-1">{{ u.rol?.nombre || '—' }}</span>
+                    <span class="ms-1">{{ u.rolNombre?.nombre || '—' }}</span>
                   </li>
                 </ul>
 

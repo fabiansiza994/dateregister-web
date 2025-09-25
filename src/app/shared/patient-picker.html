@@ -1,0 +1,177 @@
+<!-- Modal (controlado por el padre con [isOpen]) -->
+<div class="modal fade" tabindex="-1"
+     [class.show]="isOpen"
+     [style.display]="isOpen ? 'block' : 'none'"
+     aria-modal="true" role="dialog">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content shadow-lg rounded-4 border-0">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">
+          <i class="bi bi-heart-pulse me-2"></i> Seleccionar o crear paciente
+        </h5>
+        <button type="button" class="btn-close" (click)="close()"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-3">
+          <li class="nav-item">
+            <button class="nav-link" [class.active]="tab()==='buscar'" (click)="tab.set('buscar')">Buscar</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" [class.active]="tab()==='crear'" (click)="tab.set('crear')">Crear</button>
+          </li>
+        </ul>
+
+        <!-- Error -->
+        @if (error()) {
+          <div class="alert alert-danger py-2">
+            {{ error() }}
+          </div>
+        }
+
+        <!-- Buscar -->
+        @if (tab()==='buscar') {
+          <form class="row g-2 mb-3" (submit)="$event.preventDefault(); onSearch()">
+            <div class="col-md-8">
+              <input class="form-control" placeholder="Nombre, documento, email…"
+                     [(ngModel)]="q" name="q" (keyup.enter)="onSearch()">
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+              <button class="btn btn-outline-success" [disabled]="loading()">Buscar</button>
+              <button type="button" class="btn btn-light" (click)="q=''; onSearch()" [disabled]="loading()">Limpiar</button>
+            </div>
+          </form>
+
+          <div class="table-responsive border rounded-3">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th style="width:70px;">#</th>
+                  <th>Documento</th>
+                  <th>Nombre</th>
+                  <th>Email</th>
+                  <th>Teléfono</th>
+                  <th style="width:120px;">Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (loading()) {
+                  <tr>
+                    <td colspan="6" class="text-center py-4">
+                      <span class="spinner-border spinner-border-sm me-2"></span> Cargando…
+                    </td>
+                  </tr>
+                } @else {
+                  @if (visibleWithRow().length===0) {
+                    <tr>
+                      <td colspan="6" class="text-center py-4 text-secondary">Sin resultados.</td>
+                    </tr>
+                  } @else {
+                    @for (p of visibleWithRow(); track p.id) {
+                      <tr>
+                        <td class="text-secondary">{{ p.row }}</td>
+                        <td class="text-monospace">{{ p.documento || '—' }}</td>
+                        <td class="fw-semibold">{{ p.nombre }} {{ p.apellido || '' }}</td>
+                        <td>{{ p.email || '—' }}</td>
+                        <td>{{ p.telefono || '—' }}</td>
+                        <td>
+                          <button class="btn btn-sm btn-success" (click)="choose(p)">Seleccionar</button>
+                        </td>
+                      </tr>
+                    }
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Paginación -->
+          <div class="d-flex justify-content-between align-items-center mt-2">
+            <div class="small text-secondary">Total: {{ total() }}</div>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-secondary" (click)="prev()" [disabled]="page()<=1 || loading()">«</button>
+              <button class="btn btn-outline-secondary" disabled>{{ page() }}/{{ totalPages() }}</button>
+              <button class="btn btn-outline-secondary" (click)="next()" [disabled]="page()>=totalPages() || loading()">»</button>
+            </div>
+          </div>
+        }
+
+        <!-- Crear -->
+        @if (tab()==='crear') {
+          <form class="row g-3" (submit)="$event.preventDefault(); createPatient()">
+            <div class="col-md-6">
+              <label class="form-label">Nombre *</label>
+              <input class="form-control" [(ngModel)]="createForm.nombre" name="nombre" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Apellido</label>
+              <input class="form-control" [(ngModel)]="createForm.apellido" name="apellido">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Documento *</label>
+              <input class="form-control" [(ngModel)]="createForm.documento" name="documento" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Teléfono</label>
+              <input class="form-control" [(ngModel)]="createForm.telefono" name="telefono">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" [(ngModel)]="createForm.email" name="email">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Dirección</label>
+              <input class="form-control" [(ngModel)]="createForm.direccion" name="direccion">
+            </div>
+
+            <!-- Asociar Cliente -->
+            <div class="col-md-8">
+              <label class="form-label">Buscar cliente (para asociar)</label>
+              <div class="input-group">
+                <input class="form-control" [(ngModel)]="qCliente" name="qCliente" (keyup.enter)="buscarClientes()" placeholder="Nombre o identificación">
+                <button type="button" class="btn btn-outline-secondary" (click)="buscarClientes()">Buscar</button>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Cliente asociado *</label>
+              <select class="form-select" [(ngModel)]="createForm.clienteId" name="clienteId" required>
+                <option [ngValue]="null" disabled>— Selecciona —</option>
+                @for (c of clientes(); track c.id) {
+                  <option [ngValue]="c.id">
+                    {{ c.nombre }} {{ c.apellido || '' }} — {{ c.identificacion || 's/ID' }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div class="col-12 d-flex justify-content-end gap-2">
+              <!-- 👇 sin "as any" -->
+              <button type="button" class="btn btn-light"
+                      (click)="createForm={ nombre:'', apellido:'', documento:'', telefono:'', email:'', direccion:'', clienteId: null }"
+                      [disabled]="creating()">
+                Limpiar
+              </button>
+              <button class="btn btn-success" [disabled]="creating()">
+                @if (creating()) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                Crear y seleccionar
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+
+      <div class="modal-footer border-0">
+        <button class="btn btn-light" (click)="close()" [disabled]="loading()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (isOpen) {
+  <div class="modal-backdrop fade show"></div>
+}

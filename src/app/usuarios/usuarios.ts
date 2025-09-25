@@ -20,8 +20,8 @@ interface UsuarioLite {
   apellido?: string | null;
   email?: string | null;
   estado?: string | null;   // si tu backend lo expone
-  rol?: { id: number; nombre: string } | null;
-  grupo?: { id: number; nombre: string } | null;
+  rolNombre?: { id: number; nombre: string } | null;
+  grupoNombre?: { id: number; nombre: string } | null;
 }
 
 interface UserSearchOk {

@@ -6,6 +6,7 @@ import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom, TimeoutError } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 import { ConfigService } from '../core/config.service';
+import { AuthService } from '../core/auth.service';
 
 interface FormaPago { id: number; formaPago: string; estado: number; }
 interface ClienteMin { id: number; nombre: string; apellido?: string | null; }
@@ -17,6 +18,13 @@ interface Trabajo {
   cliente: ClienteMin | null;
   formaPago: FormaPago | null;
   foto1?: string | null;
+  paciente: PacienteMin | null;
+  estado?: 'PENDIENTE' | 'PAGO' | 'CANCELADO' | string; 
+}
+interface PacienteMin { // 👈 nuevo
+  id: number;
+  nombre: string;
+  apellido?: string | null;
 }
 interface JobSearchOk {
   dataResponse: { idTx: string | null; response: 'SUCCESS' | 'ERROR' };
@@ -35,6 +43,18 @@ interface JobSearchOk {
   templateUrl: './trabajos.html',
 })
 export class JobsComponent implements OnInit {
+
+  private readonly _claims = signal<any | null>(null);
+  sector = computed(() => (this._claims()?.sector ?? '').toUpperCase());
+
+  estadoBadge(estado?: string) {
+  const s = (estado || '').toUpperCase();
+  if (s === 'PAGO') return 'badge bg-success-subtle text-dark';
+  if (s === 'CANCELADO') return 'badge bg-danger-subtle';
+  // default / PENDIENTE
+  return 'badge bg-warning-subtle text-dark';
+}
+
   // Filtro
   q = '';
 
@@ -72,8 +92,9 @@ export class JobsComponent implements OnInit {
   constructor(
     private http: HttpClient,
     private cfg: ConfigService,
-    private router: Router
-  ) {}
+    private router: Router,
+    private auth: AuthService
+  ) {this._claims.set(this.auth.claims()); }
 
   ngOnInit(): void {
     this.apiBase = this.cfg.get<string>('apiBaseUrl', '');

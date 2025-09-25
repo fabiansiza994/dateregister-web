@@ -239,7 +239,7 @@ export class Pacientes {
         this.error.set('La eliminación tardó demasiado. Intenta de nuevo.');
       } else {
         const be = (e?.error ?? e) as PacienteDeleteError;
-        const apiMsgs = be?.error?.map(x => x?.msgError || x?.descError)
+        const apiMsgs = be?.error?.map(x => x?.descError)
           ?.filter(Boolean)?.join(' | ');
         this.error.set(
           apiMsgs || be?.message || e?.error?.message || e?.message || 'No se pudo eliminar el paciente.'

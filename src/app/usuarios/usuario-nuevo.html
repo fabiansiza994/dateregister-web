@@ -96,12 +96,12 @@
             <div class="col-md-6">
               <label class="form-label">Rol</label>
               <input type="text" class="form-control" value="USER (id: 2)" readonly>
-              <!-- rol.id = 2 ya está fijo en el modelo -->
             </div>
           </div>
 
           <div class="d-flex justify-content-end gap-2 mt-4">
-            <button class="btn btn-primary" [disabled]="!isStep1Valid()" (click)="goToStep(2)">
+            <!-- Solo submit del form -->
+            <button class="btn btn-primary" type="submit" [disabled]="!isStep1Valid()">
               Siguiente
             </button>
           </div>
@@ -170,19 +170,10 @@
             </ul>
           </div>
 
-          <!-- (Opcional) Aceptar términos -->
-          <!--
-          <div class="form-check mt-3">
-            <input class="form-check-input" type="checkbox" id="terms" [(ngModel)]="acceptedTerms" name="terms">
-            <label class="form-check-label small" for="terms">
-              Confirmo la creación del usuario con el grupo seleccionado.
-            </label>
-          </div>
-          -->
-
           <div class="d-flex justify-content-between gap-2 mt-4">
-            <button class="btn btn-outline-secondary" (click)="goToStep(1)" [disabled]="loading()">Atrás</button>
-            <button class="btn btn-success" [disabled]="!isStep2Valid() || loading()" (click)="submit()">
+            <button class="btn btn-outline-secondary" type="button" (click)="goToStep(1)" [disabled]="loading()">Atrás</button>
+            <!-- Solo submit del form -->
+            <button class="btn btn-success" type="submit" [disabled]="!isStep2Valid() || loading()">
               @if (loading()) {
                 <span class="spinner-border spinner-border-sm me-2" role="status"></span>
               }

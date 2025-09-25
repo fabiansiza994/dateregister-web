@@ -33,7 +33,7 @@ interface UsuarioAdminCreateRequest {
   empresa: {
     id: number;          // 0 = nueva empresa
     nombre: string;
-    nit: string;            // <- si tu API lo exige, rellénalo vía UI
+    nit: string;
     pais:   { id: number | null };
     sector: { id: number | null };
   };
@@ -64,7 +64,7 @@ export class UsuarioNuevoComponent implements OnInit {
     empresa: {
       id: 0,
       nombre: '',     // se setea desde claims
-      nit: '',        // puedes pedirlo en Step 2 si es requerido por API
+      nit: '',
       pais:   { id: null },
       sector: { id: null },
     },
@@ -105,7 +105,6 @@ export class UsuarioNuevoComponent implements OnInit {
         && !!e.nombre.trim()
         && e.pais.id   !== null
         && e.sector.id !== null;
-        // Si NIT es obligatorio, añade: && !!e.nit.trim()
   });
 
   private apiBase = '';
@@ -121,15 +120,14 @@ export class UsuarioNuevoComponent implements OnInit {
     this.apiBase = this.cfg.get<string>('apiBaseUrl','');
 
     // Prefill desde claims
-    const claims = this.auth.claims(); // { empresa, pais:'CO', sector:'TECNOLOGIA', ... }
+    const claims = this.auth.claims();
     this.model.update(m => ({
       ...m,
       empresa: {
         ...m.empresa,
         nombre: (claims?.empresa ?? '').toString(),
-        // nit queda '', pídelo en UI si lo requiere tu API
-        pais:   { id: null },  // se mapea con catálogo
-        sector: { id: null },  // se mapea con catálogo
+        pais:   { id: null },
+        sector: { id: null },
       }
     }));
 
@@ -173,14 +171,12 @@ export class UsuarioNuevoComponent implements OnInit {
   }
 
   private autoselectEmpresaFromClaims(paisCode?: string, sectorName?: string) {
-    // Mapear pais.id por código (CO, AR, etc)
     if (paisCode) {
       const matchPais = this.paises().find(p => (p.codigoPais || '').toUpperCase() === paisCode.toUpperCase());
       if (matchPais) {
         this.model.update(m => ({ ...m, empresa: { ...m.empresa, pais: { id: matchPais.id } } }));
       }
     }
-    // Mapear sector.id por nombre
     if (sectorName) {
       const matchSector = this.sectores().find(s => (s.nombre || '').toUpperCase() === sectorName.toUpperCase());
       if (matchSector) {
@@ -240,7 +236,7 @@ export class UsuarioNuevoComponent implements OnInit {
     try {
       const url = `${this.apiBase}/group/search`;
       const params = new HttpParams()
-        .set('q', this.qGroup ?? '')  // siempre q
+        .set('q', this.qGroup ?? '')
         .set('page', '0')
         .set('size', '20')
         .set('sortBy', 'nombre')
@@ -265,6 +261,9 @@ export class UsuarioNuevoComponent implements OnInit {
 
   // ------- Submit -------
   async submit() {
+    // Guardia anti doble-submit
+    if (this.loading()) return;
+
     if (!this.isStep1Valid() || !this.isStep2Valid()) {
       this.error.set('Completa los pasos obligatorios antes de continuar.');
       setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
@@ -277,7 +276,7 @@ export class UsuarioNuevoComponent implements OnInit {
     this.fieldErrors.set({});
 
     try {
-      const url = `${this.apiBase}/user/create`;
+      const url = `${this.apiBase}/user/register`;
       const res = await firstValueFrom(
         this.http.post<UsuarioCreateOk>(url, this.model()).pipe(timeout(12000))
       );
@@ -285,7 +284,7 @@ export class UsuarioNuevoComponent implements OnInit {
 
       const id = res?.data?.id;
       const flash = `✅ Usuario creado${id ? ' (ID ' + id + ')' : ''}.`;
-      this.router.navigate(['/modules'], { state: { flash } });
+      this.router.navigate(['/usuarios'], { state: { flash } });
 
     } catch (e:any) {
       if (e instanceof TimeoutError) {

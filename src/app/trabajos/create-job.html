@@ -24,26 +24,58 @@
           <input type="date" class="form-control" [(ngModel)]="form.fecha" name="fecha" required>
         </div>
 
-        <!-- Cliente (selector via modal) -->
-        <div class="col-md-5">
-          <label class="form-label d-flex align-items-center justify-content-between">
-            <span>Cliente <span class="text-danger">*</span></span>
-            <small *ngIf="selectedClient" class="text-secondary">ID: {{ selectedClient?.id }}</small>
-          </label>
+        <!-- Cliente/Paciente según sector -->
+        @if (sector() !== 'SALUD') {
+          <div class="col-md-5">
+            <label class="form-label d-flex align-items-center justify-content-between">
+              <span>Cliente <span class="text-danger">*</span></span>
+              @if (selectedClient) {
+                <small class="text-secondary">ID: {{ selectedClient?.id }}</small>
+              }
+            </label>
 
-          <div class="input-group">
-            <input type="text" class="form-control"
-                   [value]="selectedClient ? (selectedClient.nombre + ' ' + (selectedClient.apellido||'')) : ''"
-                   placeholder="Sin seleccionar" readonly>
-            <button type="button" class="btn btn-outline-primary" (click)="openClientModal()">
-              <i class="bi bi-search"></i> Seleccionar
-            </button>
-            <button type="button" class="btn btn-outline-secondary" (click)="clearClient()" [disabled]="!selectedClient">
-              Limpiar
-            </button>
+            <div class="input-group">
+              <input type="text" class="form-control"
+                     [value]="selectedClient ? (selectedClient.nombre + ' ' + (selectedClient.apellido||'')) : ''"
+                     placeholder="Sin seleccionar" readonly>
+              <button type="button" class="btn btn-outline-primary" (click)="openClientModal()">
+                <i class="bi bi-search"></i> Seleccionar
+              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="clearClient()" [disabled]="!selectedClient">
+                Limpiar
+              </button>
+            </div>
+
+            @if (!selectedClient) {
+              <div class="form-text">Debes seleccionar o crear un cliente.</div>
+            }
           </div>
-          <div class="form-text" *ngIf="!selectedClient">Debes seleccionar o crear un cliente.</div>
-        </div>
+        } @else {
+          <div class="col-md-5">
+            <label class="form-label d-flex align-items-center justify-content-between">
+              <span>Paciente <span class="text-danger">*</span></span>
+              @if (selectedPatient) {
+                <small class="text-secondary">ID: {{ selectedPatient?.id }}</small>
+              }
+            </label>
+
+            <div class="input-group">
+              <input type="text" class="form-control"
+                     [value]="selectedPatient ? (selectedPatient.nombre + ' ' + (selectedPatient.apellido||'')) : ''"
+                     placeholder="Sin seleccionar" readonly>
+              <button type="button" class="btn btn-outline-success" (click)="openPatientModal()">
+                <i class="bi bi-heart-pulse"></i> Seleccionar
+              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="clearPatient()" [disabled]="!selectedPatient">
+                Limpiar
+              </button>
+            </div>
+
+            @if (!selectedPatient) {
+              <div class="form-text">Debes seleccionar o crear un paciente.</div>
+            }
+          </div>
+        }
 
         <!-- Forma de pago -->
         <div class="col-md-4">
@@ -52,7 +84,9 @@
             <option [ngValue]="0" disabled>Seleccione…</option>
             <option *ngFor="let f of formasPago" [ngValue]="f.id">{{ f.formaPago }}</option>
           </select>
-          <div class="small text-secondary" *ngIf="mopLoading()">Cargando formas de pago…</div>
+          @if (mopLoading()) {
+            <div class="small text-secondary">Cargando formas de pago…</div>
+          }
         </div>
 
         <!-- Valores -->
@@ -98,48 +132,61 @@
         <div class="col-md-6">
           <label class="form-label">Foto 1</label>
           <input type="file" class="form-control" accept="image/*" (change)="onFileChange($event, 'foto1')">
-          <div class="mt-2" *ngIf="previews.foto1">
-            <img [src]="previews.foto1" alt="foto1" class="img-thumbnail" style="max-width: 220px; object-fit: cover;">
-          </div>
+          @if (previews.foto1) {
+            <div class="mt-2">
+              <img [src]="previews.foto1" alt="foto1" class="img-thumbnail" style="max-width: 220px; object-fit: cover;">
+            </div>
+          }
         </div>
 
         <div class="col-md-6">
           <label class="form-label">Foto 2</label>
           <input type="file" class="form-control" accept="image/*" (change)="onFileChange($event, 'foto2')">
-          <div class="mt-2" *ngIf="previews.foto2">
-            <img [src]="previews.foto2" alt="foto2" class="img-thumbnail" style="max-width: 220px; object-fit: cover;">
-          </div>
+          @if (previews.foto2) {
+            <div class="mt-2">
+              <img [src]="previews.foto2" alt="foto2" class="img-thumbnail" style="max-width: 220px; object-fit: cover;">
+            </div>
+          }
         </div>
 
         <div class="col-md-6">
           <label class="form-label">Foto 3</label>
           <input type="file" class="form-control" accept="image/*" (change)="onFileChange($event, 'foto3')">
-          <div class="mt-2" *ngIf="previews.foto3">
-            <img [src]="previews.foto3" alt="foto3" class="img-thumbnail" style="max-width: 220px; object-fit: cover;">
-          </div>
+          @if (previews.foto3) {
+            <div class="mt-2">
+              <img [src]="previews.foto3" alt="foto3" class="img-thumbnail" style="max-width: 220px; object-fit: cover;">
+            </div>
+          }
         </div>
 
         <div class="col-md-6">
           <label class="form-label">Foto 4</label>
           <input type="file" class="form-control" accept="image/*" (change)="onFileChange($event, 'foto4')">
-          <div class="mt-2" *ngIf="previews.foto4">
-            <img [src]="previews.foto4" alt="foto4" class="img-thumbnail" style="max-width: 220px; object-fit: cover;">
-          </div>
+          @if (previews.foto4) {
+            <div class="mt-2">
+              <img [src]="previews.foto4" alt="foto4" class="img-thumbnail" style="max-width: 220px; object-fit: cover;">
+            </div>
+          }
         </div>
 
         <!-- Progreso -->
-        <div class="col-12" *ngIf="progress()>0">
-          <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-            <div class="progress-bar" [style.width.%]="progress()">{{ progress() }}%</div>
+        @if (progress() > 0) {
+          <div class="col-12">
+            <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+              <div class="progress-bar" [style.width.%]="progress()">{{ progress() }}%</div>
+            </div>
           </div>
-        </div>
+        }
 
       </div>
     </div>
 
     <div class="card-footer d-flex justify-content-end gap-2 border-0">
       <button type="button" class="btn btn-light" [disabled]="loading()" (click)="resetForm()">Limpiar</button>
-      <button type="submit" class="btn btn-primary" [disabled]="loading() || !selectedClient">
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="loading() || (sector()==='SALUD' ? !selectedPatient : !selectedClient)">
         @if (loading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
         Guardar
       </button>
@@ -147,7 +194,16 @@
   </form>
 </div>
 
-<!-- Modal selector de cliente -->
+<!-- Modal selector de PACIENTE -->
+<app-patient-picker
+  [apiBase]="apiBase"
+  [token]="tokenStr"
+  [isOpen]="patientModalOpen()"
+  (closed)="onPatientClose()"
+  (selected)="onPatientPicked($event)"
+></app-patient-picker>
+
+<!-- Modal selector de CLIENTE -->
 <app-client-picker
   [apiBase]="apiBase"
   [token]="tokenStr"

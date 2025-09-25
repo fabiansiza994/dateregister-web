@@ -1,4 +1,70 @@
-.navbar-brand {
-  font-size: 1.25rem;
-  letter-spacing: 0.5px;
+/* Links navbar */
+.navbar .nav-link {
+  opacity: .9;
+  transition: opacity .2s ease;
+}
+.navbar .nav-link.active,
+.navbar .nav-link:hover,
+.navbar .dropdown-item:hover {
+  opacity: 1;
+}
+
+/* Avatar genérico (base) */
+.brand-avatar,
+.user-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+/* Avatar empresa */
+.brand-avatar {
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, .25);
+  color: #fff;
+}
+
+/* Avatar usuario */
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  background: #fff;
+  color: #0d6efd; /* azul bootstrap */
+  border: 2px solid rgba(255, 255, 255, .4);
+}
+
+/* Botón dropdown usuario */
+.navbar .nav-link.dropdown-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Botón tipo “subtle” */
+.btn.btn-primary-subtle {
+  background: rgba(255, 255, 255, .15);
+  backdrop-filter: saturate(140%) blur(2px);
+  color: #fff;
+}
+
+/* Menús desplegables */
+.navbar .dropdown-menu {
+  border-radius: 12px;
+  padding: .5rem;
+  animation: fadeIn .15s ease-in-out;
+}
+.dropdown-item {
+  border-radius: .5rem;
+}
+
+/* Animación sutil */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }

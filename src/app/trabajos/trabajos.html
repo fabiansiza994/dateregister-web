@@ -17,8 +17,8 @@
     <div class="row g-3">
       <div class="col-md-6">
         <label for="q" class="form-label">Descripción o Cliente</label>
-        <input id="q" type="text" class="form-control" placeholder="Ej: garage, Juan..."
-               [(ngModel)]="q" name="q" (keyup.enter)="onSearch()" autocomplete="off">
+        <input id="q" type="text" class="form-control" placeholder="Ej: garage, Juan..." [(ngModel)]="q" name="q"
+          (keyup.enter)="onSearch()" autocomplete="off">
       </div>
       <div class="col-md-2 d-flex align-items-end gap-2">
         <button type="submit" class="btn btn-outline-primary w-100" [disabled]="loading()">
@@ -33,7 +33,7 @@
         <div class="d-flex align-items-center gap-2">
           <label class="text-secondary small mb-0">Orden:</label>
           <select class="form-select form-select-sm w-auto" [ngModel]="sortBy()" (ngModelChange)="changeSort($event)"
-                  name="sortBy">
+            name="sortBy">
             <option value="id">ID</option>
             <option value="fecha">Fecha</option>
             <option value="valorTotal">Valor</option>
@@ -45,7 +45,7 @@
 
           <label class="text-secondary small mb-0">/ pág:</label>
           <select class="form-select form-select-sm w-auto" [ngModel]="pageSize()" (ngModelChange)="setPageSize($event)"
-                  name="pageSize">
+            name="pageSize">
             <option *ngFor="let s of pageSizeOptions" [value]="s">{{s}}</option>
           </select>
         </div>
@@ -56,127 +56,154 @@
 
 <!-- 🔴 Error -->
 @if (error()) {
-  <div class="alert alert-danger d-flex align-items-start gap-2 rounded-4 shadow-sm" role="alert">
-    <i class="bi bi-exclamation-triangle mt-1"></i>
-    <div class="flex-grow-1">{{ error() }}</div>
-    <button type="button" class="btn-close" aria-label="Cerrar" (click)="error.set(null)"></button>
-  </div>
+<div class="alert alert-danger d-flex align-items-start gap-2 rounded-4 shadow-sm" role="alert">
+  <i class="bi bi-exclamation-triangle mt-1"></i>
+  <div class="flex-grow-1">{{ error() }}</div>
+  <button type="button" class="btn-close" aria-label="Cerrar" (click)="error.set(null)"></button>
+</div>
 }
 
 <!-- DESKTOP / TABLE -->
 <div class="table-responsive shadow-sm rounded-4 d-none d-md-block">
   <table class="table table-hover align-middle mb-0">
     <thead class="table-light sticky-top">
-    <tr>
-      <th style="width:70px;">#</th>
-      <th (click)="changeSort('fecha')" role="button">Fecha</th>
-      <th>Descripción</th>
-      <th>Cliente</th>
-      <th (click)="changeSort('valorTotal')" role="button">Valor</th>
-      <th>Pago</th>
-      <th style="width:100px;">Foto</th>
-      <th style="width:160px;">Acciones</th>
-    </tr>
+      <tr>
+        <th style="width:70px;">#</th>
+        <th (click)="changeSort('fecha')" role="button">Fecha</th>
+
+        <th>Cliente</th>
+        @if (sector() === 'SALUD') {
+        <th>Paciente</th>
+        }
+        <th (click)="changeSort('valorTotal')" role="button">Valor</th>
+        <th>Estado</th>
+        <th style="width:160px;">Acciones</th>
+      </tr>
     </thead>
     <tbody>
-    @if (loading()) {
-      <tr><td colspan="8" class="text-center py-4">
-        <div class="d-inline-flex align-items-center gap-2 text-secondary">
-          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cargando…
-        </div>
-      </td></tr>
-    } @else {
-      @if (visibleWithRow().length===0) {
-        <tr><td colspan="8" class="text-center py-4 text-secondary">Sin resultados.</td></tr>
+      @if (loading()) {
+      <tr>
+        <td colspan="9" class="text-center py-4">
+          <div class="d-inline-flex align-items-center gap-2 text-secondary">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cargando…
+          </div>
+        </td>
+      </tr>
       } @else {
-        @for (j of visibleWithRow(); track j.id) {
-          <tr>
-            <td class="text-secondary">{{ j.rowNumber }}</td>
-            <td>{{ j.fecha }}</td>
-            <td class="fw-semibold">{{ j.descripcionLabor }}</td>
-            <td>
-              <i class="bi bi-person me-1 text-muted"></i>
-              {{ j.cliente?.nombre }} <span class="text-secondary">{{ j.cliente?.apellido || '' }}</span>
-            </td>
-            <td class="text-nowrap">{{ formatMoney(j.valorTotal) }}</td>
-            <td><span class="badge bg-info-subtle text-dark">{{ j.formaPago?.formaPago || '—' }}</span></td>
-            <td>
-              <a *ngIf="j.foto1" [href]="j.foto1" target="_blank" rel="noopener">
-                <img [src]="j.foto1" alt="foto" class="img-thumbnail" style="width:72px; height:48px; object-fit:cover;">
-              </a>
-              <span *ngIf="!j.foto1">—</span>
-            </td>
-            <td>
-              <div class="btn-group btn-group-sm">
-                <button class="btn btn-outline-info" (click)="verTrabajo(j)"><i class="bi bi-eye"></i> Ver</button>
-                <button class="btn btn-outline-primary" (click)="editarTrabajo(j)"><i class="bi bi-pencil"></i> Editar</button>
-              </div>
-            </td>
-          </tr>
+      @if (visibleWithRow().length===0) {
+      <tr>
+        <td colspan="9" class="text-center py-4 text-secondary">Sin resultados.</td>
+      </tr>
+      } @else {
+      @for (j of visibleWithRow(); track j.id) {
+      <tr>
+        <td class="text-secondary">{{ j.rowNumber }}</td>
+        <td>{{ j.fecha }}</td>
+
+
+        <!-- Cliente -->
+        <td>
+          <i class="bi bi-person me-1 text-muted"></i>
+          {{ j.cliente?.nombre }} <span class="text-secondary">{{ j.cliente?.apellido || '' }}</span>
+        </td>
+        @if (sector() === 'SALUD') {
+        <!-- 👇 Paciente (NUEVO TD) -->
+        <td>
+          @if (j.paciente) {
+          <i class="bi bi-heart-pulse me-1 text-danger"></i>
+          {{ j.paciente.nombre }} <span class="text-secondary">{{ j.paciente.apellido || '' }}</span>
+          } @else { <span class="text-secondary">No se asigno paciente</span>}
+        </td>
         }
+        <td class="text-nowrap">{{ formatMoney(j.valorTotal) }}</td>
+        <td>
+          <span [class]="estadoBadge(j.estado)">{{ j.estado || '—' }}</span>
+        </td>
+
+
+        <td>
+          <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-info" (click)="verTrabajo(j)"><i class="bi bi-eye"></i> Ver</button>
+            <button class="btn btn-outline-primary" (click)="editarTrabajo(j)"><i class="bi bi-pencil"></i>
+              Editar</button>
+          </div>
+        </td>
+      </tr>
       }
-    }
+      }
+      }
     </tbody>
+
   </table>
 </div>
 
 <!-- MOBILE / CARDS -->
 <div class="d-md-none">
   @if (loading()) {
-    <div class="text-center py-4 text-secondary">
-      <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cargando…
-    </div>
+  <div class="text-center py-4 text-secondary">
+    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cargando…
+  </div>
   } @else {
-    @if (visibleWithRow().length===0) {
-      <div class="alert alert-light border text-center text-secondary">Sin resultados.</div>
-    } @else {
-      <div class="row g-3">
-        @for (j of visibleWithRow(); track j.id) {
-          <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                  <div>
-                    <div class="small text-secondary">#{{ j.rowNumber }}</div>
-                    <h6 class="mb-0 fw-semibold">{{ j.descripcionLabor }}</h6>
-                    <div class="small text-secondary">{{ j.fecha }}</div>
-                  </div>
-                  <span class="badge bg-info-subtle text-dark">{{ j.formaPago?.formaPago || '—' }}</span>
-                </div>
+  @if (visibleWithRow().length===0) {
+  <div class="alert alert-light border text-center text-secondary">Sin resultados.</div>
+  } @else {
+  <div class="row g-3">
+    @for (j of visibleWithRow(); track j.id) {
+    <div class="col-12">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <div class="small text-secondary">#{{ j.rowNumber }}</div>
+              <h6 class="mb-0 fw-semibold">{{ j.descripcionLabor }}</h6>
+              <div class="small text-secondary">{{ j.fecha }}</div>
+            </div>  
+          </div>
 
-                <ul class="list-unstyled mb-0 small">
-                  <li class="mb-1">
-                    <span class="text-secondary">Cliente:</span>
-                    <span class="ms-1">{{ j.cliente?.nombre }} {{ j.cliente?.apellido || '' }}</span>
-                  </li>
-                  <li class="mb-1">
-                    <span class="text-secondary">Valor:</span>
-                    <span class="ms-1">{{ formatMoney(j.valorTotal) }}</span>
-                  </li>
-                </ul>
+          <ul class="list-unstyled mb-0 small">
+            <li class="mb-1">
+              <span class="text-secondary">Cliente:</span>
+              <span class="ms-1">{{ j.cliente?.nombre }} {{ j.cliente?.apellido || '' }}</span>
+            </li>
+            @if (j.paciente) {
+            <li class="mb-1">
+              <span class="text-secondary">Paciente:</span>
+              <span class="ms-1">{{ j.paciente.nombre }} {{ j.paciente.apellido || '' }}</span>
+            </li>
+            }
+            <li class="mb-1">
+              <span class="text-secondary">Estado:</span>
+              <span class="ms-1">
+                <span [class]="estadoBadge(j.estado)">{{ j.estado || '—' }}</span>
+              </span>
+            <li class="mb-1">
+              <span class="text-secondary">Valor:</span>
+              <span class="ms-1">{{ formatMoney(j.valorTotal) }}</span>
+            </li>
+          </ul>
 
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                  <div>
-                    <a *ngIf="j.foto1" [href]="j.foto1" target="_blank" rel="noopener">
-                      <img [src]="j.foto1" alt="foto" class="rounded" style="width:96px; height:64px; object-fit:cover;">
-                    </a>
-                  </div>
-                  <div class="d-flex gap-2">
-                    <button class="btn btn-sm btn-outline-info" (click)="verTrabajo(j)">
-                      <i class="bi bi-eye"></i> Ver
-                    </button>
-                    <button class="btn btn-sm btn-outline-primary" (click)="editarTrabajo(j)">
-                      <i class="bi bi-pencil"></i> Editar
-                    </button>
-                  </div>
-                </div>
-
-              </div>
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <div>
+              <a *ngIf="j.foto1" [href]="j.foto1" target="_blank" rel="noopener">
+                <img [src]="j.foto1" alt="foto" class="rounded" style="width:96px; height:64px; object-fit:cover;">
+              </a>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-info" (click)="verTrabajo(j)">
+                <i class="bi bi-eye"></i> Ver
+              </button>
+              <button class="btn btn-sm btn-outline-primary" (click)="editarTrabajo(j)">
+                <i class="bi bi-pencil"></i> Editar
+              </button>
             </div>
           </div>
-        }
+
+        </div>
       </div>
+    </div>
     }
+  </div>
+  }
   }
 </div>
 
@@ -188,6 +215,7 @@
   <div class="btn-group">
     <button class="btn btn-outline-secondary btn-sm" (click)="prevPage()" [disabled]="page()<=1 || loading()">«</button>
     <button class="btn btn-outline-secondary btn-sm" disabled>{{ page() }}/{{ totalPages() }}</button>
-    <button class="btn btn-outline-secondary btn-sm" (click)="nextPage()" [disabled]="page()>=totalPages() || loading()">»</button>
+    <button class="btn btn-outline-secondary btn-sm" (click)="nextPage()"
+      [disabled]="page()>=totalPages() || loading()">»</button>
   </div>
 </div>
