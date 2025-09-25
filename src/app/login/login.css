@@ -1,6 +1,6 @@
 :root{
   /* Cambia esta URL por tu imagen */
-  --login-hero: url('https://images.unsplash.com/photo-1551281044-8e14f2075a3d?q=80&w=1600&auto=format&fit=crop');
+  --login-hero: url('https://dataregisterbucket.s3.us-east-2.amazonaws.com/icons/icon.png');
   --brand-bg: #f1f3f5;
 }
 
@@ -91,4 +91,9 @@
 }
 
 /* Reduce padding en pantallas muy pequeñas */
-@media (max
+@media (max-width: 575.98px) {
+  .form-shell {
+    padding: 1rem;
+    max-width: 100%;
+  }
+}

@@ -58,22 +58,32 @@
         <!-- Valores -->
         <div class="col-md-3">
           <label class="form-label">Valor mano de obra</label>
-          <input type="number" class="form-control" [(ngModel)]="form.valorLabor" name="valorLabor" min="0" step="1">
+          <input type="number" class="form-control"
+                 [(ngModel)]="form.valorLabor" name="valorLabor"
+                 min="0" step="1"
+                 (ngModelChange)="recalc()">
         </div>
 
         <div class="col-md-3">
           <label class="form-label">Valor materiales</label>
-          <input type="number" class="form-control" [(ngModel)]="form.valorMateriales" name="valorMateriales" min="0" step="1">
+          <input type="number" class="form-control"
+                 [(ngModel)]="form.valorMateriales" name="valorMateriales"
+                 min="0" step="1"
+                 (ngModelChange)="recalc()">
         </div>
 
         <div class="col-md-3">
-          <label class="form-label">Valor total <span class="text-danger">*</span></label>
-          <input type="number" class="form-control" [(ngModel)]="form.valorTotal" name="valorTotal" min="0" step="1" required>
+          <label class="form-label">Valor total (auto)</label>
+          <input type="number" class="form-control"
+                 [value]="totalCalc()" readonly>
+          <div class="form-text">Se calcula: mano de obra + materiales.</div>
         </div>
 
         <div class="col-md-3">
-          <label class="form-label">Ganancias</label>
-          <input type="number" class="form-control" [(ngModel)]="form.ganancias" name="ganancias" min="0" step="1">
+          <label class="form-label">Ganancias (auto)</label>
+          <input type="number" class="form-control"
+                 [value]="gananciasCalc()" readonly>
+          <div class="form-text">Se calcula: total − materiales.</div>
         </div>
 
         <div class="col-12">

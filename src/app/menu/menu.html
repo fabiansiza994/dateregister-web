@@ -23,6 +23,11 @@
           <a class="nav-link" routerLink="/pacientes">Pacientes</a>
         </li>
         }
+        @if (role() === 'ADMIN') {
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/usuarios/">Usuarios</a>
+          </li>
+        }
         <li class="nav-item">
           <a class="nav-link" routerLink="/trabajos">Trabajos</a>
         </li>

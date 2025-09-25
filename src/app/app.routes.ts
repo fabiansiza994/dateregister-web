@@ -23,6 +23,12 @@ export const routes: Routes = [
       // dentro de children (mantén este orden)
       { path: 'trabajos', loadComponent: () => import('./trabajos/trabajos').then(m => m.JobsComponent) },
       { path: 'trabajos/nuevo', loadComponent: () => import('./trabajos/create-job.component').then(m => m.CreateJobComponent)  },
+      
+      { path: 'usuarios/nuevo', loadComponent: () => import('./usuarios/usuario-nuevo').then(m => m.UsuarioNuevoComponent) },
+      // app.routes.ts (dentro de children protegidas)
+{ path: 'usuarios', loadComponent: () => import('./usuarios/usuarios').then(m => m.UsuariosComponent) },
+
+
       // Si luego creas estas páginas:
       // { path: 'clientes', loadComponent: () => import('./clientes/clientes').then(m => m.Clientes) },
       // { path: 'trabajos', loadComponent: () => import('./trabajos/trabajos').then(m => m.Trabajos) },

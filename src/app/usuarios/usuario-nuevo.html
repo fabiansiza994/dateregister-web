@@ -1,0 +1,197 @@
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="fw-semibold mb-0">Crear usuario</h3>
+    <a routerLink="/modules" class="btn btn-link text-decoration-none px-0">&larr; Volver</a>
+  </div>
+
+  <!-- Progreso -->
+  <div class="mb-4">
+    <div class="d-flex justify-content-between small fw-semibold mb-1">
+      <span [class.text-primary]="step===1">1. Datos personales</span>
+      <span [class.text-primary]="step===2">2. Grupo</span>
+    </div>
+    <div class="progress" style="height: 8px;">
+      <div class="progress-bar" role="progressbar"
+           [style.width.%]="step===1 ? 50 : 100"></div>
+    </div>
+  </div>
+
+  <!-- Mensajes -->
+  @if (error()) {
+    <div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
+      <span class="fw-bold mt-1">⚠️</span>
+      <div>{{ error() }}</div>
+    </div>
+  }
+  @if (success()) {
+    <div class="alert alert-success d-flex align-items-start gap-2" role="alert">
+      <span class="fw-bold mt-1">✅</span>
+      <div>{{ success() }}</div>
+    </div>
+  }
+
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4">
+
+      <!-- STEP 1 -->
+      @if (step === 1) {
+        <form (submit)="$event.preventDefault(); goToStep(2)">
+          <h5 class="fw-semibold mb-3">1) Datos personales</h5>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Usuario *</label>
+              <input type="text" class="form-control"
+                     [class.is-invalid]="fieldErrors()['usuario']"
+                     [ngModel]="model().usuario" (ngModelChange)="onField('usuario', $event)" name="usuario"
+                     placeholder="jdoe" autocomplete="off" />
+              @if (fieldErrors()['usuario']) {
+                <div class="invalid-feedback">{{ fieldErrors()['usuario'] }}</div>
+              }
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Email *</label>
+              <input type="email" class="form-control"
+                     [class.is-invalid]="fieldErrors()['email']"
+                     [ngModel]="model().email" (ngModelChange)="onField('email', $event)" name="email"
+                     placeholder="usuario@correo.com" autocomplete="off" />
+              @if (fieldErrors()['email']) {
+                <div class="invalid-feedback">{{ fieldErrors()['email'] }}</div>
+              }
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Nombre *</label>
+              <input type="text" class="form-control"
+                     [class.is-invalid]="fieldErrors()['nombre']"
+                     [ngModel]="model().nombre" (ngModelChange)="onField('nombre', $event)" name="nombre"
+                     placeholder="Juan" autocomplete="off" />
+              @if (fieldErrors()['nombre']) {
+                <div class="invalid-feedback">{{ fieldErrors()['nombre'] }}</div>
+              }
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Apellido *</label>
+              <input type="text" class="form-control"
+                     [class.is-invalid]="fieldErrors()['apellido']"
+                     [ngModel]="model().apellido" (ngModelChange)="onField('apellido', $event)" name="apellido"
+                     placeholder="Pérez" autocomplete="off" />
+              @if (fieldErrors()['apellido']) {
+                <div class="invalid-feedback">{{ fieldErrors()['apellido'] }}</div>
+              }
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Contraseña *</label>
+              <input type="password" class="form-control"
+                     [class.is-invalid]="fieldErrors()['password']"
+                     [ngModel]="model().password" (ngModelChange)="onField('password', $event)" name="password"
+                     placeholder="••••••••" autocomplete="off" />
+              @if (fieldErrors()['password']) {
+                <div class="invalid-feedback">{{ fieldErrors()['password'] }}</div>
+              }
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Rol</label>
+              <input type="text" class="form-control" value="USER (id: 2)" readonly>
+              <!-- rol.id = 2 ya está fijo en el modelo -->
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button class="btn btn-primary" [disabled]="!isStep1Valid()" (click)="goToStep(2)">
+              Siguiente
+            </button>
+          </div>
+        </form>
+      }
+
+      <!-- STEP 2 -->
+      @if (step === 2) {
+        <form (submit)="$event.preventDefault(); submit()">
+          <h5 class="fw-semibold mb-3">2) Grupo</h5>
+
+          <div class="row g-3 align-items-end">
+            <div class="col-md-8">
+              <label class="form-label">Buscar grupos</label>
+              <div class="input-group">
+                <input type="text" class="form-control"
+                       [(ngModel)]="qGroup" name="qGroup" (keyup.enter)="loadGrupos()"
+                       placeholder="Nombre del grupo" autocomplete="off">
+                <button type="button" class="btn btn-outline-secondary" (click)="loadGrupos()">
+                  <i class="bi bi-search"></i>
+                </button>
+              </div>
+              @if (errorGrupos()) {
+                <div class="text-danger small mt-1">{{ errorGrupos() }}</div>
+              } @else {
+                <div class="form-text" *ngIf="totalGrupos() > 0">
+                  {{ totalGrupos() }} grupo(s) encontrados
+                </div>
+              }
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Seleccionar grupo *</label>
+              <select class="form-select"
+                      [class.is-invalid]="fieldErrors()['grupo.id']"
+                      [ngModel]="model().grupo.id" (ngModelChange)="onGrupoChange($event)" name="grupoId"
+                      [disabled]="loadingGrupos()">
+                <option [ngValue]="null" disabled>— Selecciona —</option>
+                <option *ngFor="let g of grupos()" [ngValue]="g.id">{{ g.nombre }}</option>
+              </select>
+              @if (fieldErrors()['grupo.id']) {
+                <div class="invalid-feedback">{{ fieldErrors()['grupo.id'] }}</div>
+              }
+            </div>
+          </div>
+
+          <!-- Resumen -->
+          <div class="mt-4">
+            <h6 class="fw-bold mb-2">Resumen</h6>
+            <ul class="list-group small">
+              <li class="list-group-item">
+                <strong>Usuario:</strong> {{ model().usuario }} — {{ model().nombre }} {{ model().apellido }}
+              </li>
+              <li class="list-group-item">
+                <strong>Email:</strong> {{ model().email }}
+              </li>
+              <li class="list-group-item">
+                <strong>Empresa ID:</strong> {{ model().empresa.id }}
+              </li>
+              <li class="list-group-item">
+                <strong>Grupo ID:</strong> {{ model().grupo.id ?? '—' }}
+              </li>
+              <li class="list-group-item">
+                <strong>Rol:</strong> USER (id: 2)
+              </li>
+            </ul>
+          </div>
+
+          <!-- (Opcional) Aceptar términos -->
+          <!--
+          <div class="form-check mt-3">
+            <input class="form-check-input" type="checkbox" id="terms" [(ngModel)]="acceptedTerms" name="terms">
+            <label class="form-check-label small" for="terms">
+              Confirmo la creación del usuario con el grupo seleccionado.
+            </label>
+          </div>
+          -->
+
+          <div class="d-flex justify-content-between gap-2 mt-4">
+            <button class="btn btn-outline-secondary" (click)="goToStep(1)" [disabled]="loading()">Atrás</button>
+            <button class="btn btn-success" [disabled]="!isStep2Valid() || loading()" (click)="submit()">
+              @if (loading()) {
+                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+              }
+              Crear usuario
+            </button>
+          </div>
+        </form>
+      }
+
+    </div>
+  </div>
+</div>
