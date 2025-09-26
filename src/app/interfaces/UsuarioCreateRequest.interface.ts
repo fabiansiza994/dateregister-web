@@ -10,6 +10,7 @@ export interface UsuarioCreateRequest {
     pais: { id: number | null };
     sector: { id: number | null };
   };
+  rol: { id: number },
   grupo: {
     nombre: string;
   };

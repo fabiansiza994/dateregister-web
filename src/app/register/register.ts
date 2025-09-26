@@ -39,7 +39,8 @@ export class Register implements OnInit {
       pais: { id: null },
       sector: { id: null }
     },
-    grupo: { nombre: '' }
+    grupo: { nombre: '' },
+    rol:   { id: 1 }
   };
 
   // Catálogos
@@ -192,7 +193,7 @@ export class Register implements OnInit {
       // ÉXITO → flash en login
       const idTx = res?.dataResponse?.idTx ?? '—';
       const status = res?.dataResponse?.response ?? 'SUCCESS';
-      const flash = `🎉 ¡Cuenta creada! (Tx: ${idTx}, Estado: ${status}). Ya puedes iniciar sesión.`;
+      const flash = `🎉 ¡Cuenta creada! (Estado: ${status}). Ya puedes iniciar sesión.`;
       this.router.navigate(['/login'], { state: { flash } });
 
     } catch (e: any) {

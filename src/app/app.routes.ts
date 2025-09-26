@@ -29,7 +29,7 @@ export const routes: Routes = [
       // app.routes.ts (dentro de children protegidas)
       { path: 'usuarios', loadComponent: () => import('./usuarios/usuarios').then(m => m.UsuariosComponent) },
       
-
+      { path: 'formas-pago', loadComponent: () => import('./method-of-payment/method-of-payment').then(m => m.MethodOfPaymentComponent) },
 
       // Si luego creas estas páginas:
       // { path: 'clientes', loadComponent: () => import('./clientes/clientes').then(m => m.Clientes) },

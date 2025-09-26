@@ -54,6 +54,7 @@ export class CreateJobComponent implements OnInit {
   sector = computed(() => (this._claims()?.sector ?? '').toUpperCase());
   role   = computed(() => (this._claims()?.role ?? '').toUpperCase());
   empresa = computed(() => this._claims()?.empresa ?? '');
+  empresaId = computed(() => Number(this._claims()?.empresaId ?? 0) || 0);
   user    = computed(() => this._claims()?.sub ?? '');
 
   // =========================
@@ -109,7 +110,7 @@ export class CreateJobComponent implements OnInit {
     this.auth.refreshFromStorage();
     this._claims.set(this.auth.claims());
 
-    this.loadFormasPago();
+    this.loadFormasPago(this.empresaId());
     this.recalc(); // inicializa totales
   }
 
@@ -226,11 +227,11 @@ export class CreateJobComponent implements OnInit {
   // =========================
   // Formas de pago
   // =========================
-  async loadFormasPago() {
+  async loadFormasPago(id: number) {
     if (!this.apiBase) return;
     this.mopLoading.set(true);
     try {
-      const url = `${this.apiBase}/mop/list`;                 // <- igual que tu versión original
+      const url = `${this.apiBase}/mop/list/${id}`;                 // <- igual que tu versión original
       const res: any = await firstValueFrom(this.http.get(url).pipe(timeout(10000)));
       this.formasPago = res?.data ?? [];
     } catch {
