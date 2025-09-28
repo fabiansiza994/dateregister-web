@@ -6,6 +6,8 @@ import { firstValueFrom, TimeoutError } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 import { ConfigService } from '../core/config.service';
 import { AuthService } from '../core/auth.service';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface FormaPago { id: number; formaPago: string; estado?: number; }
 interface ClienteMin { id: number; nombre: string; apellido?: string | null; }
@@ -99,6 +101,91 @@ export class JobDetailComponent implements OnInit {
     }
     this.id.set(id);
     this.loadDetail(id);
+  }
+
+  // ========= PDF =========
+  downloadPdf() {
+    const j = this.job();
+    if (!j) return;
+
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+
+    // --- Encabezado / Empresa ---
+    const empresa = this._claims()?.empresa || 'DataRegister';
+    const fecha = j.fecha || '';
+    const id = j.id;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text(String(empresa), 40, 50);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text(`Detalle de trabajo #${id}`, 40, 70);
+    doc.text(`Fecha: ${fecha}`, 40, 86);
+
+    // --- Cliente o Paciente ---
+    const sector = this.sector();
+    let persona = '—';
+    if (sector === 'SALUD' && j.paciente) {
+      persona = `${j.paciente.nombre ?? ''} ${j.paciente.apellido ?? ''}`.trim() || '—';
+      doc.text(`Paciente: ${j.paciente.documento} ${persona}`, 40, 102);
+    } else if (j.cliente) {
+      persona = `${j.cliente.nombre ?? ''} ${j.cliente.apellido ?? ''}`.trim() || '—';
+      doc.text(`Cliente: ${persona}`, 40, 102);
+    } else {
+      doc.text(`Cliente/Paciente: —`, 40, 102);
+    }
+
+    // Forma de pago y estado
+    const mop = j.formaPago?.formaPago || '—';
+    const estado = j.estado || '—';
+    doc.text(`Forma de pago: ${mop}`, 40, 118);
+    doc.text(`Estado: ${estado}`, 40, 134);
+
+    // --- Descripción (multilínea) ---
+    const desc = j.descripcionLabor || '—';
+    doc.setFont('helvetica', 'bold');
+    doc.text('Descripción:', 40, 164);
+    doc.setFont('helvetica', 'normal');
+    const descLines = doc.splitTextToSize(desc, 515); // ancho para margen dcho ≈ 40
+    doc.text(descLines, 40, 180);
+
+    // --- Tabla de valores ---
+    // Calculamos por si no vienen los campos
+    const manoObra = j.valorLabor ?? 0;
+    const materiales = j.valorMateriales ?? 0;
+    const total = typeof j.valorTotal === 'number'
+      ? j.valorTotal
+      : (Number(manoObra || 0) + Number(materiales || 0));
+
+    const fmt = (n: number | null | undefined) => this.formatMoney(Number(n ?? 0));
+
+    autoTable(doc, {
+      startY: 220 + (descLines.length > 1 ? (descLines.length - 1) * 12 : 0), // baja si la descr. es larga
+      head: [['Concepto', 'Valor']],
+      body: [
+        ['Mano de obra', fmt(manoObra)],
+        ['Materiales',   fmt(materiales)],
+        ['Total',        fmt(total)],
+      ],
+      styles: { font: 'helvetica', fontSize: 10 },
+      headStyles: { fillColor: [230, 230, 230] },
+      theme: 'striped',
+      margin: { left: 40, right: 40 },
+      tableWidth: 515,
+      columnStyles: { 1: { halign: 'right' } }
+    });
+
+    // --- Pie ---
+    const pageH = doc.internal.pageSize.getHeight();
+    doc.setFontSize(9);
+    doc.setTextColor(120);
+    doc.text('Generado por DataRegister', 40, pageH - 30);
+
+    // --- Guardar ---
+    const nombre = `detalle_trabajo_${id}_${fecha}.pdf`;
+    doc.save(nombre);
   }
 
   estadoBadge(estado?: string) {

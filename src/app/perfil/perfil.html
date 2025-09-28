@@ -1,0 +1,141 @@
+<div class="container py-4">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h3 class="fw-semibold mb-0">Mi perfil</h3>
+      <small class="text-secondary">Actualiza tu información y contraseña</small>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <div class="rounded-circle d-flex align-items-center justify-content-center bg-primary text-white fw-bold"
+           style="width:40px; height:40px;">
+        {{ initials() }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensajes -->
+  @if (error()) {
+    <div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
+      <i class="bi bi-exclamation-triangle mt-1"></i>
+      <div class="flex-grow-1">{{ error() }}</div>
+      <button type="button" class="btn-close ms-auto" (click)="error.set(null)"></button>
+    </div>
+  }
+  @if (success()) {
+    <div class="alert alert-success d-flex align-items-start gap-2" role="alert">
+      <i class="bi bi-check2-circle mt-1"></i>
+      <div class="flex-grow-1">{{ success() }}</div>
+      <button type="button" class="btn-close ms-auto" (click)="success.set(null)"></button>
+    </div>
+  }
+
+  <!-- CARD Perfil -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Usuario</label>
+          <input type="text" class="form-control" [value]="me()?.usuario || usernameClaim()" readonly>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Empresa</label>
+          <input type="text" class="form-control" [value]="me()?.empresa?.nombre || empresaClaim()" readonly>
+          <div class="form-text">
+            @if (me()?.empresa?.sectorNombre) { <span>Sector: {{ me()?.empresa?.sectorNombre }}</span> }
+            @if (me()?.empresa?.paisNombre)   { <span class="ms-2">País: {{ me()?.empresa?.paisNombre }}</span> }
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Rol</label>
+          <input type="text" class="form-control" [value]="me()?.rol?.nombre || roleClaim()" readonly>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Nombre</label>
+          <input type="text" class="form-control"
+                 [ngModel]="model().nombre"
+                 (ngModelChange)="setModel('nombre', $event)"
+                 name="nombre" autocomplete="off">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Apellido</label>
+          <input type="text" class="form-control"
+                 [ngModel]="model().apellido"
+                 (ngModelChange)="setModel('apellido', $event)"
+                 name="apellido" autocomplete="off">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control"
+                 [ngModel]="model().email"
+                 (ngModelChange)="setModel('email', $event)"
+                 name="email" autocomplete="off">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Grupo</label>
+          <input type="text" class="form-control" [value]="me()?.grupo?.nombre || '—'" readonly>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Intentos fallidos</label>
+          <input type="text" class="form-control" [value]="me()?.intentosFallidos ?? 0" readonly>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Estado</label>
+          <input type="text" class="form-control" [value]="me()?.bloqueado ? 'Bloqueado' : 'Activo'" readonly>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-footer border-0 d-flex justify-content-end gap-2">
+      <button class="btn btn-primary" (click)="saveProfile()" [disabled]="loading()">
+        @if (loading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+        Guardar cambios
+      </button>
+    </div>
+  </div>
+
+  <!-- CARD Cambiar contraseña -->
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body">
+      <h5 class="fw-semibold mb-3">Cambiar contraseña</h5>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Contraseña actual</label>
+          <input type="password" class="form-control"
+                 [ngModel]="pwd().oldPassword"
+                 (ngModelChange)="setPwd('oldPassword', $event)"
+                 name="oldPassword" autocomplete="current-password">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Nueva contraseña</label>
+          <input type="password" class="form-control"
+                 [ngModel]="pwd().newPassword"
+                 (ngModelChange)="setPwd('newPassword', $event)"
+                 name="newPassword" autocomplete="new-password">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Confirmar nueva contraseña</label>
+          <input type="password" class="form-control"
+                 [ngModel]="pwd2()"
+                 (ngModelChange)="pwd2.set($event)"
+                 name="newPassword2" autocomplete="new-password">
+        </div>
+      </div>
+    </div>
+    <div class="card-footer border-0 d-flex justify-content-end gap-2">
+      <button class="btn btn-outline-primary" (click)="changePassword()" [disabled]="loading()">
+        @if (loading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+        Actualizar contraseña
+      </button>
+    </div>
+  </div>
+
+</div>

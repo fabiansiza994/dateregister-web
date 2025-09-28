@@ -15,7 +15,7 @@ interface Cliente {
   email?: string;
   direccion?: string;
   telefono?: string;
-  estado: string;
+  estado: string; // 'ACTIVO' | 'INACTIVO'
 }
 
 @Component({
@@ -28,7 +28,8 @@ export class ClienteEditarComponent implements OnInit {
 
   // estado con signals
   loading = signal(false);
-  error = signal<string | null>(null);
+  error = signal<string | null>(null); // error global
+  fieldErrors = signal<Record<string, string>>({}); // errores por campo
   cliente = signal<Cliente | null>(null);
 
   private apiBase = '';
@@ -55,8 +56,9 @@ export class ClienteEditarComponent implements OnInit {
   async loadCliente(id: number) {
     this.loading.set(true);
     this.error.set(null);
+    this.fieldErrors.set({});
     try {
-      const url = `${this.apiBase}/client/detail/${id}`; // usa /detail/{id}
+      const url = `${this.apiBase}/client/detail/${id}`;
       const res = await firstValueFrom(
         this.http.get<{ data: Cliente }>(url).pipe(timeout(10000))
       );
@@ -70,22 +72,31 @@ export class ClienteEditarComponent implements OnInit {
     }
   }
 
+  // Actualizar un campo y limpiar el error de ese campo
+  onField<K extends keyof Cliente>(key: K, value: Cliente[K]) {
+    this.cliente.update(c => c ? ({ ...c, [key]: value }) as Cliente : c);
+    const fe = { ...this.fieldErrors() };
+    delete fe[String(key)];
+    this.fieldErrors.set(fe);
+  }
+
   async actualizar() {
     const c = this.cliente();
     if (!c) return;
 
     this.loading.set(true);
     this.error.set(null);
+    this.fieldErrors.set({});
 
     try {
       const url = `${this.apiBase}/client/update/${c.id}`;
       const payload = {
         identificacion: c.identificacion?.trim(),
         nombre: c.nombre?.trim(),
-        apellido: c.apellido?.trim() || '',
-        email: c.email?.trim() || '',
-        direccion: c.direccion?.trim() || '',
-        telefono: c.telefono?.trim() || '',
+        apellido: (c.apellido ?? '').trim(),
+        email: (c.email ?? '').trim(),
+        direccion: (c.direccion ?? '').trim(),
+        telefono: (c.telefono ?? '').trim(),
         estado: c.estado
       };
 
@@ -93,15 +104,36 @@ export class ClienteEditarComponent implements OnInit {
         this.http.put<{
           dataResponse?: { response?: 'SUCCESS' | 'ERROR' };
           error?: Array<{ descError?: string; msgError?: string }>;
+          message?: string;
         }>(url, payload).pipe(timeout(10000))
       );
 
       if (res?.dataResponse?.response === 'ERROR') {
-        const apiMsgs = res?.error?.map(e => e?.descError || e?.msgError).filter(Boolean).join(' | ');
-        throw new Error(apiMsgs || 'Actualización rechazada');
+        // Mapear errores por campo
+        const arr = res?.error ?? [];
+        if (arr.length > 0) {
+          const map: Record<string, string> = {};
+          arr.forEach(it => {
+            const field = (it?.msgError ?? '').trim() || 'global';
+            const msg   = (it?.descError ?? 'Error').trim();
+            if (field === 'global') {
+              this.error.set(msg);
+            } else {
+              map[field] = msg;
+            }
+          });
+          this.fieldErrors.set(map);
+          // ejemplo recibido:
+          // [{ codError:"E400", descError:"El apellido es obligatorio", msgError:"apellido" }]
+          return; // no navegamos si hay errores
+        }
+        // si no hay array de errores, mostrar un genérico
+        throw new Error(res?.message || 'Actualización rechazada');
       }
 
-      this.router.navigate(['/clientes']);
+      // éxito
+      this.router.navigate(['/clientes'], { state: { flash: '✅ Cliente actualizado.' } });
+
     } catch (e: any) {
       if (e instanceof TimeoutError) this.error.set('La actualización tardó demasiado. Intenta de nuevo.');
       else this.error.set(e?.message || e?.error?.message || 'No se pudo actualizar el cliente');
@@ -111,10 +143,13 @@ export class ClienteEditarComponent implements OnInit {
   }
 
   toggleEstado(ev: Event) {
-  const checked = (ev.target as HTMLInputElement).checked;
-  this.cliente.update(c => c ? { ...c, estado: checked ? 'ACTIVO' : 'INACTIVO' } : c);
-}
-
+    const checked = (ev.target as HTMLInputElement).checked;
+    this.cliente.update(c => c ? { ...c, estado: checked ? 'ACTIVO' : 'INACTIVO' } as Cliente : c);
+    // limpiar posible error de estado si lo hubiera en el futuro
+    const fe = { ...this.fieldErrors() };
+    delete fe['estado'];
+    this.fieldErrors.set(fe);
+  }
 
   volver() { this.router.navigate(['/clientes']); }
 }

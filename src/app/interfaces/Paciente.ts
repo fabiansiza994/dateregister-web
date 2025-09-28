@@ -6,6 +6,7 @@ interface Paciente {
   email?: string | null;
   telefono?: string | null;
   direccion?: string | null;
+  clienteNombre?: string | null;
   estado?: 'ACTIVO' | 'INACTIVO' | string;
 }
 

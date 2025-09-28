@@ -1,1 +1,27 @@
-/* You can add global styles to this file, and also import other style files */
+@import "driver.js/dist/driver.css";
+
+/* Driver por encima del sitio */
+.driver-overlay {               /* sombra */
+  z-index: 1990 !important;
+}
+.driver-stage,
+.driver-popover,
+.driver-highlighted-element,
+.driver-fix-stacking {          /* recuadro y popover del tour */
+  z-index: 1995 !important;
+}
+
+/* Durante el tour, eleva modales (Bootstrap/Material) por encima del overlay del tour */
+.tour-elevate .modal,
+.tour-elevate .cdk-overlay-container {
+  z-index: 2000 !important;     /* > driver-overlay y > driver-popover si lo necesitas */
+}
+.tour-elevate .modal-backdrop {
+  z-index: 1985 !important;     /* debajo del overlay del tour para que no lo tape */
+}
+
+/* Evita stacking contexts raros en la navbar */
+.navbar, .navbar * {
+  transform: none !important;
+  filter: none !important;
+}

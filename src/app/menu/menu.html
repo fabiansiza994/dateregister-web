@@ -20,8 +20,8 @@
       <!-- Left: navegación -->
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
-          <a class="nav-link d-flex align-items-center gap-1" routerLink="/clientes" routerLinkActive="active"
-            (click)="close()">
+          <a class="nav-link d-flex align-items-center gap-1" id="menu-clientes" routerLink="/clientes"
+            routerLinkActive="active" (click)="close()">
             <i class="bi bi-people"></i><span>Clientes</span>
           </a>
         </li>
@@ -44,15 +44,22 @@
           <ul class="dropdown-menu shadow-sm" aria-labelledby="adminMenu">
             <li>
               <a class="dropdown-item d-flex align-items-center gap-2" routerLink="/usuarios/" (click)="close()">
-                <i class="bi bi-people-gear"></i><span>Usuarios</span>
+                <i class="bi bi-people"></i><span>Usuarios</span>
               </a>
             </li>
             <!-- futuro: Grupos, Seguridad, etc. -->
             <li>
-              <a class="dropdown-item d-flex align-items-center gap-2" routerLink="/formas-pago" (click)="close()">
+              <a class="dropdown-item d-flex align-items-center gap-2" id="menu-pagos" routerLink="/formas-pago"
+                (click)="close()">
                 <i class="bi bi-cash-coin"></i><span>Formas de pago</span>
               </a>
             </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2" routerLink="/grupos" (click)="close()">
+                <i class="bi bi-diagram-3"></i><span>Grupos</span>
+              </a>
+            </li>
+
           </ul>
         </li>
         }
@@ -87,6 +94,7 @@
             <li>
               <a class="dropdown-item d-flex align-items-center gap-2" routerLink="/perfil" (click)="close()">
                 <i class="bi bi-person"></i><span>Mi perfil</span>
+                
               </a>
             </li>
             <li>

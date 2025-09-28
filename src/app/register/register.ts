@@ -22,7 +22,7 @@ import { timeout } from 'rxjs/operators';
   styleUrls: ['./register.css']
 })
 export class Register implements OnInit {
-  // Paso actual (puede ser prop normal)
+  // Paso actual
   private _step = 1;
   get step() { return this._step; }
 
@@ -40,7 +40,7 @@ export class Register implements OnInit {
       sector: { id: null }
     },
     grupo: { nombre: '' },
-    rol:   { id: 1 }
+    rol: { id: 1 }
   };
 
   // Catálogos
@@ -58,13 +58,17 @@ export class Register implements OnInit {
   loading = signal(false);
   error = signal<string | null>(null);
   successMessage = signal<string | null>(null);
-  acceptedTerms = false; // ngModel lo usa como boolean normal
+  acceptedTerms = false;
+
+  // === NUEVO: confirmación de password y control de autocompletado de usuario ===
+  confirmPassword = '';
+  private userEditedUsername = false;
 
   constructor(
     private http: HttpClient,
     private router: Router,
     private cfg: ConfigService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadPaises();
@@ -140,10 +144,52 @@ export class Register implements OnInit {
     }
   }
 
+  // ---------- Helpers usuario sugerido ----------
+  private normalizeToken(s?: string): string {
+    if (!s) return '';
+    return s
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // quita acentos
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, '')                     // solo letras/números/espacios
+      .trim()
+      .split(/\s+/)[0] || '';                          // primer token
+  }
+
+  private computeUsername(): string {
+    const first = this.normalizeToken(this.model.nombre);
+    const last = this.normalizeToken(this.model.apellido);
+    if (!first || !last) return '';
+    return `${first}.${last}`;
+  }
+
+  updateSuggestedUser(): void {
+    if (this.userEditedUsername) return;
+    const sugg = this.computeUsername();
+    if (sugg) this.model.usuario = sugg;
+  }
+
+  onUsuarioInput(): void {
+    this.userEditedUsername = true;
+  }
+
+  get invalidUsername(): boolean {
+    const u = this.model.usuario ?? '';
+    if (!u) return false; // no mostramos advertencia si está vacío
+    return !/^[a-z0-9.]+$/.test(u);
+  }
+
   // ---------- Validaciones ----------
+  get passwordsMatch(): boolean {
+    return !!this.model.password && this.model.password === this.confirmPassword;
+  }
+
   isStep1Valid(): boolean {
     const m = this.model;
-    return !!m.usuario && !!m.email && !!m.nombre && !!m.apellido && !!m.password;
+    const baseOk = !!m.usuario && !!m.email && !!m.nombre && !!m.apellido && !!m.password;
+    // (Opcional) Forzar mínimo de 8 caracteres:
+    // const strongEnough = (m.password?.length ?? 0) >= 8;
+    // return baseOk && this.passwordsMatch && strongEnough;
+    return baseOk && this.passwordsMatch;
   }
 
   isStep2Valid(): boolean {
@@ -191,22 +237,18 @@ export class Register implements OnInit {
       }
 
       // ÉXITO → flash en login
-      const idTx = res?.dataResponse?.idTx ?? '—';
       const status = res?.dataResponse?.response ?? 'SUCCESS';
       const flash = `🎉 ¡Cuenta creada! (Estado: ${status}). Ya puedes iniciar sesión.`;
       this.router.navigate(['/login'], { state: { flash } });
 
     } catch (e: any) {
-      // Timeouts
       if (e instanceof TimeoutError) {
         this.error.set('La solicitud tardó demasiado. Intenta de nuevo en un momento.');
       } else {
-        // Extrae mensajes del backend (prioriza msgError)
         const be: CreateErrorResponse | undefined = e?.error;
         const apiMsgs = be?.error?.map(x => x?.msgError || x?.descError).filter(Boolean) ?? [];
         const messageFromApi = apiMsgs.join(' | ');
 
-        // Mover paso por código (opcional)
         const code = be?.error?.[0]?.descError;
         if (code === 'E001') this._step = 1; // Usuario ya existe
         if (code === 'E002') this._step = 2; // NIT ya existe

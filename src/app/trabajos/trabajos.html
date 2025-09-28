@@ -5,9 +5,9 @@
     <small class="text-secondary">Busca por descripción o nombre del cliente</small>
   </div>
   <div class="mt-2 mt-sm-0">
-    <a class="btn btn-primary" routerLink="/trabajos/nuevo">
+    <!-- <a class="btn btn-primary" routerLink="/trabajos/nuevo">
       <i class="bi bi-plus-circle me-1"></i> Crear trabajo
-    </a>
+    </a> -->
   </div>
 </div>
 
@@ -28,7 +28,6 @@
           Limpiar
         </button>
       </div>
-
       <div class="col-md-4 d-flex align-items-end justify-content-md-end">
         <div class="d-flex align-items-center gap-2">
           <label class="text-secondary small mb-0">Orden:</label>
@@ -53,13 +52,29 @@
     </div>
   </div>
 </form>
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
 
+    <div class="mt-2 mt-sm-0">
+       <a class="btn btn-primary" routerLink="/trabajos/nuevo">
+      <i class="bi bi-plus-circle me-1"></i> Crear trabajo
+    </a>
+    </div>
+</div>
 <!-- 🔴 Error -->
 @if (error()) {
 <div class="alert alert-danger d-flex align-items-start gap-2 rounded-4 shadow-sm" role="alert">
   <i class="bi bi-exclamation-triangle mt-1"></i>
   <div class="flex-grow-1">{{ error() }}</div>
   <button type="button" class="btn-close" aria-label="Cerrar" (click)="error.set(null)"></button>
+</div>
+}
+
+<!-- 🟢 Success -->
+@if (success()) {
+<div class="alert alert-success d-flex align-items-start gap-2 rounded-4 shadow-sm" role="alert">
+  <i class="bi bi-check2-circle mt-1"></i>
+  <div class="flex-grow-1">{{ success() }}</div>
+  <button type="button" class="btn-close" aria-label="Cerrar" (click)="success.set(null)"></button>
 </div>
 }
 
@@ -70,14 +85,13 @@
       <tr>
         <th style="width:70px;">#</th>
         <th (click)="changeSort('fecha')" role="button">Fecha</th>
-
         <th>Cliente</th>
         @if (sector() === 'SALUD') {
-        <th>Paciente</th>
+          <th>Paciente</th>
         }
         <th (click)="changeSort('valorTotal')" role="button">Valor</th>
         <th>Estado</th>
-        <th style="width:160px;">Acciones</th>
+        <th style="width:220px;">Acciones</th>
       </tr>
     </thead>
     <tbody>
@@ -100,32 +114,33 @@
         <td class="text-secondary">{{ j.rowNumber }}</td>
         <td>{{ j.fecha }}</td>
 
-
-        <!-- Cliente -->
         <td>
           <i class="bi bi-person me-1 text-muted"></i>
           {{ j.cliente?.nombre }} <span class="text-secondary">{{ j.cliente?.apellido || '' }}</span>
         </td>
+
         @if (sector() === 'SALUD') {
-        <!-- 👇 Paciente (NUEVO TD) -->
         <td>
           @if (j.paciente) {
-          <i class="bi bi-heart-pulse me-1 text-danger"></i>
-          {{ j.paciente.nombre }} <span class="text-secondary">{{ j.paciente.apellido || '' }}</span>
+            <i class="bi bi-heart-pulse me-1 text-danger"></i>
+            {{ j.paciente.nombre }} <span class="text-secondary">{{ j.paciente.apellido || '' }}</span>
           } @else { <span class="text-secondary">No se asigno paciente</span>}
         </td>
         }
+
         <td class="text-nowrap">{{ formatMoney(j.valorTotal) }}</td>
+
         <td>
           <span [class]="estadoBadge(j.estado)">{{ j.estado || '—' }}</span>
         </td>
 
-
         <td>
           <div class="btn-group btn-group-sm">
             <button class="btn btn-outline-info" (click)="verTrabajo(j)"><i class="bi bi-eye"></i> Ver</button>
-            <button class="btn btn-outline-primary" (click)="editarTrabajo(j)"><i class="bi bi-pencil"></i>
-              Editar</button>
+            <button class="btn btn-outline-primary" (click)="editarTrabajo(j)"><i class="bi bi-pencil"></i> Editar</button>
+            <button class="btn btn-outline-danger" (click)="openConfirm(j)" [disabled]="loading()">
+              <i class="bi bi-trash"></i> Eliminar
+            </button>
           </div>
         </td>
       </tr>
@@ -157,7 +172,7 @@
               <div class="small text-secondary">#{{ j.rowNumber }}</div>
               <h6 class="mb-0 fw-semibold">{{ j.descripcionLabor }}</h6>
               <div class="small text-secondary">{{ j.fecha }}</div>
-            </div>  
+            </div>
           </div>
 
           <ul class="list-unstyled mb-0 small">
@@ -176,6 +191,7 @@
               <span class="ms-1">
                 <span [class]="estadoBadge(j.estado)">{{ j.estado || '—' }}</span>
               </span>
+            </li>
             <li class="mb-1">
               <span class="text-secondary">Valor:</span>
               <span class="ms-1">{{ formatMoney(j.valorTotal) }}</span>
@@ -194,6 +210,9 @@
               </button>
               <button class="btn btn-sm btn-outline-primary" (click)="editarTrabajo(j)">
                 <i class="bi bi-pencil"></i> Editar
+              </button>
+              <button class="btn btn-sm btn-outline-danger" (click)="openConfirm(j)">
+                <i class="bi bi-trash"></i> Eliminar
               </button>
             </div>
           </div>
@@ -219,3 +238,42 @@
       [disabled]="page()>=totalPages() || loading()">»</button>
   </div>
 </div>
+
+<!-- Modal Confirmación -->
+<div class="modal fade"
+     tabindex="-1"
+     [class.show]="confirmOpen()"
+     [style.display]="confirmOpen() ? 'block' : 'none'"
+     aria-modal="true" role="dialog">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow-lg rounded-4 border-0">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">
+          <i class="bi bi-trash me-2 text-danger"></i>
+          Confirmar eliminación
+        </h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="closeConfirm()"></button>
+      </div>
+
+      <div class="modal-body">
+        @if (jobToDelete()) {
+          <p class="mb-1">
+            ¿Eliminar el trabajo <span class="fw-semibold">#{{ jobToDelete()?.id }}</span>?
+          </p>
+          <p class="small text-secondary mb-0">Esta acción no se puede deshacer.</p>
+        } @else {
+          <p>¿Seguro que deseas eliminar este trabajo?</p>
+        }
+      </div>
+
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-light" (click)="closeConfirm()" [disabled]="deleting()">Cancelar</button>
+        <button type="button" class="btn btn-danger" (click)="confirmDelete()" [disabled]="deleting()">
+          @if (deleting()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="confirmOpen()" *ngIf="confirmOpen()"></div>

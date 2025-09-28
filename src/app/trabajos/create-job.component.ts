@@ -2,18 +2,20 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpEventType, HttpHeaders } from '@angular/common/http';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom, TimeoutError } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 import { ConfigService } from '../core/config.service';
 import { AuthService } from '../core/auth.service';
 
 import { ClientPickerComponent } from '../shared/client-picker.component';
-import { PatientPickerComponent } from '../shared/patient-picker.component'; // <- añade este archivo como te pasé
+import { PatientPickerComponent } from '../shared/patient-picker.component';
 
 type FotoKey = 'foto1' | 'foto2' | 'foto3' | 'foto4';
+type JobEstado = 'PAGO' | 'PENDIENTE' | 'CANCELADO';
 
 interface CreateJobPayload {
+  id?: number;               // requerido en UPDATE
   fecha: string;             // "YYYY-MM-DD"
   valorLabor?: number;
   valorMateriales?: number;
@@ -23,6 +25,7 @@ interface CreateJobPayload {
   clienteId: number;
   pacienteId?: number;
   formaPagoId: number;
+  estado?: JobEstado;        // 👈 NUEVO (solo visible en edición)
 }
 
 interface FormaPago { id: number; formaPago: string; estado?: number; }
@@ -40,6 +43,30 @@ export interface PacienteLite {
   apellido?: string | null;
 }
 
+interface JobDetail {
+  id: number;
+  fecha: string;
+  valorTotal: number;
+  descripcionLabor: string;
+  cliente?: { id: number; nombre: string; apellido?: string|null } | null;
+  paciente?: { id: number; nombre: string; apellido?: string|null; clienteId?: number|null } | null;
+  formaPago?: { id: number; formaPago: string } | null;
+  valorLabor?: number | null;
+  valorMateriales?: number | null;
+  ganancias?: number | null;
+  estado?: JobEstado | null;     // 👈 NUEVO
+  foto1?: string | null;
+  foto2?: string | null;
+  foto3?: string | null;
+  foto4?: string | null;
+}
+interface JobDetailOk {
+  dataResponse: { response: 'SUCCESS'|'ERROR'; idTx?: string|null };
+  data?: JobDetail;
+  message?: string;
+  error?: Array<{ descError?: string; msgError?: string }>;
+}
+
 @Component({
   selector: 'app-crear-trabajo',
   standalone: true,
@@ -47,9 +74,6 @@ export interface PacienteLite {
   templateUrl: './create-job.html',
 })
 export class CreateJobComponent implements OnInit {
-  // =========================
-  // Claims como signals
-  // =========================
   private readonly _claims = signal<any | null>(null);
   sector = computed(() => (this._claims()?.sector ?? '').toUpperCase());
   role   = computed(() => (this._claims()?.role ?? '').toUpperCase());
@@ -57,9 +81,9 @@ export class CreateJobComponent implements OnInit {
   empresaId = computed(() => Number(this._claims()?.empresaId ?? 0) || 0);
   user    = computed(() => this._claims()?.sub ?? '');
 
-  // =========================
-  // Form model
-  // =========================
+  private _jobId = signal<number|null>(null);
+  isEdit = computed(() => this._jobId() !== null);
+
   form: CreateJobPayload = {
     fecha: '',
     valorLabor: undefined,
@@ -70,74 +94,92 @@ export class CreateJobComponent implements OnInit {
     clienteId: 0,
     pacienteId: undefined,
     formaPagoId: 0,
+    estado: undefined,        // 👈 se usa en edición
   };
 
-  // archivos y previews
   files: Partial<Record<FotoKey, File>> = {};
   previews: Partial<Record<FotoKey, string>> = {};
+  existingPhotos: Partial<Record<FotoKey, string>> = {};
 
-  // UI state
   loading = signal(false);
   error = signal<string | null>(null);
   progress = signal(0);
 
-  // Cliente (modal)
   clientModalOpen = signal(false);
   selectedClient: ClienteLite | null = null;
 
-  // Paciente (modal)
   patientModalOpen = signal(false);
   selectedPatient: PacienteLite | null = null;
 
-  // Formas de pago
   mopLoading = signal(false);
   formasPago: FormaPago[] = [];
 
-  // Base de API
   apiBase = '';
+
+  // Opciones de estado para el select
+  readonly estadoOptions: JobEstado[] = ['PAGO', 'PENDIENTE', 'CANCELADO'];
 
   constructor(
     private http: HttpClient,
     private cfg: ConfigService,
     private router: Router,
-    private auth: AuthService
+    private auth: AuthService,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     this.apiBase = this.cfg.get<string>('apiBaseUrl', '');
-
-    // Cargar claims desde AuthService (SIN usar token() externo)
     this.auth.refreshFromStorage();
     this._claims.set(this.auth.claims());
 
+    const idParam = this.route.snapshot.paramMap.get('id');
+    const id = idParam ? Number(idParam) : NaN;
+    if (!Number.isNaN(id)) {
+      this._jobId.set(id);
+    }
+
     this.loadFormasPago(this.empresaId());
-    this.recalc(); // inicializa totales
+    this.recalc();
+
+    if (this.isEdit()) {
+      this.loadDetail(this._jobId()!);
+    }
   }
 
-  // =========================
-  // Helpers numéricos/calculados
-  // =========================
   private num(v: any): number {
     const n = Number(v);
     return Number.isFinite(n) ? n : 0;
   }
-
-  totalCalc(): number {
-    return this.num(this.form.valorLabor) + this.num(this.form.valorMateriales);
-  }
-
-  gananciasCalc(): number {
-    return this.totalCalc() - this.num(this.form.valorMateriales);
-  }
-
+  totalCalc(): number { return this.num(this.form.valorLabor) + this.num(this.form.valorMateriales); }
+  gananciasCalc(): number { return this.totalCalc() - this.num(this.form.valorMateriales); }
   recalc(): void {
     this.form.valorTotal = this.totalCalc();
     this.form.ganancias = this.gananciasCalc();
   }
 
-  // =========================
-  // Utilidades
-  // =========================
+  // ====== Formateo pesos (es-CO) ======
+  private nf = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
+
+  formatPeso(v?: number | null): string {
+    const n = Number(v ?? 0);
+    return this.nf.format(Number.isFinite(n) ? Math.trunc(n) : 0);
+  }
+
+  parsePeso(input: any): number {
+    // elimina separadores de miles (.) y normaliza coma decimal a punto
+    const raw = String(input ?? '')
+      .replace(/\s+/g, '')
+      .replace(/\./g, '')
+      .replace(/,/g, '.');
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  onMoneyInput<K extends 'valorLabor'|'valorMateriales'>(key: K, value: string) {
+    this.form[key] = this.parsePeso(value);
+    this.recalc();
+  }
+
   get tokenStr(): string | null { return localStorage.getItem('token'); }
 
   onFileChange(ev: Event, key: FotoKey) {
@@ -155,7 +197,9 @@ export class CreateJobComponent implements OnInit {
   }
 
   resetForm() {
+    const keepId = this.isEdit() ? this._jobId()! : undefined;
     this.form = {
+      id: keepId,
       fecha: '',
       valorLabor: undefined,
       valorMateriales: undefined,
@@ -165,9 +209,11 @@ export class CreateJobComponent implements OnInit {
       clienteId: 0,
       pacienteId: undefined,
       formaPagoId: 0,
+      estado: this.isEdit() ? 'PENDIENTE' : undefined, // default amigable
     };
     this.files = {};
     this.previews = {};
+    this.existingPhotos = {};
     this.error.set(null);
     this.progress.set(0);
     this.selectedClient = null;
@@ -181,27 +227,20 @@ export class CreateJobComponent implements OnInit {
     if (!this.form.formaPagoId) return 'Debes seleccionar una forma de pago.';
     if (!(this.num(this.form.valorTotal) >= 0)) return 'El valor total debe ser un número válido.';
 
-    // siempre se requiere clienteId (tu backend lo necesita)
-  if (!this.form.clienteId) {
-    // si estabas en SALUD y elegiste paciente sin clienteId, lo explicitamos:
-    if (this.sector() === 'SALUD') {
-      return 'El paciente seleccionado no tiene cliente asociado (clienteId). Selecciona otro paciente o asócialo a un cliente.';
+    if (!this.form.clienteId) {
+      if (this.sector() === 'SALUD') {
+        return 'El paciente seleccionado no tiene cliente asociado (clienteId). Selecciona otro paciente o asócialo a un cliente.';
+      }
+      return 'Debes seleccionar un cliente.';
     }
-    return 'Debes seleccionar un cliente.';
-  }
+    if (this.sector() === 'SALUD' && !this.form.pacienteId) {
+      return 'Debes seleccionar un paciente.';
+    }
 
-    // Validación según sector (computed)
-    if (this.sector() === 'SALUD') {
-      if (!this.form.pacienteId) return 'Debes seleccionar un paciente.';
-    } else {
-      if (!this.form.clienteId) return 'Debes seleccionar un cliente.';
-    }
+    // En edición permitimos estado; si lo envían vacío, lo ignora el BE.
     return null;
   }
 
-  // =========================
-  // Cliente (modal)
-  // =========================
   openClientModal() { this.clientModalOpen.set(true); }
   onClientPicked(c: ClienteLite) {
     this.selectedClient = { id: c.id, nombre: c.nombre, apellido: c.apellido ?? null };
@@ -211,9 +250,6 @@ export class CreateJobComponent implements OnInit {
   onClientClose() { this.clientModalOpen.set(false); }
   clearClient() { this.selectedClient = null; this.form.clienteId = 0; }
 
-  // =========================
-  // Paciente (modal)
-  // =========================
   openPatientModal() { this.patientModalOpen.set(true); }
   onPatientPicked(p: PacienteLite) {
     this.selectedPatient = { id: p.id, nombre: p.nombre, apellido: p.apellido ?? null };
@@ -224,14 +260,11 @@ export class CreateJobComponent implements OnInit {
   onPatientClose() { this.patientModalOpen.set(false); }
   clearPatient() { this.selectedPatient = null; this.form.pacienteId = undefined; }
 
-  // =========================
-  // Formas de pago
-  // =========================
   async loadFormasPago(id: number) {
     if (!this.apiBase) return;
     this.mopLoading.set(true);
     try {
-      const url = `${this.apiBase}/mop/list/${id}`;                 // <- igual que tu versión original
+      const url = `${this.apiBase}/mop/list/${id}`;
       const res: any = await firstValueFrom(this.http.get(url).pipe(timeout(10000)));
       this.formasPago = res?.data ?? [];
     } catch {
@@ -241,19 +274,62 @@ export class CreateJobComponent implements OnInit {
     }
   }
 
-  // =========================
-  // Crear trabajo
-  // =========================
-  async create() {
-    // asegura que los campos calculados estén sincronizados
-    this.recalc();
+  async loadDetail(jobId: number) {
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      const url = `${this.apiBase}/job/detail/${jobId}`;
+      const res = await firstValueFrom(this.http.get<JobDetailOk>(url).pipe(timeout(12000)));
+      if (res?.dataResponse?.response === 'ERROR') {
+        const api = res?.error?.map(x => x?.descError || x?.msgError)?.filter(Boolean)?.join(' | ');
+        throw new Error(api || res?.message || 'No fue posible cargar el trabajo.');
+      }
+      const j = res?.data!;
+      this.form = {
+        id: j.id,
+        fecha: j.fecha,
+        descripcionLabor: j.descripcionLabor,
+        valorLabor: j.valorLabor ?? undefined,
+        valorMateriales: j.valorMateriales ?? undefined,
+        valorTotal: j.valorTotal,
+        ganancias: j.ganancias ?? undefined,
+        clienteId: j.cliente?.id ?? 0,
+        pacienteId: j.paciente?.id ?? undefined,
+        formaPagoId: j.formaPago?.id ?? 0,
+        estado: (j.estado as JobEstado) ?? 'PENDIENTE', // 👈 precarga estado
+      };
+      this.selectedClient = j.cliente ? {
+        id: j.cliente.id, nombre: j.cliente.nombre, apellido: j.cliente.apellido ?? null
+      } : null;
+      this.selectedPatient = j.paciente ? {
+        id: j.paciente.id, nombre: j.paciente.nombre, apellido: j.paciente.apellido ?? null
+      } : null;
 
+      this.existingPhotos = {
+        foto1: j.foto1 || undefined,
+        foto2: j.foto2 || undefined,
+        foto3: j.foto3 || undefined,
+        foto4: j.foto4 || undefined,
+      };
+
+    } catch (e:any) {
+      this.error.set(e?.error?.message || e?.message || 'Error al cargar el trabajo.');
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  async submit() {
+    this.recalc();
     const v = this.validate();
     if (v) { this.error.set(v); return; }
+    if (this.isEdit()) return this.update();
+    return this.create();
+  }
 
+  async create() {
     try {
       if (!this.apiBase) throw new Error('Config no cargada: falta apiBaseUrl');
-
       const token = this.tokenStr;
       if (!token) { this.error.set('No hay sesión activa (token). Inicia sesión.'); return; }
 
@@ -293,12 +369,66 @@ export class CreateJobComponent implements OnInit {
         });
       });
 
-      // Éxito
       this.router.navigate(['/trabajos'], { state: { flash: '✅ Trabajo creado.' } });
 
     } catch (e: any) {
       if (e instanceof TimeoutError) this.error.set('La carga tardó demasiado. Intenta de nuevo.');
       else this.error.set(e?.error?.message || e?.message || 'No se pudo crear el trabajo.');
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  async update() {
+    try {
+      if (!this.apiBase) throw new Error('Config no cargada: falta apiBaseUrl');
+      const token = this.tokenStr;
+      if (!token) { this.error.set('No hay sesión activa (token). Inicia sesión.'); return; }
+      if (!this.form.id) { this.error.set('ID de trabajo inválido.'); return; }
+
+      // Asegura que el payload lleve el mismo id del path
+      const fd = new FormData();
+      const payload = { ...this.form, id: this.form.id };
+      const payloadBlob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+      fd.append('payload', payloadBlob);
+
+      (['foto1', 'foto2', 'foto3', 'foto4'] as const).forEach(k => {
+        if (this.files[k]) fd.append(k, this.files[k]!);
+      });
+
+      this.loading.set(true);
+      this.progress.set(0);
+      this.error.set(null);
+
+      const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+      const url = `${this.apiBase}/job/update/${this.form.id}`; // 👈 path con {id}
+
+      await new Promise<void>((resolve, reject) => {
+        this.http.put(url, fd, {
+          headers,
+          reportProgress: true,
+          observe: 'events',
+        })
+        .pipe(timeout(30000))
+        .subscribe({
+          next: (event) => {
+            if (event.type === HttpEventType.UploadProgress && event.total) {
+              const pct = Math.round((100 * event.loaded) / event.total);
+              this.progress.set(pct);
+            } else if (event.type === HttpEventType.Response) {
+              resolve();
+            }
+          },
+          error: (e) => reject(e),
+          complete: () => resolve()
+        });
+      });
+
+      this.router.navigate(['/trabajos', this.form.id], { state: { flash: '✅ Cambios guardados.' } });
+
+    } catch (e: any) {
+      if (e instanceof TimeoutError) this.error.set('La actualización tardó demasiado. Intenta de nuevo.');
+      else this.error.set(e?.error?.message || e?.message || 'No se pudo actualizar el trabajo.');
     } finally {
       this.loading.set(false);
     }

@@ -93,6 +93,45 @@ export class UsuarioNuevoComponent implements OnInit {
   errorPaises   = signal<string|null>(null);
   errorSectores = signal<string|null>(null);
 
+  // ====== Lógica de autogenerar usuario (como en register) ======
+  private userEditedUsername = false;
+
+  private normalizeToken(s?: string): string {
+    if (!s) return '';
+    return s
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // quita acentos
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, '')                     // solo letras/números/espacios
+      .trim()
+      .split(/\s+/)[0] || '';                          // primer token
+  }
+
+  private computeUsername(): string {
+    const first = this.normalizeToken(this.model().nombre);
+    const last  = this.normalizeToken(this.model().apellido);
+    if (!first || !last) return '';
+    return `${first}.${last}`;
+  }
+
+  updateSuggestedUser(): void {
+    if (this.userEditedUsername) return; // no sobrescribir si el usuario ya editó
+    const sugg = this.computeUsername();
+    if (sugg) {
+      this.model.update(m => ({ ...m, usuario: sugg }));
+      this.clearFieldError('usuario');
+    }
+  }
+
+  onUsuarioInput(): void {
+    this.userEditedUsername = true;
+  }
+
+  invalidUsername = computed(() => {
+    const u = this.model().usuario ?? '';
+    if (!u) return false;
+    return !/^[a-z0-9.]+$/.test(u);
+  });
+
   // Validaciones
   isStep1Valid = computed(() => {
     const m = this.model();

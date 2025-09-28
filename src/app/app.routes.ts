@@ -24,13 +24,15 @@ export const routes: Routes = [
       { path: 'trabajos', loadComponent: () => import('./trabajos/trabajos').then(m => m.JobsComponent) },
       { path: 'trabajos/nuevo', loadComponent: () => import('./trabajos/create-job.component').then(m => m.CreateJobComponent) },
       { path: 'trabajos/:id', loadComponent: () => import('./trabajos/job-detail.component').then(m => m.JobDetailComponent) },
-
+      { path: 'trabajos/:id/editar', loadComponent: () => import('./trabajos/create-job.component').then(m => m.CreateJobComponent) },
       { path: 'usuarios/nuevo', loadComponent: () => import('./usuarios/usuario-nuevo').then(m => m.UsuarioNuevoComponent) },
       // app.routes.ts (dentro de children protegidas)
       { path: 'usuarios', loadComponent: () => import('./usuarios/usuarios').then(m => m.UsuariosComponent) },
-      
-      { path: 'formas-pago', loadComponent: () => import('./method-of-payment/method-of-payment').then(m => m.MethodOfPaymentComponent) },
 
+      { path: 'formas-pago', loadComponent: () => import('./method-of-payment/method-of-payment').then(m => m.MethodOfPaymentComponent) },
+      { path: 'grupos', loadComponent: () => import('./grupos/grupos').then(m => m.GruposComponent) },
+      { path: 'reportes', loadComponent: () => import('./reportes-component/reportes-component').then(m => m.ReportesComponent) },
+    { path: 'perfil', loadComponent: () => import('./perfil/perfil').then(m => m.PerfilComponent) },
       // Si luego creas estas páginas:
       // { path: 'clientes', loadComponent: () => import('./clientes/clientes').then(m => m.Clientes) },
       // { path: 'trabajos', loadComponent: () => import('./trabajos/trabajos').then(m => m.Trabajos) },

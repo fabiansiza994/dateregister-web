@@ -49,7 +49,7 @@
                 <tr>
                   <th style="width:70px;">#</th>
                   <th>Documento</th>
-                  <th>Nombre</th>
+                  <th>Cliente/Paciente</th>
                   <th>Email</th>
                   <th>Teléfono</th>
                   <th style="width:120px;">Acción</th>
@@ -72,7 +72,8 @@
                       <tr>
                         <td class="text-secondary">{{ p.row }}</td>
                         <td class="text-monospace">{{ p.documento || '—' }}</td>
-                        <td class="fw-semibold">{{ p.nombre }} {{ p.apellido || '' }}</td>
+                     
+                         <td><span class="fw-semibold">{{ clientLabel(p) }}</span> <span>{{ pacientLabel(p) }}</span></td>
                         <td>{{ p.email || '—' }}</td>
                         <td>{{ p.telefono || '—' }}</td>
                         <td>
@@ -148,7 +149,6 @@
             </div>
 
             <div class="col-12 d-flex justify-content-end gap-2">
-              <!-- 👇 sin "as any" -->
               <button type="button" class="btn btn-light"
                       (click)="createForm={ nombre:'', apellido:'', documento:'', telefono:'', email:'', direccion:'', clienteId: null }"
                       [disabled]="creating()">

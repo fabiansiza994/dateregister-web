@@ -5,10 +5,10 @@
     <small class="text-secondary">Busca por nombre o identificación y administra tus pacientes</small>
   </div>
   <div class="mt-2 mt-sm-0">
-    <a class="btn btn-primary" routerLink="/pacientes/nuevo">
+    <!-- <a class="btn btn-primary" routerLink="/pacientes/nuevo">
       <i class="bi bi-person-plus me-1"></i>
       Crear paciente
-    </a>
+    </a> -->
   </div>
 </div>
 
@@ -52,7 +52,15 @@
     </div>
   </div>
 </form>
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
 
+    <div class="mt-2 mt-sm-0">
+       <a class="btn btn-primary" routerLink="/pacientes/nuevo">
+      <i class="bi bi-person-plus me-1"></i>
+      Crear paciente
+    </a>
+    </div>
+</div>
 <!-- Controles paginación / orden -->
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
   <div class="text-secondary small">
@@ -89,11 +97,10 @@
       <tr>
         <th style="width:70px;">#</th>
         <th>Identificación</th>
-        <th>Nombre</th>
-        <th>Apellido</th>
+        <th>Cliente</th>
+        <th>Paciente</th>
+   
         <th>Email</th>
-        <th>Teléfono</th>
-        <th>Dirección</th>
         <th>Estado</th>
         <th style="width: 140px;">Acciones</th>
       </tr>
@@ -115,14 +122,12 @@
             <tr class="align-middle">
               <td class="text-secondary">{{ p.rowNumber }}</td>
               <td><span class="text-monospace">{{ p.documento || '—' }}</span></td>
-              <td class="fw-semibold"><i class="bi bi-person me-1 text-muted"></i>{{ p.nombre }}</td>
-              <td>{{ p.apellido || '—' }}</td>
+              <td><i class="bi bi-building me-1 text-muted"></i>{{p.clienteNombre}}</td>
+              <td class="fw-semibold"> <i class="bi bi-person me-1 text-muted"></i> {{ p.nombre }} {{ p.apellido || '—' }}</td>
               <td>
-                <a *ngIf="p.email" [href]="'mailto:' + p.email" class="text-decoration-none">{{ p.email }}</a>
+                {{ p.email }}
                 <span *ngIf="!p.email">—</span>
               </td>
-              <td>{{ p.telefono || '—' }}</td>
-              <td>{{ p.direccion || '—' }}</td>
               <td>
                 <span class="badge rounded-pill"
                       [ngClass]="p.estado==='ACTIVO' ? 'bg-success' : 'bg-secondary'">

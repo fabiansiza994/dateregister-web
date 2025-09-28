@@ -33,7 +33,7 @@
 
 .illustration-overlay{
   position: absolute; inset: 0;
-  background: linear-gradient(90deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.35) 40%, rgba(0,0,0,.15) 100%);
+  background: linear-gradient(90deg, rgba(1, 2, 77, 0.55) 0%, rgba(18, 50, 156, 0.35) 40%, rgba(7, 14, 116, 0.15) 100%);
 }
 
 .illustration-content{

@@ -10,6 +10,7 @@ import { AuthService } from '../core/auth.service';
 
 interface FormaPago { id: number; formaPago: string; estado: number; }
 interface ClienteMin { id: number; nombre: string; apellido?: string | null; }
+interface PacienteMin { id: number; nombre: string; apellido?: string | null; }
 interface Trabajo {
   id: number;
   fecha: string;               // "YYYY-MM-DD"
@@ -19,13 +20,9 @@ interface Trabajo {
   formaPago: FormaPago | null;
   foto1?: string | null;
   paciente: PacienteMin | null;
-  estado?: 'PENDIENTE' | 'PAGO' | 'CANCELADO' | string; 
+  estado?: 'PENDIENTE' | 'PAGO' | 'CANCELADO' | string;
 }
-interface PacienteMin { // 👈 nuevo
-  id: number;
-  nombre: string;
-  apellido?: string | null;
-}
+
 interface JobSearchOk {
   dataResponse: { idTx: string | null; response: 'SUCCESS' | 'ERROR' };
   data: {
@@ -48,19 +45,25 @@ export class JobsComponent implements OnInit {
   sector = computed(() => (this._claims()?.sector ?? '').toUpperCase());
 
   estadoBadge(estado?: string) {
-  const s = (estado || '').toUpperCase();
-  if (s === 'PAGO') return 'badge bg-success-subtle text-dark';
-  if (s === 'CANCELADO') return 'badge bg-danger-subtle';
-  // default / PENDIENTE
-  return 'badge bg-warning-subtle text-dark';
-}
+    const s = (estado || '').toUpperCase();
+    if (s === 'PAGO') return 'badge bg-success-subtle text-dark';
+    if (s === 'CANCELADO') return 'badge bg-danger-subtle';
+    // default / PENDIENTE
+    return 'badge bg-warning-subtle text-dark';
+  }
 
   // Filtro
   q = '';
 
   // Estado UI
   loading = signal(false);
-  error = signal<string | null>(null);
+  error   = signal<string | null>(null);
+  success = signal<string | null>(null);
+
+  // Modal eliminar
+  confirmOpen = signal(false);
+  jobToDelete = signal<Trabajo | null>(null);
+  deleting    = signal(false);
 
   // Datos
   jobs = signal<Trabajo[]>([]);
@@ -94,7 +97,7 @@ export class JobsComponent implements OnInit {
     private cfg: ConfigService,
     private router: Router,
     private auth: AuthService
-  ) {this._claims.set(this.auth.claims()); }
+  ) { this._claims.set(this.auth.claims()); }
 
   ngOnInit(): void {
     this.apiBase = this.cfg.get<string>('apiBaseUrl', '');
@@ -146,6 +149,7 @@ export class JobsComponent implements OnInit {
   async loadPage() {
     this.loading.set(true);
     this.error.set(null);
+    this.success.set(null);
     try {
       if (!this.apiBase) throw new Error('Config no cargada: falta apiBaseUrl');
 
@@ -190,6 +194,48 @@ export class JobsComponent implements OnInit {
   // Navegación
   verTrabajo(j: Trabajo)   { this.router.navigate(['/trabajos', j.id]); }
   editarTrabajo(j: Trabajo){ this.router.navigate(['/trabajos', j.id, 'editar']); }
+
+  // ===== Eliminar =====
+  openConfirm(j: Trabajo) {
+    this.jobToDelete.set(j);
+    this.confirmOpen.set(true);
+    this.error.set(null);
+    this.success.set(null);
+  }
+  closeConfirm() {
+    if (this.deleting()) return;
+    this.confirmOpen.set(false);
+    this.jobToDelete.set(null);
+  }
+  async confirmDelete() {
+    const j = this.jobToDelete();
+    if (!j) return;
+
+    this.deleting.set(true);
+    this.error.set(null);
+    try {
+      const url = `${this.apiBase}/job/delete/${j.id}`;
+      await firstValueFrom(this.http.delete(url).pipe(timeout(12000)));
+
+      // optimista: quitar de la lista
+      this.jobs.update(list => list.filter(x => x.id !== j.id));
+      this.total.update(t => Math.max(0, t - 1));
+
+      // si se vació la página y hay previas, retroceder una
+      if (this.visibleWithRow().length === 0 && this.page() > 1) {
+        this.page.update(p => p - 1);
+        await this.loadPage();
+      }
+
+      this.success.set('🗑️ Trabajo eliminado correctamente.');
+    } catch (e: any) {
+      if (e instanceof TimeoutError) this.error.set('La eliminación tardó demasiado. Intenta de nuevo.');
+      else this.error.set(e?.error?.message || e?.message || 'No se pudo eliminar el trabajo.');
+    } finally {
+      this.deleting.set(false);
+      this.closeConfirm();
+    }
+  }
 
   // Formateo
   formatMoney(n: number | null | undefined) {

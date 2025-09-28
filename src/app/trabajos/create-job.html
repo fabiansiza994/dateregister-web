@@ -1,7 +1,9 @@
 <div class="container py-3">
   <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-semibold mb-0">Crear trabajo</h3>
+    <h3 class="fw-semibold mb-0">
+      {{ isEdit() ? 'Editar trabajo' : 'Crear trabajo' }}
+    </h3>
     <a routerLink="/trabajos" class="btn btn-link text-decoration-none px-0">&larr; Volver</a>
   </div>
 
@@ -15,7 +17,7 @@
   }
 
   <!-- Form -->
-  <form class="card border-0 shadow-sm rounded-4" (submit)="$event.preventDefault(); create()">
+  <form class="card border-0 shadow-sm rounded-4" (submit)="$event.preventDefault(); submit()">
     <div class="card-body">
       <div class="row g-3">
 
@@ -24,9 +26,24 @@
           <input type="date" class="form-control" [(ngModel)]="form.fecha" name="fecha" required>
         </div>
 
+        <!-- Estado (solo en edición) -->
+        @if (isEdit()) {
+          <div class="col-md-3">
+            <label class="form-label">Estado</label>
+            <select class="form-select"
+                    [(ngModel)]="form.estado"
+                    name="estado">
+              <option *ngFor="let e of estadoOptions" [ngValue]="e">
+                {{ e }}
+              </option>
+            </select>
+            <div class="form-text">Cambia el estado del trabajo.</div>
+          </div>
+        }
+
         <!-- Cliente/Paciente según sector -->
         @if (sector() !== 'SALUD') {
-          <div class="col-md-5">
+          <div class="col-md-6">
             <label class="form-label d-flex align-items-center justify-content-between">
               <span>Cliente <span class="text-danger">*</span></span>
               @if (selectedClient) {
@@ -51,7 +68,7 @@
             }
           </div>
         } @else {
-          <div class="col-md-5">
+          <div class="col-md-6">
             <label class="form-label d-flex align-items-center justify-content-between">
               <span>Paciente <span class="text-danger">*</span></span>
               @if (selectedPatient) {
@@ -89,34 +106,40 @@
           }
         </div>
 
-        <!-- Valores -->
+        <!-- Valores con formateo es-CO -->
         <div class="col-md-3">
           <label class="form-label">Valor mano de obra</label>
-          <input type="number" class="form-control"
-                 [(ngModel)]="form.valorLabor" name="valorLabor"
-                 min="0" step="1"
-                 (ngModelChange)="recalc()">
+          <input
+            type="text"
+            inputmode="numeric"
+            class="form-control"
+            [ngModel]="formatPeso(form.valorLabor)"
+            (ngModelChange)="onMoneyInput('valorLabor', $event)"
+            name="valorLabor"
+            autocomplete="off">
         </div>
 
         <div class="col-md-3">
           <label class="form-label">Valor materiales</label>
-          <input type="number" class="form-control"
-                 [(ngModel)]="form.valorMateriales" name="valorMateriales"
-                 min="0" step="1"
-                 (ngModelChange)="recalc()">
+          <input
+            type="text"
+            inputmode="numeric"
+            class="form-control"
+            [ngModel]="formatPeso(form.valorMateriales)"
+            (ngModelChange)="onMoneyInput('valorMateriales', $event)"
+            name="valorMateriales"
+            autocomplete="off">
         </div>
 
         <div class="col-md-3">
           <label class="form-label">Valor total (auto)</label>
-          <input type="number" class="form-control"
-                 [value]="totalCalc()" readonly>
+          <input type="text" class="form-control" [value]="formatPeso(totalCalc())" readonly>
           <div class="form-text">Se calcula: mano de obra + materiales.</div>
         </div>
 
         <div class="col-md-3">
           <label class="form-label">Ganancias (auto)</label>
-          <input type="number" class="form-control"
-                 [value]="gananciasCalc()" readonly>
+          <input type="text" class="form-control" [value]="formatPeso(gananciasCalc())" readonly>
           <div class="form-text">Se calcula: total − materiales.</div>
         </div>
 
@@ -128,9 +151,37 @@
           <div class="form-text">{{ (form.descripcionLabor?.length || 0) }}/500</div>
         </div>
 
-        <!-- Imágenes -->
+        <!-- Imágenes (existentes + nuevas) -->
+        <div class="col-12">
+          @if (isEdit() && (existingPhotos.foto1 || existingPhotos.foto2 || existingPhotos.foto3 || existingPhotos.foto4)) {
+            <div class="text-secondary small mb-2">Evidencias actuales</div>
+            <div class="d-flex flex-wrap gap-3 mb-3">
+              @if (existingPhotos.foto1) {
+                <a [href]="existingPhotos.foto1" target="_blank" rel="noopener" class="d-inline-block">
+                  <img [src]="existingPhotos.foto1" alt="foto1" class="img-thumbnail" style="width:180px; height:120px; object-fit:cover;">
+                </a>
+              }
+              @if (existingPhotos.foto2) {
+                <a [href]="existingPhotos.foto2" target="_blank" rel="noopener" class="d-inline-block">
+                  <img [src]="existingPhotos.foto2" alt="foto2" class="img-thumbnail" style="width:180px; height:120px; object-fit:cover;">
+                </a>
+              }
+              @if (existingPhotos.foto3) {
+                <a [href]="existingPhotos.foto3" target="_blank" rel="noopener" class="d-inline-block">
+                  <img [src]="existingPhotos.foto3" alt="foto3" class="img-thumbnail" style="width:180px; height:120px; object-fit:cover;">
+                </a>
+              }
+              @if (existingPhotos.foto4) {
+                <a [href]="existingPhotos.foto4" target="_blank" rel="noopener" class="d-inline-block">
+                  <img [src]="existingPhotos.foto4" alt="foto4" class="img-thumbnail" style="width:180px; height:120px; object-fit:cover;">
+                </a>
+              }
+            </div>
+          }
+        </div>
+
         <div class="col-md-6">
-          <label class="form-label">Foto 1</label>
+          <label class="form-label">Foto 1 (opcional)</label>
           <input type="file" class="form-control" accept="image/*" (change)="onFileChange($event, 'foto1')">
           @if (previews.foto1) {
             <div class="mt-2">
@@ -140,7 +191,7 @@
         </div>
 
         <div class="col-md-6">
-          <label class="form-label">Foto 2</label>
+          <label class="form-label">Foto 2 (opcional)</label>
           <input type="file" class="form-control" accept="image/*" (change)="onFileChange($event, 'foto2')">
           @if (previews.foto2) {
             <div class="mt-2">
@@ -150,7 +201,7 @@
         </div>
 
         <div class="col-md-6">
-          <label class="form-label">Foto 3</label>
+          <label class="form-label">Foto 3 (opcional)</label>
           <input type="file" class="form-control" accept="image/*" (change)="onFileChange($event, 'foto3')">
           @if (previews.foto3) {
             <div class="mt-2">
@@ -160,7 +211,7 @@
         </div>
 
         <div class="col-md-6">
-          <label class="form-label">Foto 4</label>
+          <label class="form-label">Foto 4 (opcional)</label>
           <input type="file" class="form-control" accept="image/*" (change)="onFileChange($event, 'foto4')">
           @if (previews.foto4) {
             <div class="mt-2">
@@ -169,7 +220,6 @@
           }
         </div>
 
-        <!-- Progreso -->
         @if (progress() > 0) {
           <div class="col-12">
             <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100">
@@ -188,7 +238,7 @@
         class="btn btn-primary"
         [disabled]="loading() || (sector()==='SALUD' ? !selectedPatient : !selectedClient)">
         @if (loading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
-        Guardar
+        {{ isEdit() ? 'Guardar cambios' : 'Guardar' }}
       </button>
     </div>
   </form>

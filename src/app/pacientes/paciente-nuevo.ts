@@ -20,7 +20,7 @@ interface PacienteCreateRequest {
 interface ApiErrorItem {
   codError?: string;
   descError?: string;  // mensaje humano
-  msgError?: string;   // nombre del campo
+  msgError?: string;   // nombre del campo (o código, según BE)
 }
 
 interface PacienteCreateOk {
@@ -89,6 +89,25 @@ export class PacienteNuevoComponent {
 
   private apiBase = '';
 
+  // ===== Helpers de mapeo de errores =====
+  private readonly knownFields = new Set([
+    'documento', 'nombre', 'apellido', 'telefono', 'email', 'direccion', 'clienteId', 'global'
+  ]);
+
+  private resolveFieldFrom(it: ApiErrorItem): string {
+    const raw = (it?.msgError ?? '').trim().toLowerCase();
+    if (raw && this.knownFields.has(raw)) return raw; // Si viene un campo real, úsalo
+
+    // Heurística por contenido del mensaje (para cuando msgError trae un código como E001)
+    const msg = `${it?.descError ?? ''} ${it?.codError ?? ''}`.toLowerCase();
+    const hits: string[] = [];
+    if (msg.includes('documento')) hits.push('documento');
+    if (msg.includes('cliente')) hits.push('clienteId');
+
+    if (hits.length === 1) return hits[0];
+    return 'global';
+  }
+
   constructor(
     private http: HttpClient,
     private cfg: ConfigService,
@@ -134,7 +153,7 @@ export class PacienteNuevoComponent {
       const items = res?.data?.items ?? [];
       this.clientes.set(items);
       this.totalClientes.set(res?.data?.totalElements ?? items.length);
-    } catch (e) {
+    } catch {
       // silencioso; podrías mostrar un toast si quieres
       this.clientes.set([]);
       this.totalClientes.set(0);
@@ -179,14 +198,27 @@ export class PacienteNuevoComponent {
         const arr = be?.error ?? [];
 
         if (arr.length > 0) {
-          // Backend: msgError = nombre del campo, descError = mensaje humano
+          // limpiar estado previo
+          this.fieldErrors.set({});
+          this.errorGlobal.set(null);
+
           arr.forEach(it => {
-            const field = (it?.msgError ?? '').trim() || 'global';
+            const field = this.resolveFieldFrom(it);
             const msg   = (it?.descError ?? it?.codError ?? 'Error').trim();
-            if (field === 'global') this.errorGlobal.set(msg);
-            else this.setFieldError(field, msg);
+
+            if (!field || field === 'global' || !this.knownFields.has(field)) {
+              this.errorGlobal.set(msg);
+            } else {
+              this.setFieldError(field, msg);
+            }
           });
+
+          // Si no se marcó ningún campo y no hay errorGlobal, caer a message genérico
+          if (!this.errorGlobal() && Object.keys(this.fieldErrors()).length === 0) {
+            this.errorGlobal.set(be?.message || 'No se pudo crear el paciente.');
+          }
         } else {
+          // Sin arreglo de errores: usa message o el mensaje crudo
           this.errorGlobal.set(
             be?.message || e?.error?.message || e?.message || 'No se pudo crear el paciente.'
           );

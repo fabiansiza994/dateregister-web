@@ -1,10 +1,10 @@
-<div class="container py-5">
+<div class="container py-2">
   <h2 class="mb-4 text-center fw-semibold">Módulos principales</h2>
 
   <div class="row g-4 justify-content-center">
     <!-- Card Clientes -->
     <div class="col-md-4 col-sm-6">
-      <div class="card h-100 shadow-sm border-0 rounded-3 text-center">
+      <div id="mod-clientes" class="card h-100 shadow-sm border-0 rounded-3 text-center">
         <div class="card-body d-flex flex-column align-items-center justify-content-center">
           <div class="icon-circle mb-3">
             <i class="bi bi-people-fill"></i>
@@ -13,14 +13,14 @@
           <p class="card-text text-secondary">
             Gestiona la información de tus clientes, contactos y datos asociados.
           </p>
-          <a href="clientes" class="btn btn-primary mt-auto">Ir a Clientes</a>
+          <a routerLink="/clientes" class="btn btn-primary mt-auto">Ir a Clientes</a>
         </div>
       </div>
     </div>
 
     <!-- Card Trabajos -->
     <div class="col-md-4 col-sm-6">
-      <div class="card h-100 shadow-sm border-0 rounded-3 text-center">
+      <div id="mod-trabajos" class="card h-100 shadow-sm border-0 rounded-3 text-center">
         <div class="card-body d-flex flex-column align-items-center justify-content-center">
           <div class="icon-circle mb-3">
             <i class="bi bi-briefcase-fill"></i>
@@ -29,14 +29,14 @@
           <p class="card-text text-secondary">
             Administra trabajos, tareas asignadas y su estado de ejecución.
           </p>
-          <a href="trabajos" class="btn btn-primary mt-auto">Ir a Trabajos</a>
+          <a routerLink="/trabajos" class="btn btn-primary mt-auto">Ir a Trabajos</a>
         </div>
       </div>
     </div>
 
     <!-- Card Reportes -->
     <div class="col-md-4 col-sm-6">
-      <div class="card h-100 shadow-sm border-0 rounded-3 text-center">
+      <div id="mod-reportes" class="card h-100 shadow-sm border-0 rounded-3 text-center">
         <div class="card-body d-flex flex-column align-items-center justify-content-center">
           <div class="icon-circle mb-3">
             <i class="bi bi-bar-chart-fill"></i>
@@ -45,7 +45,8 @@
           <p class="card-text text-secondary">
             Visualiza reportes y estadísticas detalladas de tus operaciones.
           </p>
-          <a href="#" class="btn btn-primary mt-auto">Ir a Reportes</a>
+          <!-- Si aún no tienes ruta, puedes dejar /modules o desactivar -->
+          <a routerLink="/modules" class="btn btn-primary mt-auto" tabindex="-1" aria-disabled="true">Ir a Reportes</a>
         </div>
       </div>
     </div>
@@ -53,7 +54,7 @@
     <!-- Card Pacientes (solo para sector SALUD) -->
     @if (sector() === 'SALUD') {
       <div class="col-md-4 col-sm-6">
-        <div class="card h-100 shadow-sm border-0 rounded-3 text-center border-success">
+        <div id="mod-pacientes" class="card h-100 shadow-sm border-0 rounded-3 text-center border-success">
           <div class="card-body d-flex flex-column align-items-center justify-content-center">
             <div class="icon-circle mb-3">
               <i class="bi bi-heart-pulse-fill"></i>
@@ -68,4 +69,9 @@
       </div>
     }
   </div>
+
+  <!-- (Opcional) Botón para repetir tour desde esta misma vista -->
+  <!-- <div class="text-center mt-4">
+    <button class="btn btn-outline-primary btn-sm" (click)="runTourAgain()">Repetir tour de módulos</button>
+  </div> -->
 </div>

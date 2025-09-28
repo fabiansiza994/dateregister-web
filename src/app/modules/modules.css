@@ -9,3 +9,7 @@
   font-size: 1.8rem;
   color: #0d6efd;
 }
+
+.card .card-body {
+  padding: 1rem; /* Bootstrap usa 1.25rem por defecto */
+}

@@ -177,8 +177,8 @@ export class Pacientes {
   }
 
   // Acciones
-  verPaciente(p: Paciente) { /* this.router.navigate(['/pacientes', p.id]) */ }
-  editarPaciente(p: Paciente) { /* this.router.navigate(['/pacientes', p.id, 'editar']) */ }
+  verPaciente(p: Paciente) {  this.router.navigate(['/pacientes', p.id])  }
+  editarPaciente(p: Paciente) {  this.router.navigate(['/pacientes', p.id, 'editar'])  }
 
   // Modal eliminar
   openConfirm(p: Paciente) {

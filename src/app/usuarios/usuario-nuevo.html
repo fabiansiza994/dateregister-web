@@ -41,12 +41,20 @@
             <div class="col-md-6">
               <label class="form-label">Usuario *</label>
               <input type="text" class="form-control"
-                     [class.is-invalid]="fieldErrors()['usuario']"
-                     [ngModel]="model().usuario" (ngModelChange)="onField('usuario', $event)" name="usuario"
-                     placeholder="jdoe" autocomplete="off" />
+                     [class.is-invalid]="fieldErrors()['usuario'] || invalidUsername()"
+                     [ngModel]="model().usuario"
+                     (ngModelChange)="onField('usuario', $event); onUsuarioInput()"
+                     name="usuario"
+                     placeholder="j.doe" autocomplete="off" readonly/>
               @if (fieldErrors()['usuario']) {
                 <div class="invalid-feedback">{{ fieldErrors()['usuario'] }}</div>
               }
+              @if (!fieldErrors()['usuario'] && invalidUsername()) {
+                <div class="text-warning small mt-1">El usuario solo debe contener letras, números y puntos.</div>
+              }
+              <div class="form-text">
+                Se sugiere automáticamente con tu nombre y apellido; si lo editas, ya no se sobrescribe.
+              </div>
             </div>
 
             <div class="col-md-6">
@@ -64,7 +72,9 @@
               <label class="form-label">Nombre *</label>
               <input type="text" class="form-control"
                      [class.is-invalid]="fieldErrors()['nombre']"
-                     [ngModel]="model().nombre" (ngModelChange)="onField('nombre', $event)" name="nombre"
+                     [ngModel]="model().nombre"
+                     (ngModelChange)="onField('nombre', $event); updateSuggestedUser()"
+                     name="nombre"
                      placeholder="Juan" autocomplete="off" />
               @if (fieldErrors()['nombre']) {
                 <div class="invalid-feedback">{{ fieldErrors()['nombre'] }}</div>
@@ -75,7 +85,9 @@
               <label class="form-label">Apellido *</label>
               <input type="text" class="form-control"
                      [class.is-invalid]="fieldErrors()['apellido']"
-                     [ngModel]="model().apellido" (ngModelChange)="onField('apellido', $event)" name="apellido"
+                     [ngModel]="model().apellido"
+                     (ngModelChange)="onField('apellido', $event); updateSuggestedUser()"
+                     name="apellido"
                      placeholder="Pérez" autocomplete="off" />
               @if (fieldErrors()['apellido']) {
                 <div class="invalid-feedback">{{ fieldErrors()['apellido'] }}</div>
@@ -100,7 +112,6 @@
           </div>
 
           <div class="d-flex justify-content-end gap-2 mt-4">
-            <!-- Solo submit del form -->
             <button class="btn btn-primary" type="submit" [disabled]="!isStep1Valid()">
               Siguiente
             </button>
@@ -172,7 +183,6 @@
 
           <div class="d-flex justify-content-between gap-2 mt-4">
             <button class="btn btn-outline-secondary" type="button" (click)="goToStep(1)" [disabled]="loading()">Atrás</button>
-            <!-- Solo submit del form -->
             <button class="btn btn-success" type="submit" [disabled]="!isStep2Valid() || loading()">
               @if (loading()) {
                 <span class="spinner-border spinner-border-sm me-2" role="status"></span>
