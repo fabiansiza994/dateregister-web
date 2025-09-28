@@ -1,0 +1,97 @@
+<div class="container py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h3 class="fw-semibold mb-0">Detalle del paciente</h3>
+      <small class="text-secondary">Información completa del registro</small>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-light" (click)="backToList()">
+        <i class="bi bi-arrow-left"></i> Volver
+      </a>
+      <a class="btn btn-primary" (click)="goToEdit()">
+        <i class="bi bi-pencil"></i> Editar
+      </a>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
+      <i class="bi bi-exclamation-triangle mt-1"></i>
+      <div>{{ error() }}</div>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-body">
+        <div class="d-inline-flex align-items-center gap-2 text-secondary">
+          <span class="spinner-border spinner-border-sm"></span> Cargando…
+        </div>
+      </div>
+    </div>
+  } @else {
+    @if (paciente()) {
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body">
+          <div class="row g-3">
+
+            <div class="col-md-4">
+              <div class="text-secondary small">Paciente</div>
+              <div class="fw-semibold">
+                <i class="bi bi-person me-1 text-muted"></i>
+                {{ paciente()?.nombre }} <span class="text-secondary">{{ paciente()?.apellido || '' }}</span>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="text-secondary small">Identificación</div>
+              <div class="text-monospace">{{ paciente()?.documento || '—' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="text-secondary small">Estado</div>
+              <span class="badge rounded-pill"
+                    [ngClass]="paciente()?.estado==='ACTIVO' ? 'bg-success' : 'bg-secondary'">
+                {{ paciente()?.estado || '—' }}
+              </span>
+            </div>
+
+            <div class="col-md-4">
+              <div class="text-secondary small">Email</div>
+              <div>
+                <a *ngIf="paciente()?.email" [href]="'mailto:'+paciente()?.email">{{ paciente()?.email }}</a>
+                <span *ngIf="!paciente()?.email">—</span>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="text-secondary small">Teléfono</div>
+              <div>{{ paciente()?.telefono || '—' }}</div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="text-secondary small">Dirección</div>
+              <div>{{ paciente()?.direccion || '—' }}</div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="text-secondary small">Cliente asociado</div>
+              <div>
+                <i class="bi bi-building me-1 text-muted"></i>
+                {{ paciente()?.clienteNombre || ('ID ' + (paciente()?.clienteId || '—')) }}
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="card-footer d-flex justify-content-between align-items-center border-0">
+          <a class="btn btn-light" (click)="backToList()"><i class="bi bi-arrow-left"></i> Volver</a>
+          <a class="btn btn-primary" (click)="goToEdit()"><i class="bi bi-pencil"></i> Editar</a>
+        </div>
+      </div>
+    } @else {
+      <div class="alert alert-warning">No se encontró el paciente.</div>
+    }
+  }
+</div>

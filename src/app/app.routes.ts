@@ -15,6 +15,9 @@ export const routes: Routes = [
       { path: 'clientes', loadComponent: () => import('./cliente/cliente').then(m => m.ClientesComponent) },
       { path: 'pacientes', loadComponent: () => import('./pacientes/pacientes').then(m => m.Pacientes) },
       { path: 'pacientes/nuevo', loadComponent: () => import('./pacientes/paciente-nuevo').then(m => m.PacienteNuevoComponent) },
+      { path: 'pacientes/:id', loadComponent: () => import('./pacientes/paciente-detalle').then(m => m.PacienteDetalleComponent) },
+      { path: 'pacientes/:id/editar', loadComponent: () => import('./pacientes/paciente-editar').then(m => m.PacienteEditarComponent) },
+
       { path: 'clientes/nuevo', loadComponent: () => import('./cliente/cliente-nuevo').then(m => m.ClienteNuevoComponent) },
       { path: 'modules', loadComponent: () => import('./modules/modules').then(m => m.Modules) },
       { path: 'clientes/:id/editar', loadComponent: () => import('./cliente/cliente-editar').then(m => m.ClienteEditarComponent) },
@@ -32,7 +35,7 @@ export const routes: Routes = [
       { path: 'formas-pago', loadComponent: () => import('./method-of-payment/method-of-payment').then(m => m.MethodOfPaymentComponent) },
       { path: 'grupos', loadComponent: () => import('./grupos/grupos').then(m => m.GruposComponent) },
       { path: 'reportes', loadComponent: () => import('./reportes-component/reportes-component').then(m => m.ReportesComponent) },
-    { path: 'perfil', loadComponent: () => import('./perfil/perfil').then(m => m.PerfilComponent) },
+      { path: 'perfil', loadComponent: () => import('./perfil/perfil').then(m => m.PerfilComponent) },
       // Si luego creas estas páginas:
       // { path: 'clientes', loadComponent: () => import('./clientes/clientes').then(m => m.Clientes) },
       // { path: 'trabajos', loadComponent: () => import('./trabajos/trabajos').then(m => m.Trabajos) },

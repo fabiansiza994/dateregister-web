@@ -47,10 +47,10 @@
         <div class="row g-3">
           <div class="col-md-6">
             <label class="form-label">Usuario</label>
-            <input type="text" class="form-control" placeholder="nick01" [(ngModel)]="model.usuario"
+            <input style="border-style: dashed;" type="text" class="form-control" placeholder="nick01" [(ngModel)]="model.usuario"
               (ngModelChange)="onUsuarioInput()" readonly="true">
             <div class="form-text">
-              Sugerido automáticamente a partir de tu nombre y apellido (puedes editarlo).
+              Sugerido automáticamente a partir de tu nombre y apellido.
             </div>
 
             @if(invalidUsername){
@@ -92,6 +92,9 @@
         </div>
 
         <div class="d-flex justify-content-end gap-2 mt-4">
+          <button class="btn btn-light" (click)="volver()">
+            Cancelar
+          </button>
           <button class="btn btn-primary" [disabled]="!isStep1Valid() || loading()" (click)="goToStep(2)">
             Siguiente
           </button>

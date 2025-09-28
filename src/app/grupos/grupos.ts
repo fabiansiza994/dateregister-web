@@ -47,7 +47,6 @@ interface CreateDto {
 }
 interface UpdateDto {
   nombre: string;
-  // 🔧 idem arriba
 }
 
 @Component({
@@ -58,11 +57,9 @@ interface UpdateDto {
 })
 export class GruposComponent implements OnInit {
 
-  // ====== Claims (por si necesitas restringir por empresa/rol a futuro)
   private readonly _claims = signal<any | null>(null);
-  empresaId = computed(() => Number(this._claims()?.empresaId ?? 0) || 0); // 👈 reutilizamos claims
+  empresaId = computed(() => Number(this._claims()?.empresaId ?? 0) || 0);
 
-  // ====== UI
   loading = signal(false);
   error   = signal<string | null>(null);
   success = signal<string | null>(null);
@@ -70,11 +67,9 @@ export class GruposComponent implements OnInit {
   confirmOpen = signal(false);
   groupToDelete = signal<Grupo | null>(null);
 
-  // ====== Datos
   groups = signal<Grupo[]>([]);
   total  = signal(0);
 
-  // ====== Filtros / orden / paginación
   q = '';
   sortBy = signal<'id' | 'nombre'>('id');
   direction = signal<'ASC' | 'DESC'>('DESC');
@@ -94,12 +89,10 @@ export class GruposComponent implements OnInit {
     return this.groups().map((g, i) => ({ ...g, rowNumber: startIdx + i + 1 }));
   });
 
-  // ====== Crear
   creating = signal(false);
   newName  = signal('');
   canCreate = computed(() => !!this.newName().trim() && !this.creating());
 
-  // ====== Editar inline
   editingId = signal<number | null>(null);
   editName  = signal('');
   savingRowId = signal<number | null>(null);
@@ -120,6 +113,23 @@ export class GruposComponent implements OnInit {
     this.loadPage();
   }
 
+  // ================== Helper ==================
+  private extractApiError(e: any): string {
+    if (e?.error?.dataResponse?.response === 'ERROR') {
+      const apiMsgs = e?.error?.error
+        ?.map((x: ApiErrItem) => x?.descError || x?.msgError)
+        ?.filter(Boolean)
+        ?.join(' | ');
+      if (apiMsgs) return apiMsgs;
+    }
+    if (Array.isArray(e?.error)) {
+      const apiMsgs = e.error.map((x: ApiErrItem) => x?.descError || x?.msgError)
+        .filter(Boolean).join(' | ');
+      if (apiMsgs) return apiMsgs;
+    }
+    return e?.error?.message || e?.message || 'Ocurrió un error inesperado.';
+  }
+
   // ================== Carga de página ==================
   async loadPage() {
     this.loading.set(true);
@@ -137,6 +147,10 @@ export class GruposComponent implements OnInit {
         this.http.get<ApiPageOk<Grupo>>(url, { params }).pipe(timeout(12000))
       );
 
+      if (res?.dataResponse?.response === 'ERROR') {
+        throw { error: res };
+      }
+
       const data = res?.data;
       const items = data?.items ?? [];
       const total = data?.totalElements ?? items.length;
@@ -144,7 +158,6 @@ export class GruposComponent implements OnInit {
       this.groups.set(items);
       this.total.set(total);
 
-      // Corrige si te fuiste de rango
       const tp = this.totalPages();
       if (this.page() > tp) {
         this.page.set(tp);
@@ -152,11 +165,8 @@ export class GruposComponent implements OnInit {
       }
 
     } catch (e: any) {
-      if (e instanceof TimeoutError) this.error.set('La consulta tardó demasiado. Intenta de nuevo.');
-      else {
-        const apiMsgs = e?.error?.error?.map((x: ApiErrItem) => x?.descError || x?.msgError)?.filter(Boolean)?.join(' | ');
-        this.error.set(apiMsgs || e?.error?.message || e?.message || 'No se pudo cargar la lista de grupos.');
-      }
+      if (e instanceof TimeoutError) this.error.set('La consulta tardó demasiado.');
+      else this.error.set(this.extractApiError(e));
     } finally {
       this.loading.set(false);
     }
@@ -164,7 +174,6 @@ export class GruposComponent implements OnInit {
 
   // ================== Búsqueda ==================
   async onSearch() {
-    // Usamos /group/search si hay q; si no, /list
     if (!this.q.trim()) return this.loadPage();
 
     this.loading.set(true); this.error.set(null);
@@ -182,6 +191,10 @@ export class GruposComponent implements OnInit {
         this.http.get<ApiPageOk<Grupo>>(url, { params }).pipe(timeout(12000))
       );
 
+      if (res?.dataResponse?.response === 'ERROR') {
+        throw { error: res };
+      }
+
       const data = res?.data;
       const items = data?.items ?? [];
       const total = data?.totalElements ?? items.length;
@@ -196,11 +209,8 @@ export class GruposComponent implements OnInit {
       }
 
     } catch (e: any) {
-      if (e instanceof TimeoutError) this.error.set('La búsqueda tardó demasiado. Intenta de nuevo.');
-      else {
-        const apiMsgs = e?.error?.error?.map((x: ApiErrItem) => x?.descError || x?.msgError)?.filter(Boolean)?.join(' | ');
-        this.error.set(apiMsgs || e?.error?.message || e?.message || 'Error al buscar grupos.');
-      }
+      if (e instanceof TimeoutError) this.error.set('La búsqueda tardó demasiado.');
+      else this.error.set(this.extractApiError(e));
     } finally {
       this.loading.set(false);
     }
@@ -259,13 +269,11 @@ export class GruposComponent implements OnInit {
       );
 
       if (res?.dataResponse?.response === 'ERROR') {
-        const apiMsgs = res?.error?.map(x => x?.descError || x?.msgError)?.filter(Boolean)?.join(' | ');
-        throw new Error(apiMsgs || res?.message || 'No fue posible crear el grupo.');
+        throw { error: res };
       }
 
       const created = res?.data;
       if (created?.id) {
-        // Inserta al inicio de la lista
         this.groups.set([created, ...this.groups()]);
         this.total.set(this.total() + 1);
       } else {
@@ -278,7 +286,7 @@ export class GruposComponent implements OnInit {
 
     } catch (e: any) {
       if (e instanceof TimeoutError) this.error.set('La creación tardó demasiado.');
-      else this.error.set(e?.error?.message || e?.message || 'No fue posible crear el grupo.');
+      else this.error.set(this.extractApiError(e));
     } finally {
       this.creating.set(false);
     }
@@ -310,8 +318,7 @@ export class GruposComponent implements OnInit {
       );
 
       if (res?.dataResponse?.response === 'ERROR') {
-        const apiMsgs = res?.error?.map(x => x?.descError || x?.msgError)?.filter(Boolean)?.join(' | ');
-        throw new Error(apiMsgs || res?.message || 'No fue posible actualizar el grupo.');
+        throw { error: res };
       }
 
       const updated = res?.data;
@@ -327,7 +334,7 @@ export class GruposComponent implements OnInit {
 
     } catch (e: any) {
       if (e instanceof TimeoutError) this.error.set('La actualización tardó demasiado.');
-      else this.error.set(e?.error?.message || e?.message || 'No fue posible actualizar el grupo.');
+      else this.error.set(this.extractApiError(e));
     } finally {
       this.savingRowId.set(null);
     }
@@ -356,8 +363,7 @@ export class GruposComponent implements OnInit {
       );
 
       if (res?.dataResponse?.response === 'ERROR') {
-        const apiMsgs = res?.error?.map(x => x?.descError || x?.msgError)?.filter(Boolean)?.join(' | ');
-        throw new Error(apiMsgs || res?.message || 'No fue posible eliminar el grupo.');
+        throw { error: res };
       }
 
       this.groups.update(list => list.filter(x => x.id !== g.id));
@@ -367,26 +373,28 @@ export class GruposComponent implements OnInit {
 
     } catch (e: any) {
       if (e instanceof TimeoutError) this.error.set('La eliminación tardó demasiado.');
-      else this.error.set(e?.error?.message || e?.message || 'No fue posible eliminar el grupo.');
+      else this.error.set(this.extractApiError(e));
     } finally {
       this.loading.set(false);
       this.closeConfirm();
     }
   }
 
-  // ================== (Opcional) Ver detalle ==================
+  // ================== Ver detalle ==================
   async verDetalle(g: Grupo) {
-    // Si sólo quieres navegar a otra ruta, hazlo aquí.
-    // Si quieres modal con /detail, puedes implementarlo similar al confirm.
-    // Por ahora, sólo consola:
     try {
       const url = `${this.apiBase}/group/detail/${g.id}`;
       const res = await firstValueFrom(this.http.get<ApiDetailOk<Grupo>>(url).pipe(timeout(10000)));
+
+      if (res?.dataResponse?.response === 'ERROR') {
+        throw { error: res };
+      }
+
       console.log('Detalle grupo', res?.data);
       this.success.set(`Grupo #${g.id}: ${res?.data?.nombre ?? ''}`);
       setTimeout(() => this.success.set(null), 1500);
     } catch (e) {
-      this.error.set('No fue posible obtener el detalle.');
+      this.error.set(this.extractApiError(e));
       setTimeout(() => this.error.set(null), 2000);
     }
   }

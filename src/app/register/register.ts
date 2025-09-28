@@ -262,4 +262,5 @@ export class Register implements OnInit {
       this.loading.set(false);
     }
   }
+  volver() { this.router.navigate(['/login']); }
 }
