@@ -1,13 +1,21 @@
 {
   "name": "dataregister-web",
   "version": "0.0.0",
-  "scripts": {
+   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
+    "start": "ng serve",                                   
+    "build": "ng build",                                   
+    "build:prod": "ng build --configuration production", 
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:dataregister-web": "node dist/dataregister-web/server/server.mjs"
+
+
+    "build:ssr": "ng build --configuration production && ng run dataregister-web:server",
+
+    "prerender": "ng run dataregister-web:prerender",
+    "serve:ssr": "node dist/dataregister-web/server/server.mjs",
+
+    "serve:static": "npx http-server ./dist/dataregister-web/browser -p 8080 -s"
   },
   "private": true,
   "dependencies": {

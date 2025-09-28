@@ -36,7 +36,7 @@
       <div class="row g-3">
         <div class="col-md-4">
           <label class="form-label">Usuario</label>
-          <input type="text" class="form-control" [value]="me()?.usuario || usernameClaim()" readonly>
+          <input type="text" style="border-style: dashed;" class="form-control" [value]="me()?.usuario || usernameClaim()" readonly>
         </div>
 
         <div class="col-md-4">
@@ -82,10 +82,10 @@
           <input type="text" class="form-control" [value]="me()?.grupo?.nombre || '—'" readonly>
         </div>
 
-        <div class="col-md-4">
+        <!-- <div class="col-md-4">
           <label class="form-label">Intentos fallidos</label>
           <input type="text" class="form-control" [value]="me()?.intentosFallidos ?? 0" readonly>
-        </div>
+        </div> -->
 
         <div class="col-md-4">
           <label class="form-label">Estado</label>

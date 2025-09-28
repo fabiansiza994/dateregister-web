@@ -15,8 +15,8 @@ type FotoKey = 'foto1' | 'foto2' | 'foto3' | 'foto4';
 type JobEstado = 'PAGO' | 'PENDIENTE' | 'CANCELADO';
 
 interface CreateJobPayload {
-  id?: number;               // requerido en UPDATE
-  fecha: string;             // "YYYY-MM-DD"
+  id?: number;
+  fecha: string;
   valorLabor?: number;
   valorMateriales?: number;
   valorTotal: number;
@@ -25,7 +25,7 @@ interface CreateJobPayload {
   clienteId: number;
   pacienteId?: number;
   formaPagoId: number;
-  estado?: JobEstado;        // 👈 NUEVO (solo visible en edición)
+  estado?: JobEstado;
 }
 
 interface FormaPago { id: number; formaPago: string; estado?: number; }
@@ -54,12 +54,13 @@ interface JobDetail {
   valorLabor?: number | null;
   valorMateriales?: number | null;
   ganancias?: number | null;
-  estado?: JobEstado | null;     // 👈 NUEVO
+  estado?: JobEstado | null;
   foto1?: string | null;
   foto2?: string | null;
   foto3?: string | null;
   foto4?: string | null;
 }
+
 interface JobDetailOk {
   dataResponse: { response: 'SUCCESS'|'ERROR'; idTx?: string|null };
   data?: JobDetail;
@@ -94,12 +95,13 @@ export class CreateJobComponent implements OnInit {
     clienteId: 0,
     pacienteId: undefined,
     formaPagoId: 0,
-    estado: undefined,        // 👈 se usa en edición
+    estado: undefined,
   };
 
   files: Partial<Record<FotoKey, File>> = {};
   previews: Partial<Record<FotoKey, string>> = {};
   existingPhotos: Partial<Record<FotoKey, string>> = {};
+  markedForDelete = new Set<FotoKey>(); // 👈 NUEVO
 
   loading = signal(false);
   error = signal<string | null>(null);
@@ -116,7 +118,6 @@ export class CreateJobComponent implements OnInit {
 
   apiBase = '';
 
-  // Opciones de estado para el select
   readonly estadoOptions: JobEstado[] = ['PAGO', 'PENDIENTE', 'CANCELADO'];
 
   constructor(
@@ -157,7 +158,6 @@ export class CreateJobComponent implements OnInit {
     this.form.ganancias = this.gananciasCalc();
   }
 
-  // ====== Formateo pesos (es-CO) ======
   private nf = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
 
   formatPeso(v?: number | null): string {
@@ -166,7 +166,6 @@ export class CreateJobComponent implements OnInit {
   }
 
   parsePeso(input: any): number {
-    // elimina separadores de miles (.) y normaliza coma decimal a punto
     const raw = String(input ?? '')
       .replace(/\s+/g, '')
       .replace(/\./g, '')
@@ -196,6 +195,14 @@ export class CreateJobComponent implements OnInit {
     }
   }
 
+  toggleDelete(foto: FotoKey) {
+    if (this.markedForDelete.has(foto)) {
+      this.markedForDelete.delete(foto);
+    } else {
+      this.markedForDelete.add(foto);
+    }
+  }
+
   resetForm() {
     const keepId = this.isEdit() ? this._jobId()! : undefined;
     this.form = {
@@ -209,11 +216,12 @@ export class CreateJobComponent implements OnInit {
       clienteId: 0,
       pacienteId: undefined,
       formaPagoId: 0,
-      estado: this.isEdit() ? 'PENDIENTE' : undefined, // default amigable
+      estado: this.isEdit() ? 'PENDIENTE' : undefined,
     };
     this.files = {};
     this.previews = {};
     this.existingPhotos = {};
+    this.markedForDelete.clear();
     this.error.set(null);
     this.progress.set(0);
     this.selectedClient = null;
@@ -223,21 +231,18 @@ export class CreateJobComponent implements OnInit {
 
   private validate(): string | null {
     if (!this.form.fecha) return 'La fecha es obligatoria.';
-    if (!this.form.descripcionLabor?.trim()) return 'La descripción de la labor es obligatoria.';
+    if (!this.form.descripcionLabor?.trim()) return 'La descripción es obligatoria.';
     if (!this.form.formaPagoId) return 'Debes seleccionar una forma de pago.';
-    if (!(this.num(this.form.valorTotal) >= 0)) return 'El valor total debe ser un número válido.';
-
+    if (!(this.num(this.form.valorTotal) >= 0)) return 'El valor total no es válido.';
     if (!this.form.clienteId) {
       if (this.sector() === 'SALUD') {
-        return 'El paciente seleccionado no tiene cliente asociado (clienteId). Selecciona otro paciente o asócialo a un cliente.';
+        return 'El paciente no tiene cliente asociado. Selecciona otro paciente.';
       }
       return 'Debes seleccionar un cliente.';
     }
     if (this.sector() === 'SALUD' && !this.form.pacienteId) {
       return 'Debes seleccionar un paciente.';
     }
-
-    // En edición permitimos estado; si lo envían vacío, lo ignora el BE.
     return null;
   }
 
@@ -281,7 +286,7 @@ export class CreateJobComponent implements OnInit {
       const url = `${this.apiBase}/job/detail/${jobId}`;
       const res = await firstValueFrom(this.http.get<JobDetailOk>(url).pipe(timeout(12000)));
       if (res?.dataResponse?.response === 'ERROR') {
-        const api = res?.error?.map(x => x?.descError || x?.msgError)?.filter(Boolean)?.join(' | ');
+        const api = res?.error?.map(x => x?.descError || x?.msgError)?.join(' | ');
         throw new Error(api || res?.message || 'No fue posible cargar el trabajo.');
       }
       const j = res?.data!;
@@ -296,22 +301,16 @@ export class CreateJobComponent implements OnInit {
         clienteId: j.cliente?.id ?? 0,
         pacienteId: j.paciente?.id ?? undefined,
         formaPagoId: j.formaPago?.id ?? 0,
-        estado: (j.estado as JobEstado) ?? 'PENDIENTE', // 👈 precarga estado
+        estado: (j.estado as JobEstado) ?? 'PENDIENTE',
       };
-      this.selectedClient = j.cliente ? {
-        id: j.cliente.id, nombre: j.cliente.nombre, apellido: j.cliente.apellido ?? null
-      } : null;
-      this.selectedPatient = j.paciente ? {
-        id: j.paciente.id, nombre: j.paciente.nombre, apellido: j.paciente.apellido ?? null
-      } : null;
-
+      this.selectedClient = j.cliente ? { id: j.cliente.id, nombre: j.cliente.nombre, apellido: j.cliente.apellido ?? null } : null;
+      this.selectedPatient = j.paciente ? { id: j.paciente.id, nombre: j.paciente.nombre, apellido: j.paciente.apellido ?? null } : null;
       this.existingPhotos = {
         foto1: j.foto1 || undefined,
         foto2: j.foto2 || undefined,
         foto3: j.foto3 || undefined,
         foto4: j.foto4 || undefined,
       };
-
     } catch (e:any) {
       this.error.set(e?.error?.message || e?.message || 'Error al cargar el trabajo.');
     } finally {
@@ -331,15 +330,11 @@ export class CreateJobComponent implements OnInit {
     try {
       if (!this.apiBase) throw new Error('Config no cargada: falta apiBaseUrl');
       const token = this.tokenStr;
-      if (!token) { this.error.set('No hay sesión activa (token). Inicia sesión.'); return; }
+      if (!token) { this.error.set('No hay sesión activa.'); return; }
 
       const fd = new FormData();
-      const payloadBlob = new Blob([JSON.stringify(this.form)], { type: 'application/json' });
-      fd.append('payload', payloadBlob);
-
-      (['foto1', 'foto2', 'foto3', 'foto4'] as FotoKey[]).forEach(k => {
-        if (this.files[k]) fd.append(k, this.files[k]!);
-      });
+      fd.append('payload', new Blob([JSON.stringify(this.form)], { type: 'application/json' }));
+      (['foto1', 'foto2', 'foto3', 'foto4'] as FotoKey[]).forEach(k => { if (this.files[k]) fd.append(k, this.files[k]!); });
 
       this.loading.set(true);
       this.progress.set(0);
@@ -349,30 +344,26 @@ export class CreateJobComponent implements OnInit {
       const url = `${this.apiBase}/job/create`;
 
       await new Promise<void>((resolve, reject) => {
-        this.http.post(url, fd, {
-          headers,
-          reportProgress: true,
-          observe: 'events',
-        })
-        .pipe(timeout(30000))
-        .subscribe({
-          next: (event) => {
-            if (event.type === HttpEventType.UploadProgress && event.total) {
-              const pct = Math.round((100 * event.loaded) / event.total);
-              this.progress.set(pct);
-            } else if (event.type === HttpEventType.Response) {
-              resolve();
-            }
-          },
-          error: (e) => reject(e),
-          complete: () => resolve()
-        });
+        this.http.post(url, fd, { headers, reportProgress: true, observe: 'events' })
+          .pipe(timeout(30000))
+          .subscribe({
+            next: (event) => {
+              if (event.type === HttpEventType.UploadProgress && event.total) {
+                const pct = Math.round((100 * event.loaded) / event.total);
+                this.progress.set(pct);
+              } else if (event.type === HttpEventType.Response) {
+                resolve();
+              }
+            },
+            error: (e) => reject(e),
+            complete: () => resolve()
+          });
       });
 
       this.router.navigate(['/trabajos'], { state: { flash: '✅ Trabajo creado.' } });
 
     } catch (e: any) {
-      if (e instanceof TimeoutError) this.error.set('La carga tardó demasiado. Intenta de nuevo.');
+      if (e instanceof TimeoutError) this.error.set('La carga tardó demasiado.');
       else this.error.set(e?.error?.message || e?.message || 'No se pudo crear el trabajo.');
     } finally {
       this.loading.set(false);
@@ -383,51 +374,42 @@ export class CreateJobComponent implements OnInit {
     try {
       if (!this.apiBase) throw new Error('Config no cargada: falta apiBaseUrl');
       const token = this.tokenStr;
-      if (!token) { this.error.set('No hay sesión activa (token). Inicia sesión.'); return; }
+      if (!token) { this.error.set('No hay sesión activa.'); return; }
       if (!this.form.id) { this.error.set('ID de trabajo inválido.'); return; }
 
-      // Asegura que el payload lleve el mismo id del path
       const fd = new FormData();
-      const payload = { ...this.form, id: this.form.id };
-      const payloadBlob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-      fd.append('payload', payloadBlob);
-
-      (['foto1', 'foto2', 'foto3', 'foto4'] as const).forEach(k => {
-        if (this.files[k]) fd.append(k, this.files[k]!);
-      });
+      const payload = { ...this.form, id: this.form.id, deleteFotos: Array.from(this.markedForDelete) };
+      fd.append('payload', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+      (['foto1', 'foto2', 'foto3', 'foto4'] as FotoKey[]).forEach(k => { if (this.files[k]) fd.append(k, this.files[k]!); });
 
       this.loading.set(true);
       this.progress.set(0);
       this.error.set(null);
 
       const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
-      const url = `${this.apiBase}/job/update/${this.form.id}`; // 👈 path con {id}
+      const url = `${this.apiBase}/job/update/${this.form.id}`;
 
       await new Promise<void>((resolve, reject) => {
-        this.http.put(url, fd, {
-          headers,
-          reportProgress: true,
-          observe: 'events',
-        })
-        .pipe(timeout(30000))
-        .subscribe({
-          next: (event) => {
-            if (event.type === HttpEventType.UploadProgress && event.total) {
-              const pct = Math.round((100 * event.loaded) / event.total);
-              this.progress.set(pct);
-            } else if (event.type === HttpEventType.Response) {
-              resolve();
-            }
-          },
-          error: (e) => reject(e),
-          complete: () => resolve()
-        });
+        this.http.put(url, fd, { headers, reportProgress: true, observe: 'events' })
+          .pipe(timeout(30000))
+          .subscribe({
+            next: (event) => {
+              if (event.type === HttpEventType.UploadProgress && event.total) {
+                const pct = Math.round((100 * event.loaded) / event.total);
+                this.progress.set(pct);
+              } else if (event.type === HttpEventType.Response) {
+                resolve();
+              }
+            },
+            error: (e) => reject(e),
+            complete: () => resolve()
+          });
       });
 
       this.router.navigate(['/trabajos', this.form.id], { state: { flash: '✅ Cambios guardados.' } });
 
     } catch (e: any) {
-      if (e instanceof TimeoutError) this.error.set('La actualización tardó demasiado. Intenta de nuevo.');
+      if (e instanceof TimeoutError) this.error.set('La actualización tardó demasiado.');
       else this.error.set(e?.error?.message || e?.message || 'No se pudo actualizar el trabajo.');
     } finally {
       this.loading.set(false);
