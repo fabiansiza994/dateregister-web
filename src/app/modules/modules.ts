@@ -19,10 +19,11 @@ export class Modules implements AfterViewInit {
 
   private readonly _claims = signal<JwtClaims | null>(null);
 
-  sector  = computed(() => (this._claims()?.sector ?? '').toUpperCase());
-  role    = computed(() => (this._claims()?.role ?? '').toUpperCase());
-  empresa = computed(() => this._claims()?.empresa ?? '');
-  user    = computed(() => this._claims()?.sub ?? '');
+  sector    = computed(() => (this._claims()?.sector ?? '').toUpperCase());
+  role      = computed(() => (this._claims()?.role ?? '').toUpperCase());
+  empresa   = computed(() => this._claims()?.empresa ?? '');
+  user      = computed(() => this._claims()?.sub ?? '');
+  empresaId = computed(() => Number(this._claims()?.empresaId ?? 0));
 
   constructor() {
     this.auth.refreshFromStorage();
@@ -30,16 +31,20 @@ export class Modules implements AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    // Asegura que los cards estén en DOM
+    // Asegura que los cards estén en el DOM
     setTimeout(() => {
-      // 1) Corre tour de módulos (solo 1 vez por key)
-      this.tour.startModulesTour(this.role(), this.sector(), () => {
-        // 2) Al terminar, si es ADMIN, muestra el nudge de pagos (también puedes guardarlo con una key)
-        const NUDGE_KEY = 'tour:nudge:pagos:v1';
-        if (!localStorage.getItem(NUDGE_KEY) && this.role() === 'ADMIN') {
-          this.tour.startPaymentNudge(this.role());
-          localStorage.setItem(NUDGE_KEY, '1');
-        }
+      const hasOneKey   = `mop:hasOne:${this.empresaId()}`;
+      const userKeyPart = `${this.empresa()}:${this.user()}`;
+
+      // 1) Si es ADMIN y aún no tiene métodos → forzar flujo de pagos y salir
+      if (this.role() === 'ADMIN' && localStorage.getItem(hasOneKey) !== '1') {
+        this.tour.startAdminPaymentEnforcedTour(this.role(), userKeyPart);
+        return; // no ejecutar el tour de módulos en este caso
+      }
+
+      // 2) Si no aplica forzado, corre tour de módulos y luego el nudge (idempotente)
+      this.tour.startModulesTour(this.role(), this.sector(), userKeyPart, () => {
+        this.tour.startPaymentNudge(this.role(), userKeyPart);
       });
     }, 200);
   }

@@ -34,7 +34,7 @@
       <div class="row g-2 align-items-end">
         <div class="col-md-6">
           <label class="form-label">Nuevo método de pago</label>
-          <input class="form-control"
+          <input id="mop-new-name" class="form-control"
                  placeholder="Ej: EFECTIVO, TRANSFERENCIA DAVIVIENDA…"
                  [ngModel]="newName()"
                  (ngModelChange)="newName.set($event)"
@@ -43,7 +43,7 @@
                  [disabled]="creating()">
         </div>
         <div class="col-md-3">
-          <button class="btn btn-success w-100"
+          <button id="mop-add-btn" class="btn btn-success w-100"
                   [disabled]="!canCreate()">
             @if (creating()) {
               <span class="spinner-border spinner-border-sm me-2"></span>
@@ -59,7 +59,7 @@
   <div class="card border-0 shadow-sm rounded-4">
     <div class="card-body p-0">
       <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table id="mop-table" class="table table-hover align-middle mb-0">
           <thead class="table-light">
           <tr>
             <th style="width:90px;">ID</th>
@@ -77,12 +77,12 @@
             </tr>
           } @else {
             @if ((mops() || []).length === 0) {
-              <tr>
+              <tr id="mop-empty">
                 <td colspan="4" class="text-center py-4 text-secondary">Sin métodos registrados.</td>
               </tr>
             } @else {
               @for (m of mops(); track m.id) {
-                <tr>
+                <tr class="mop-row">
                   <td class="text-secondary">{{ m.id }}</td>
 
                   <!-- Nombre editable -->

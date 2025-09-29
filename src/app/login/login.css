@@ -97,3 +97,11 @@
     max-width: 100%;
   }
 }
+.offscreen{
+  position: absolute;
+  left: -999em;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}

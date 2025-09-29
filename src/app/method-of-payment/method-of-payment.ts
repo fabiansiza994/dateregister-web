@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -7,6 +7,7 @@ import { timeout } from 'rxjs/operators';
 
 import { ConfigService } from '../core/config.service';
 import { AuthService } from '../core/auth.service';
+import { TourService } from '../core/tour.service';
 
 interface Mop {
   id: number;
@@ -34,7 +35,7 @@ interface MopCreateOk {
   error?: Array<{ descError?: string; msgError?: string }>;
 }
 interface ApiOk {
-  dataResponse?: { idTx?: string|null; response: 'SUCCESS'|'ERROR' };
+  dataResponse?: { idTx?: string | null; response: 'SUCCESS' | 'ERROR' };
   message?: string;
   error?: Array<{ descError?: string; msgError?: string }>;
 }
@@ -45,8 +46,8 @@ interface ApiOk {
   imports: [CommonModule, FormsModule],
   templateUrl: './method-of-payment.html'
 })
-export class MethodOfPaymentComponent implements OnInit {
-
+export class MethodOfPaymentComponent implements OnInit, AfterViewInit {
+  private readonly tour = inject(TourService);
   // ===== Claims
   private readonly _claims = signal<any | null>(null);
   empresaId = computed<number>(() => Number(this._claims()?.empresaId ?? 0));
@@ -81,7 +82,7 @@ export class MethodOfPaymentComponent implements OnInit {
     private http: HttpClient,
     private cfg: ConfigService,
     private auth: AuthService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.apiBase = this.cfg.get<string>('apiBaseUrl', '');
@@ -108,6 +109,8 @@ export class MethodOfPaymentComponent implements OnInit {
       }
 
       this.mops.set(res?.data ?? []);
+      const key = `mop:hasOne:${this.empresaId()}`;
+      if ((res?.data?.length ?? 0) > 0) localStorage.setItem(key, '1');
     } catch (e: any) {
       if (e instanceof TimeoutError) this.error.set('La carga tardó demasiado. Intenta de nuevo.');
       else this.error.set(e?.error?.message || e?.message || 'No fue posible cargar los métodos de pago.');
@@ -145,6 +148,11 @@ export class MethodOfPaymentComponent implements OnInit {
 
       this.success.set('✅ Método de pago creado.');
       this.newName.set('');
+
+      const key = `mop:hasOne:${this.empresaId()}`;
+      localStorage.setItem(key, '1');
+      window.dispatchEvent(new CustomEvent('mop:created', { detail: { empresaId: this.empresaId() } }));
+
       setTimeout(() => this.success.set(null), 1800);
 
     } catch (e: any) {
@@ -257,5 +265,17 @@ export class MethodOfPaymentComponent implements OnInit {
     return m.estado === 1
       ? 'bg-success-subtle text-success-emphasis'
       : 'bg-secondary-subtle text-secondary-emphasis';
+  }
+
+  ngAfterViewInit(): void {
+    const user = this._claims()?.sub ?? this._claims()?.usuario ?? 'user';
+    const empresa = this._claims()?.empresa ?? 'empresa';
+    const userKeyPart = `${empresa}:${user}`;
+    const pendingKey = `tour:payments:pending:${userKeyPart}`;
+
+    // Si venimos del paso 1 del tour forzado, continúa aquí (bloqueado)
+    if (localStorage.getItem(pendingKey) === '1') {
+      this.tour.startPaymentPageEnforcedTour(userKeyPart, this.empresaId());
+    }
   }
 }
