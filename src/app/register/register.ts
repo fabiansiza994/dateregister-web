@@ -228,7 +228,7 @@ export class Register implements OnInit {
       const res = await firstValueFrom(
         this.http.post<CreateOkResponse>(`${apiBase}/user/register`, this.model, {
           headers: { 'Content-Type': 'application/json' }
-        }).pipe(timeout(12000))
+        }).pipe(timeout(30000))
       );
 
       // Caso 200 pero con response="ERROR"
@@ -238,7 +238,7 @@ export class Register implements OnInit {
 
       // ÉXITO → flash en login
       const status = res?.dataResponse?.response ?? 'SUCCESS';
-      const flash = `🎉 ¡Cuenta creada! (Estado: ${status}). Ya puedes iniciar sesión.`;
+      const flash = `🎉 ¡Cuenta creada!. verifica tu CORREO para activar la cuenta.`;
       this.router.navigate(['/login'], { state: { flash } });
 
     } catch (e: any) {
@@ -261,6 +261,11 @@ export class Register implements OnInit {
     } finally {
       this.loading.set(false);
     }
+  }
+  get sectorNombreSel(): string {
+    const id = this.model.empresa.sector?.id ?? null;
+    const nombre = this.sectores.find(s => s.id === id)?.nombre || '';
+    return nombre.toUpperCase();
   }
   volver() { this.router.navigate(['/login']); }
 }

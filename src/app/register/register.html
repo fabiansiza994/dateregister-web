@@ -1,6 +1,6 @@
 <div class="container py-4">
   <!-- Encabezado -->
-  <div class="text-center mb-4">
+  <div class="text-center mb-4"><br>
     <h2 class="fw-bold">Crear cuenta</h2>
     <p class="text-secondary mb-0">Completa los pasos y estarás listo para usar DataRegister</p>
   </div>
@@ -47,8 +47,8 @@
         <div class="row g-3">
           <div class="col-md-6">
             <label class="form-label">Usuario</label>
-            <input style="border-style: dashed;" type="text" class="form-control" placeholder="nick01" [(ngModel)]="model.usuario"
-              (ngModelChange)="onUsuarioInput()" readonly="true">
+            <input style="border-style: dashed;" type="text" class="form-control" placeholder="nick01"
+              [(ngModel)]="model.usuario" (ngModelChange)="onUsuarioInput()" readonly="true">
             <div class="form-text">
               Sugerido automáticamente a partir de tu nombre y apellido.
             </div>
@@ -170,6 +170,21 @@
                 {{ s.nombre }}
               </option>
             </select>
+
+            <!-- Mensaje contextual según el sector -->
+            <div class="mt-2">
+              @if (sectorNombreSel === 'SALUD') {
+              <div class="alert alert-info py-2 small mb-0">
+                Elegiste <strong>SALUD</strong>: además del registro de trabajos y clientes, tendrás el módulo de
+                <strong>pacientes</strong> para gestionar historiales y atenciones.
+              </div>
+              } @else if (sectorNombreSel === 'GENERAL') {
+              <div class="alert alert-secondary py-2 small mb-0">
+                Elegiste <strong>GENERAL</strong>: gestiona tus trabajos de forma profesional, registra
+                <strong>trabajos, clientes y reportes</strong>.
+              </div>
+              }
+            </div>
           </div>
         </div>
 

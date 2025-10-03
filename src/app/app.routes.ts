@@ -6,6 +6,7 @@ export const routes: Routes = [
   // Ruta pública
   { path: 'login', loadComponent: () => import('./login/login').then(m => m.Login) },
   { path: 'register', loadComponent: () => import('./register/register').then(m => m.Register) },
+  { path: 'verify/:userId', loadComponent: () => import('./verifycode/verifycode').then(m => m.VerifyCodeComponent) },
   // Grupo protegido por el layout + guard
   {
     path: '',
