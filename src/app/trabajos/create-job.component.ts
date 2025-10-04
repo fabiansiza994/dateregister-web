@@ -7,7 +7,7 @@ import { firstValueFrom, TimeoutError } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 import { ConfigService } from '../core/config.service';
 import { AuthService } from '../core/auth.service';
-
+import { AngularEditorModule, AngularEditorConfig } from '@kolkov/angular-editor';
 import { ClientPickerComponent } from '../shared/client-picker.component';
 import { PatientPickerComponent } from '../shared/patient-picker.component';
 
@@ -48,8 +48,8 @@ interface JobDetail {
   fecha: string;
   valorTotal: number;
   descripcionLabor: string;
-  cliente?: { id: number; nombre: string; apellido?: string|null } | null;
-  paciente?: { id: number; nombre: string; apellido?: string|null; clienteId?: number|null } | null;
+  cliente?: { id: number; nombre: string; apellido?: string | null } | null;
+  paciente?: { id: number; nombre: string; apellido?: string | null; clienteId?: number | null } | null;
   formaPago?: { id: number; formaPago: string } | null;
   valorLabor?: number | null;
   valorMateriales?: number | null;
@@ -62,7 +62,7 @@ interface JobDetail {
 }
 
 interface JobDetailOk {
-  dataResponse: { response: 'SUCCESS'|'ERROR'; idTx?: string|null };
+  dataResponse: { response: 'SUCCESS' | 'ERROR'; idTx?: string | null };
   data?: JobDetail;
   message?: string;
   error?: Array<{ descError?: string; msgError?: string }>;
@@ -71,18 +71,43 @@ interface JobDetailOk {
 @Component({
   selector: 'app-crear-trabajo',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ClientPickerComponent, PatientPickerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ClientPickerComponent, PatientPickerComponent, AngularEditorModule],
   templateUrl: './create-job.html',
 })
 export class CreateJobComponent implements OnInit {
+
+  editorConfig: AngularEditorConfig = {
+    editable: true,
+    spellcheck: true,
+    height: '200px',
+    minHeight: '0',
+    placeholder: 'Escribe la descripción de la labor...',
+    translate: 'no',
+    defaultParagraphSeparator: 'p',
+    toolbarHiddenButtons: [
+      [
+        'insertImage', 'insertVideo', 'insertHorizontalRule',
+        'insertOrderedList', 'insertUnorderedList', 'link'
+      ],
+      ['toggleEditorMode'],
+      [
+        'strikeThrough', 'superscript', 'subscript',
+        'justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull',
+        'indent', 'outdent', 'heading'
+      ]
+    ],
+    // 🔹 Solo mostramos lo esencial:
+    toolbarPosition: 'top'
+  };
+
   private readonly _claims = signal<any | null>(null);
   sector = computed(() => (this._claims()?.sector ?? '').toUpperCase());
-  role   = computed(() => (this._claims()?.role ?? '').toUpperCase());
+  role = computed(() => (this._claims()?.role ?? '').toUpperCase());
   empresa = computed(() => this._claims()?.empresa ?? '');
   empresaId = computed(() => Number(this._claims()?.empresaId ?? 0) || 0);
-  user    = computed(() => this._claims()?.sub ?? '');
+  user = computed(() => this._claims()?.sub ?? '');
 
-  private _jobId = signal<number|null>(null);
+  private _jobId = signal<number | null>(null);
   isEdit = computed(() => this._jobId() !== null);
 
   form: CreateJobPayload = {
@@ -126,7 +151,7 @@ export class CreateJobComponent implements OnInit {
     private router: Router,
     private auth: AuthService,
     private route: ActivatedRoute
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.apiBase = this.cfg.get<string>('apiBaseUrl', '');
@@ -174,7 +199,7 @@ export class CreateJobComponent implements OnInit {
     return Number.isFinite(n) ? n : 0;
   }
 
-  onMoneyInput<K extends 'valorLabor'|'valorMateriales'>(key: K, value: string) {
+  onMoneyInput<K extends 'valorLabor' | 'valorMateriales'>(key: K, value: string) {
     this.form[key] = this.parsePeso(value);
     this.recalc();
   }
@@ -311,7 +336,7 @@ export class CreateJobComponent implements OnInit {
         foto3: j.foto3 || undefined,
         foto4: j.foto4 || undefined,
       };
-    } catch (e:any) {
+    } catch (e: any) {
       this.error.set(e?.error?.message || e?.message || 'Error al cargar el trabajo.');
     } finally {
       this.loading.set(false);

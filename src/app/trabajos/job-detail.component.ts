@@ -103,6 +103,26 @@ export class JobDetailComponent implements OnInit {
     this.loadDetail(id);
   }
 
+  private htmlToPlainText(html: string): string {
+    if (!html) return '';
+    // Quita tags y normaliza espacios
+    return html
+      .replace(/<br\s*\/?>/gi, '\n')      // <br> a saltos de línea
+      .replace(/<\/p>/gi, '\n')           // cierre de <p> a salto de línea
+      .replace(/<[^>]+>/g, '')            // quita el resto de etiquetas
+      .replace(/\u00A0/g, ' ')            // &nbsp; a espacio normal
+      .replace(/[ \t]+\n/g, '\n')         // quita espacios al final de línea
+      .replace(/\n{3,}/g, '\n\n')         // colapsa saltos
+      .trim();
+  }
+
+  private htmlListToBullets(html: string): string {
+    return html
+      .replace(/<li[^>]*>/gi, '• ')
+      .replace(/<\/li>/gi, '\n');
+  }
+
+
   // ========= PDF =========
   downloadPdf() {
     const j = this.job();
@@ -144,12 +164,14 @@ export class JobDetailComponent implements OnInit {
     doc.text(`Estado: ${estado}`, 40, 134);
 
     // --- Descripción (multilínea) ---
-    const desc = j.descripcionLabor || '—';
+    const pre = this.htmlListToBullets(j.descripcionLabor || '');
+    const descPlain = this.htmlToPlainText(pre);
     doc.setFont('helvetica', 'bold');
     doc.text('Descripción:', 40, 164);
     doc.setFont('helvetica', 'normal');
-    const descLines = doc.splitTextToSize(desc, 515); // ancho para margen dcho ≈ 40
+    const descLines = doc.splitTextToSize(descPlain || '—', 515);
     doc.text(descLines, 40, 180);
+
 
     // --- Tabla de valores ---
     // Calculamos por si no vienen los campos
@@ -166,8 +188,8 @@ export class JobDetailComponent implements OnInit {
       head: [['Concepto', 'Valor']],
       body: [
         ['Mano de obra', fmt(manoObra)],
-        ['Materiales',   fmt(materiales)],
-        ['Total',        fmt(total)],
+        ['Materiales', fmt(materiales)],
+        ['Total', fmt(total)],
       ],
       styles: { font: 'helvetica', fontSize: 10 },
       headStyles: { fillColor: [230, 230, 230] },
@@ -189,12 +211,12 @@ export class JobDetailComponent implements OnInit {
   }
 
   estadoBadge(estado?: string) {
-  const s = (estado || '').toUpperCase();
-  if (s === 'PAGO') return 'badge bg-success-subtle text-dark';
-  if (s === 'CANCELADO') return 'badge bg-danger-subtle';
-  // default / PENDIENTE
-  return 'badge bg-warning-subtle text-dark';
-}
+    const s = (estado || '').toUpperCase();
+    if (s === 'PAGO') return 'badge bg-success-subtle text-dark';
+    if (s === 'CANCELADO') return 'badge bg-danger-subtle';
+    // default / PENDIENTE
+    return 'badge bg-warning-subtle text-dark';
+  }
 
 
   async loadDetail(id: number) {
@@ -241,7 +263,7 @@ export class JobDetailComponent implements OnInit {
     // preferir el valor ya calculado si viene:
     if (typeof j.valorTotal === 'number') return j.valorTotal;
     const mano = Number(j.valorLabor ?? 0);
-    const mat  = Number(j.valorMateriales ?? 0);
+    const mat = Number(j.valorMateriales ?? 0);
     return mano + mat;
   }
 
@@ -249,10 +271,10 @@ export class JobDetailComponent implements OnInit {
     if (!j) return 0;
     if (typeof j.ganancias === 'number') return j.ganancias!;
     const total = this.totalCalc(j);
-    const mat   = Number(j.valorMateriales ?? 0);
+    const mat = Number(j.valorMateriales ?? 0);
     return total - mat;
   }
 
   backToList() { this.router.navigate(['/trabajos']); }
-  goToEdit()   { const id = this.id(); if (id) this.router.navigate(['/trabajos', id, 'editar']); }
+  goToEdit() { const id = this.id(); if (id) this.router.navigate(['/trabajos', id, 'editar']); }
 }

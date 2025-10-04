@@ -29,7 +29,13 @@
                 "glob": "**/*",
                 "input": "node_modules/leaflet/dist/images",
                 "output": "/assets/leaflet/"
-              }
+              },
+              {
+  "glob": "**/*",
+  "input": "node_modules/@kolkov/angular-editor/assets/ae-icons",
+  "output": "/assets/ae-icons"
+}
+
             ],
             "styles": [
               "src/styles.css"
