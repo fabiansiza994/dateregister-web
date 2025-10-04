@@ -1,5 +1,11 @@
 @import "driver.js/dist/driver.css";
+@import "leaflet/dist/leaflet.css";
 
+
+#usage-map {
+  height: 70vh;
+  width: 100%;
+}
 /* Driver por encima del sitio */
 .driver-overlay {               /* sombra */
   z-index: 1990 !important;
@@ -25,3 +31,10 @@
   transform: none !important;
   filter: none !important;
 }
+
+/* Para que los iconos se vean correctamente en builds */
+.leaflet-container {
+  height: 70vh;  /* ajusta a tu gusto */
+  width: 100%;
+}
+

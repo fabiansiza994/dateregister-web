@@ -7,6 +7,8 @@ export const routes: Routes = [
   { path: 'login', loadComponent: () => import('./login/login').then(m => m.Login) },
   { path: 'register', loadComponent: () => import('./register/register').then(m => m.Register) },
   { path: 'verify/:userId', loadComponent: () => import('./verifycode/verifycode').then(m => m.VerifyCodeComponent) },
+  { path: 'mapa-uso', loadComponent: () => import('./usage-map/usage-map').then(m => m.UsageMap) },
+
   // Grupo protegido por el layout + guard
   {
     path: '',
