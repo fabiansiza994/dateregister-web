@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">dataregisterapp</string>
+    <string name="title_activity_main">dataregisterapp</string>
+    <string name="package_name">com.fmsp.dataregisterapp</string>
+    <string name="custom_url_scheme">com.fmsp.dataregisterapp</string>
+</resources>
