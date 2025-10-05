@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom, TimeoutError } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 
@@ -45,7 +45,27 @@ interface ApiOk<T> {
 export class ClientPickerComponent {
   @Input() apiBase = '';                 // ej: http://localhost:8081
   @Input() token: string | null = null;  // JWT para crear
-  @Input() isOpen = false;
+
+  private _isOpen = false;
+  private _loadedThisOpen = false;
+
+  @Input() set isOpen(v: boolean) {
+    const wasOpen = this._isOpen;
+    this._isOpen = v;
+
+    if (v && !wasOpen) {
+      this._loadedThisOpen = false;
+      if (this.tab() === 'buscar' && !this._loadedThisOpen) {
+        this.page.set(1);
+        queueMicrotask(() => this.loadPageAuto());
+      }
+    }
+
+    if (!v && wasOpen) {
+      this._loadedThisOpen = false;
+    }
+  }
+  get isOpen() { return this._isOpen; }
 
   // Overrides opcionales si no quieres decodificar el token
   @Input() empresaId: number | null | undefined;
@@ -78,7 +98,17 @@ export class ClientPickerComponent {
 
   constructor(private http: HttpClient) {}
 
-  // ---------- Búsqueda ----------
+  // ----------- Búsqueda -----------
+  private headersOpt(): { headers?: HttpHeaders } {
+    return this.token ? { headers: new HttpHeaders({ Authorization: `Bearer ${this.token}` }) } : {};
+  }
+
+  private async loadPageAuto() {
+    if (this._loadedThisOpen) return;
+    await this.loadPage();
+    this._loadedThisOpen = true;
+  }
+
   async loadPage() {
     if (!this.apiBase) { this.error.set('Falta apiBaseUrl'); return; }
     this.loading.set(true); this.error.set(null);
@@ -89,7 +119,9 @@ export class ClientPickerComponent {
         .set('page', String(zero))
         .set('size', String(this.pageSize()));
       const url = `${this.apiBase}/client/search`;
-      const res = await firstValueFrom(this.http.get<ClientSearchOk>(url, { params }).pipe(timeout(12000)));
+      const res = await firstValueFrom(
+        this.http.get<ClientSearchOk>(url, { params, ...this.headersOpt() }).pipe(timeout(12000))
+      );
       const list = res?.data?.items ?? [];
       this.items.set(list);
       this.total.set(res?.data?.totalElements ?? list.length);
@@ -103,15 +135,14 @@ export class ClientPickerComponent {
       this.loading.set(false);
     }
   }
-  async onSearch(){ this.page.set(1); await this.loadPage(); }
-  async next(){ if (this.page()<this.totalPages()) { this.page.set(this.page()+1); await this.loadPage(); } }
-  async prev(){ if (this.page()>1) { this.page.set(this.page()-1); await this.loadPage(); } }
+  async onSearch(){ this.page.set(1); this._loadedThisOpen = true; await this.loadPage(); }
+  async next(){ if (this.page()<this.totalPages()) { this.page.set(this.page()+1); this._loadedThisOpen = true; await this.loadPage(); } }
+  async prev(){ if (this.page()>1) { this.page.set(this.page()-1); this._loadedThisOpen = true; await this.loadPage(); } }
 
   choose(c: Cliente){ this.selected.emit(c); }
 
-  // ---------- Crear ----------
+  // ----------- Crear -----------
   createForm: Partial<Cliente> = {
-    // Nota: 'identificacion' la capturamos pero NO la enviamos porque tu payload correcto no la incluye
     identificacion: '',
     nombre: '',
     apellido: '',
@@ -136,14 +167,12 @@ export class ClientPickerComponent {
   private resolveEmpresaId(): number | null {
     if (this.empresaId != null) return this.empresaId;
     const claims = this.decodeJwt(this.token);
-    // intenta distintas claves posibles
     return claims?.empresaId ?? claims?.empresa_id ?? null;
   }
 
   private resolveUsuarioId(): number | null {
     if (this.usuarioId != null) return this.usuarioId;
     const claims = this.decodeJwt(this.token);
-    // intenta distintas claves posibles del JWT
     return claims?.userId ?? claims?.usuarioId ?? claims?.idUsuario ?? null;
   }
 
@@ -157,7 +186,6 @@ export class ClientPickerComponent {
       return;
     }
 
-    // Payload EXACTO que pide tu backend
     const payload = {
       nombre: (this.createForm.nombre || '').trim(),
       apellido: (this.createForm.apellido || '').trim(),
@@ -173,11 +201,8 @@ export class ClientPickerComponent {
     this.creating.set(true); this.error.set(null);
     try {
       const url = `${this.apiBase}/client/create`;
-      const headers: any = {};
-      if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
-
       const res = await firstValueFrom(
-        this.http.post<ApiOk<Cliente>>(url, payload, { headers }).pipe(timeout(12000))
+        this.http.post<ApiOk<Cliente>>(url, payload, this.headersOpt()).pipe(timeout(12000))
       );
       if (res?.dataResponse?.response === 'ERROR') {
         const msg = res?.error?.map(x=>x?.descError||x?.msgError)?.filter(Boolean)?.join(' | ');
@@ -194,5 +219,11 @@ export class ClientPickerComponent {
     }
   }
 
-  close(){ if (!this.loading()) this.closed.emit(); }
+  close(){
+    if (!this.loading()) {
+      this._isOpen = false;
+      this._loadedThisOpen = false;
+      this.closed.emit();
+    }
+  }
 }

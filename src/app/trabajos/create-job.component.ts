@@ -164,6 +164,10 @@ export class CreateJobComponent implements OnInit {
       this._jobId.set(id);
     }
 
+    if (!this.isEdit()) {
+    this.form.fecha = this.todayStr();
+  }
+
     this.loadFormasPago(this.empresaId());
     this.recalc();
 
@@ -171,6 +175,15 @@ export class CreateJobComponent implements OnInit {
       this.loadDetail(this._jobId()!);
     }
   }
+
+  private todayStr(): string {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`; // Local, sin usar toISOString() (evita desfase)
+}
+
 
   private num(v: any): number {
     const n = Number(v);
@@ -232,7 +245,7 @@ export class CreateJobComponent implements OnInit {
     const keepId = this.isEdit() ? this._jobId()! : undefined;
     this.form = {
       id: keepId,
-      fecha: '',
+      fecha: this.isEdit() ? '' : this.todayStr(),
       valorLabor: undefined,
       valorMateriales: undefined,
       valorTotal: 0,

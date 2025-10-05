@@ -11,16 +11,16 @@
 </div>
 
 @if (error()) {
-  <div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
-    <i class="bi bi-exclamation-triangle mt-1"></i>
-    <div>{{ error() }}</div>
-  </div>
+<div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
+  <i class="bi bi-exclamation-triangle mt-1"></i>
+  <div>{{ error() }}</div>
+</div>
 }
 @if (success()) {
-  <div class="alert alert-success d-flex align-items-start gap-2" role="alert">
-    <i class="bi bi-check-circle mt-1"></i>
-    <div>{{ success() }}</div>
-  </div>
+<div class="alert alert-success d-flex align-items-start gap-2" role="alert">
+  <i class="bi bi-check-circle mt-1"></i>
+  <div>{{ success() }}</div>
+</div>
 }
 
 <form class="card border-0 shadow-sm rounded-4 mb-4" (submit)="$event.preventDefault(); onSearch()">
@@ -28,10 +28,8 @@
     <div class="row g-3 align-items-end">
       <div class="col-md-10">
         <label for="q" class="form-label">Filtro</label>
-        <input id="q" type="text" class="form-control"
-               placeholder="Ej: nick | Ana | correo@mail"
-               [(ngModel)]="q" name="q"
-               (keyup.enter)="onSearch()" autocomplete="off">
+        <input id="q" type="text" class="form-control" placeholder="Ej: nick | Ana | correo@mail" [(ngModel)]="q"
+          name="q" (keyup.enter)="onSearch()" autocomplete="off">
         <div class="form-text">El filtro aplica a usuario, nombre, apellido o email</div>
       </div>
       <div class="col-md-2 d-flex gap-2">
@@ -57,7 +55,8 @@
         ID <i class="bi" [ngClass]="sortBy()==='id' && direction()==='ASC' ? 'bi-sort-down' : 'bi-sort-up'"></i>
       </button>
       <button class="btn btn-outline-secondary" (click)="changeSort('usuario')" [class.active]="sortBy()==='usuario'">
-        Usuario <i class="bi" [ngClass]="sortBy()==='usuario' && direction()==='ASC' ? 'bi-sort-down' : 'bi-sort-up'"></i>
+        Usuario <i class="bi"
+          [ngClass]="sortBy()==='usuario' && direction()==='ASC' ? 'bi-sort-down' : 'bi-sort-up'"></i>
       </button>
       <button class="btn btn-outline-secondary" (click)="changeSort('nombre')" [class.active]="sortBy()==='nombre'">
         Nombre <i class="bi" [ngClass]="sortBy()==='nombre' && direction()==='ASC' ? 'bi-sort-down' : 'bi-sort-up'"></i>
@@ -89,45 +88,56 @@
     </thead>
     <tbody>
       @if (loading()) {
-        <tr><td colspan="8" class="text-center py-4">
+      <tr>
+        <td colspan="8" class="text-center py-4">
           <div class="d-inline-flex align-items-center gap-2 text-secondary">
             <span class="spinner-border spinner-border-sm"></span> Cargando…
           </div>
-        </td></tr>
+        </td>
+      </tr>
       } @else {
-        @if (visibleWithRow().length === 0) {
-          <tr><td colspan="8" class="text-center py-4 text-secondary">
-            No se encontraron usuarios con el filtro aplicado.
-          </td></tr>
-        } @else {
-          @for (u of visibleWithRow(); track u.id) {
-            <tr class="align-middle">
-              <td class="text-secondary">{{ u.rowNumber }}</td>
-              <td class="text-monospace">{{ u.id }}</td>
-              <td class="fw-semibold"><i class="bi bi-person me-1 text-muted"></i>{{ u.usuario }}</td>
-              <td>{{ u.nombre }} {{ u.apellido || '' }}</td>
-              <td>
-                <a *ngIf="u.email" [href]="'mailto:' + u.email" class="text-decoration-none">{{ u.email }}</a>
-                <span *ngIf="!u.email">—</span>
-              </td>
-              <td>{{ u.grupoNombre || '—' }}</td>
-              <td>{{ u.rolNombre || '—' }}</td>
-              <td>
-                <div class="btn-group btn-group-sm">
-                  <button class="btn btn-outline-info" (click)="verUsuario(u)">
-                    <i class="bi bi-eye"></i> Ver
-                  </button>
-                  <button class="btn btn-outline-primary" (click)="editarUsuario(u)">
-                    <i class="bi bi-pencil"></i> Editar
-                  </button>
-                  <button class="btn btn-outline-danger" (click)="openConfirm(u)" [disabled]="loading()">
-                    <i class="bi bi-trash"></i> Eliminar
-                  </button>
-                </div>
-              </td>
-            </tr>
-          }
-        }
+      @if (visibleWithRow().length === 0) {
+      <tr>
+        <td colspan="8" class="text-center py-4 text-secondary">
+          No se encontraron usuarios con el filtro aplicado.
+        </td>
+      </tr>
+      } @else {
+      @for (u of visibleWithRow(); track u.id) {
+      <tr class="align-middle">
+        <td class="text-secondary">{{ u.rowNumber }}</td>
+        <td class="text-monospace">{{ u.id }}</td>
+        <td class="fw-semibold">
+          <i class="bi bi-person me-1 text-muted"></i>{{ u.usuario }}
+          <span *ngIf="isSelf(u)" class="badge bg-secondary ms-2">Tú</span>
+        </td>
+
+        <td>{{ u.nombre }} {{ u.apellido || '' }}</td>
+        <td>
+          <a *ngIf="u.email" [href]="'mailto:' + u.email" class="text-decoration-none">{{ u.email }}</a>
+          <span *ngIf="!u.email">—</span>
+        </td>
+        <td>{{ u.grupoNombre || '—' }}</td>
+        <td>{{ u.rolNombre || '—' }}</td>
+        <td>
+          <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-info" (click)="verUsuario(u)" disabled>
+              <i class="bi bi-eye"></i> Ver
+            </button>
+            <button class="btn btn-outline-primary" (click)="editarUsuario(u)" [disabled]="isSelf(u)"
+              *ngIf="!isSelf(u)" disabled>
+              <i class="bi bi-pencil"></i> Editar
+            </button>
+
+            <!-- Eliminar: oculto si es Tú (o deshabilitado, como prefieras) -->
+            <button class="btn btn-outline-danger" (click)="openConfirm(u)" [disabled]="loading()" *ngIf="!isSelf(u)">
+              <i class="bi bi-trash"></i> Eliminar
+            </button>
+          </div>
+        </td>
+      </tr>
+      }
+      }
       }
     </tbody>
   </table>
@@ -136,64 +146,68 @@
 <!-- MOBILE -->
 <div class="d-md-none">
   @if (loading()) {
-    <div class="text-center py-4 text-secondary">
-      <div class="d-inline-flex align-items-center gap-2">
-        <span class="spinner-border spinner-border-sm"></span> Cargando…
-      </div>
+  <div class="text-center py-4 text-secondary">
+    <div class="d-inline-flex align-items-center gap-2">
+      <span class="spinner-border spinner-border-sm"></span> Cargando…
     </div>
+  </div>
   } @else {
-    @if (visibleWithRow().length === 0) {
-      <div class="alert alert-light border text-center text-secondary">
-        No se encontraron usuarios con el filtro aplicado.
-      </div>
-    } @else {
-      <div class="row g-3">
-        @for (u of visibleWithRow(); track u.id) {
-          <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                  <div>
-                    <div class="small text-secondary">#{{ u.rowNumber }} · ID {{ u.id }}</div>
-                    <h6 class="mb-0 fw-semibold">
-                      <i class="bi bi-person me-1 text-muted"></i>{{ u.usuario }}
-                    </h6>
-                    <div class="small text-secondary">{{ u.nombre }} {{ u.apellido || '' }}</div>
-                  </div>
-                </div>
+  @if (visibleWithRow().length === 0) {
+  <div class="alert alert-light border text-center text-secondary">
+    No se encontraron usuarios con el filtro aplicado.
+  </div>
+  } @else {
+  <div class="row g-3">
+    @for (u of visibleWithRow(); track u.id) {
+    <div class="col-12">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <div class="small text-secondary">#{{ u.rowNumber }} · ID {{ u.id }}</div>
+              <h6 class="mb-0 fw-semibold">
+                <i class="bi bi-person me-1 text-muted"></i>{{ u.usuario }}
+                <span *ngIf="isSelf(u)" class="badge bg-secondary ms-2">Tú</span>
+              </h6>
 
-                <ul class="list-unstyled mb-0 small">
-                  <li class="mb-1" *ngIf="u.email">
-                    <span class="text-secondary">Email:</span>
-                    <a [href]="'mailto:' + u.email" class="ms-1 text-decoration-none">{{ u.email }}</a>
-                  </li>
-                  <li class="mb-1">
-                    <span class="text-secondary">Grupo:</span>
-                    <span class="ms-1">{{ u.grupoNombre?.nombre || '—' }}</span>
-                  </li>
-                  <li class="mb-0">
-                    <span class="text-secondary">Rol:</span>
-                    <span class="ms-1">{{ u.rolNombre?.nombre || '—' }}</span>
-                  </li>
-                </ul>
-
-                <div class="d-flex justify-content-end gap-2 mt-3">
-                  <button class="btn btn-sm btn-outline-info" (click)="verUsuario(u)">
-                    <i class="bi bi-eye"></i> Ver
-                  </button>
-                  <button class="btn btn-sm btn-outline-primary" (click)="editarUsuario(u)">
-                    <i class="bi bi-pencil"></i> Editar
-                  </button>
-                  <button class="btn btn-sm btn-outline-danger" (click)="openConfirm(u)" [disabled]="loading()">
-                    <i class="bi bi-trash"></i> Eliminar
-                  </button>
-                </div>
-              </div>
+              <div class="small text-secondary">{{ u.nombre }} {{ u.apellido || '' }}</div>
             </div>
           </div>
-        }
+
+          <ul class="list-unstyled mb-0 small">
+            <li class="mb-1" *ngIf="u.email">
+              <span class="text-secondary">Email:</span>
+              <a [href]="'mailto:' + u.email" class="ms-1 text-decoration-none">{{ u.email }}</a>
+            </li>
+            <li class="mb-1">
+              <span class="text-secondary">Grupo:</span>
+              <span class="ms-1">{{ u.grupoNombre?.nombre || '—' }}</span>
+            </li>
+            <li class="mb-0">
+              <span class="text-secondary">Rol:</span>
+              <span class="ms-1">{{ u.rolNombre?.nombre || '—' }}</span>
+            </li>
+          </ul>
+          <div class="d-flex justify-content-end gap-2 mt-3">
+            <button class="btn btn-sm btn-outline-info" (click)="verUsuario(u)">
+              <i class="bi bi-eye"></i> Ver
+            </button>
+            <button class="btn btn-sm btn-outline-primary" (click)="editarUsuario(u)" [disabled]="isSelf(u)"
+              *ngIf="!isSelf(u)">
+              <i class="bi bi-pencil"></i> Editar
+            </button>
+            <button class="btn btn-sm btn-outline-danger" (click)="openConfirm(u)" [disabled]="loading()"
+              *ngIf="!isSelf(u)">
+              <i class="bi bi-trash"></i> Eliminar
+            </button>
+          </div>
+
+        </div>
       </div>
+    </div>
     }
+  </div>
+  }
   }
 </div>
 
@@ -213,11 +227,8 @@
 </nav>
 
 <!-- Modal Confirmación -->
-<div class="modal fade"
-     tabindex="-1"
-     [class.show]="confirmOpen()"
-     [style.display]="confirmOpen() ? 'block' : 'none'"
-     aria-modal="true" role="dialog">
+<div class="modal fade" tabindex="-1" [class.show]="confirmOpen()" [style.display]="confirmOpen() ? 'block' : 'none'"
+  aria-modal="true" role="dialog">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content shadow-lg rounded-4 border-0">
       <div class="modal-header border-0">
@@ -230,13 +241,13 @@
 
       <div class="modal-body">
         @if (userToDelete()) {
-          <p class="mb-1">
-            ¿Eliminar al usuario
-            <span class="fw-semibold">{{ userToDelete()?.usuario }}</span>?
-          </p>
-          <p class="small text-secondary mb-0">Esta acción no se puede deshacer.</p>
+        <p class="mb-1">
+          ¿Eliminar al usuario
+          <span class="fw-semibold">{{ userToDelete()?.usuario }}</span>?
+        </p>
+        <p class="small text-secondary mb-0">Esta acción no se puede deshacer.</p>
         } @else {
-          <p>¿Seguro que deseas eliminar este usuario?</p>
+        <p>¿Seguro que deseas eliminar este usuario?</p>
         }
       </div>
 

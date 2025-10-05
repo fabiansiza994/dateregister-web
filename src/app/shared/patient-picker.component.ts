@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom, TimeoutError } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 
@@ -9,10 +9,8 @@ export interface PacienteLite {
   id: number;
   documento?: string | null;
   clienteId?: number | null;
-  // 👇 NUEVO: soporta cliente embebido o solo un string
   cliente?: { id: number; nombre: string; apellido?: string | null } | null;
   clienteNombre?: string | null;
-
   nombre: string;
   apellido?: string | null;
   email?: string | null;
@@ -55,15 +53,26 @@ export class PatientPickerComponent {
   @Input() apiBase = '';
   @Input() token: string | null = null;
 
-  // Carga automática al abrir
   private _isOpen = false;
+  private _loadedThisOpen = false; // evita dobles cargas por apertura
+
   @Input() set isOpen(v: boolean) {
+    const wasOpen = this._isOpen;
     this._isOpen = v;
-    if (v) {
-      if (this.tab() === 'buscar') {
+
+    if (v && !wasOpen) {
+      // Se abrió el modal
+      this._loadedThisOpen = false;
+      if (this.tab() === 'buscar' && !this._loadedThisOpen) {
         this.page.set(1);
-        queueMicrotask(() => this.loadPage());
+        // microtask para asegurar que template ya se pintó
+        queueMicrotask(() => this.loadPageAuto());
       }
+    }
+
+    if (!v && wasOpen) {
+      // Se cerró el modal
+      this._loadedThisOpen = false;
     }
   }
   get isOpen() { return this._isOpen; }
@@ -95,15 +104,9 @@ export class PatientPickerComponent {
 
   constructor(private http: HttpClient) {}
 
-  // Helper: etiqueta "Cliente — Paciente"
+  // Etiquetas
   pacientLabel(p: PacienteLite): string {
-    const clienteNom =
-      (p.clienteNombre?.trim())
-      || ([p.cliente?.nombre, p.cliente?.apellido].filter(Boolean).join(' ').trim())
-      || ''; // puede estar vacío si BE no lo envía
-
     const pacNom = [p.nombre, p.apellido].filter(Boolean).join(' ').trim();
-
     return `${pacNom}`;
   }
 
@@ -111,14 +114,21 @@ export class PatientPickerComponent {
     const clienteNom =
       (p.clienteNombre?.trim())
       || ([p.cliente?.nombre, p.cliente?.apellido].filter(Boolean).join(' ').trim())
-      || ''; // puede estar vacío si BE no lo envía
-
-    const pacNom = [p.nombre, p.apellido].filter(Boolean).join(' ').trim();
-
-    return clienteNom ? `${clienteNom} - ` : `-` ;
+      || '';
+    return clienteNom ? `${clienteNom} - ` : `-`;
   }
 
-  // ---------- Búsqueda ----------
+  // ----------- Búsqueda -----------
+  private headersOpt(): { headers?: HttpHeaders } {
+    return this.token ? { headers: new HttpHeaders({ Authorization: `Bearer ${this.token}` }) } : {};
+  }
+
+  private async loadPageAuto() {
+    if (this._loadedThisOpen) return;
+    await this.loadPage();
+    this._loadedThisOpen = true;
+  }
+
   async loadPage() {
     if (!this.apiBase) { this.error.set('Falta apiBaseUrl'); return; }
     this.loading.set(true); this.error.set(null);
@@ -133,7 +143,7 @@ export class PatientPickerComponent {
 
       const url = `${this.apiBase}/paciente/search`;
       const res = await firstValueFrom(
-        this.http.get<PacienteSearchOk>(url, { params }).pipe(timeout(12000))
+        this.http.get<PacienteSearchOk>(url, { params, ...this.headersOpt() }).pipe(timeout(12000))
       );
 
       if (res?.dataResponse?.response === 'ERROR') {
@@ -154,13 +164,13 @@ export class PatientPickerComponent {
       this.loading.set(false);
     }
   }
-  async onSearch() { this.page.set(1); await this.loadPage(); }
-  async next() { if (this.page() < this.totalPages()) { this.page.set(this.page() + 1); await this.loadPage(); } }
-  async prev() { if (this.page() > 1) { this.page.set(this.page() - 1); await this.loadPage(); } }
+  async onSearch() { this.page.set(1); this._loadedThisOpen = true; await this.loadPage(); }
+  async next() { if (this.page() < this.totalPages()) { this.page.set(this.page() + 1); this._loadedThisOpen = true; await this.loadPage(); } }
+  async prev() { if (this.page() > 1) { this.page.set(this.page() - 1); this._loadedThisOpen = true; await this.loadPage(); } }
 
   choose(p: PacienteLite) { this.selected.emit(p); }
 
-  // ---------- Crear paciente (con cliente asociado) ----------
+  // ----------- Crear paciente -----------
   createForm: Partial<PacienteLite & { documento?: string | null; clienteId?: number | null }> = {
     nombre: '',
     apellido: '',
@@ -172,7 +182,7 @@ export class PatientPickerComponent {
   };
   creating = signal(false);
 
-  // mini-buscador de clientes para llenar clienteId
+  // mini-buscador de clientes
   qCliente = '';
   loadingClientes = signal(false);
   clientes = signal<ClienteLite[]>([]);
@@ -188,7 +198,7 @@ export class PatientPickerComponent {
         .set('sortBy', 'nombre')
         .set('direction', 'ASC');
       const url = `${this.apiBase}/client/search`;
-      const res: any = await firstValueFrom(this.http.get(url, { params }).pipe(timeout(10000)));
+      const res: any = await firstValueFrom(this.http.get(url, { params, ...this.headersOpt() }).pipe(timeout(10000)));
       const items = res?.data?.items ?? [];
       this.clientes.set(items);
     } catch {
@@ -217,7 +227,7 @@ export class PatientPickerComponent {
     try {
       const url = `${this.apiBase}/paciente/create`;
       const res = await firstValueFrom(
-        this.http.post<ApiOk<{ id: number }>>(url, payload).pipe(timeout(12000))
+        this.http.post<ApiOk<{ id: number }>>(url, payload, this.headersOpt()).pipe(timeout(12000))
       );
 
       if (res?.dataResponse?.response === 'ERROR') {
@@ -235,12 +245,9 @@ export class PatientPickerComponent {
         email: payload.email || undefined,
         direccion: payload.direccion || undefined,
         estado: 'ACTIVO',
-        // Si tu API retorna el cliente en el create, puedes setearlo aquí:
-        // cliente: { id: payload.clienteId, nombre: '...' }
       };
       this.selected.emit(nuevo);
-      // this.closed.emit(); // opcional: cerrar al crear
-
+      // this.closed.emit(); // si quieres cerrar al crear
     } catch (e: any) {
       if (e instanceof TimeoutError) this.error.set('La creación tardó demasiado.');
       else this.error.set(e?.message || e?.error?.message || 'No se pudo crear el paciente.');
@@ -249,5 +256,11 @@ export class PatientPickerComponent {
     }
   }
 
-  close() { if (!this.loading()) this.closed.emit(); }
+  close() {
+    if (!this.loading()) {
+      this._isOpen = false;
+      this._loadedThisOpen = false;
+      this.closed.emit();
+    }
+  }
 }

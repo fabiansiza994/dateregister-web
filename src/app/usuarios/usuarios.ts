@@ -6,6 +6,7 @@ import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom, TimeoutError } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 import { ConfigService } from '../core/config.service';
+import { AuthService } from '../core/auth.service';
 
 interface ApiErrorItem {
   codError?: string;
@@ -25,7 +26,7 @@ interface UsuarioLite {
 }
 
 interface UserSearchOk {
-  dataResponse: { response: 'SUCCESS'|'ERROR' };
+  dataResponse: { response: 'SUCCESS' | 'ERROR' };
   data: {
     items: UsuarioLite[];
     page: number;
@@ -40,12 +41,12 @@ interface UserSearchOk {
 }
 
 interface UserDeleteOk {
-  dataResponse: { response: 'SUCCESS'|'ERROR' };
+  dataResponse: { response: 'SUCCESS' | 'ERROR' };
   data?: { deletedId?: number; message?: string };
   message?: string;
 }
 interface UserDeleteError {
-  dataResponse?: { response?: 'ERROR'|'SUCCESS' };
+  dataResponse?: { response?: 'ERROR' | 'SUCCESS' };
   error?: ApiErrorItem[];
   message?: string;
 }
@@ -57,17 +58,20 @@ interface UserDeleteError {
   templateUrl: './usuarios.html',
 })
 export class UsuariosComponent implements OnInit {
+
+  private _claims = signal<any | null>(null);
+  currentUsername = computed(() => (this._claims()?.sub ?? '').toString().toLowerCase().trim());
   // Filtro: backend exige q, aunque esté vacío
   q = '';
 
   // Estado UI
   loading = signal(false);
-  error   = signal<string | null>(null);
+  error = signal<string | null>(null);
   success = signal<string | null>(null);
 
   // Datos
   usuarios = signal<UsuarioLite[]>([]);
-  total    = signal(0);
+  total = signal(0);
 
   // Paginación (UI 1-based)
   page = signal(1);
@@ -85,7 +89,7 @@ export class UsuariosComponent implements OnInit {
     return Math.max(1, Math.ceil(t / s));
   });
   firstItemIndex = computed(() => this.total() === 0 ? 0 : (this.page() - 1) * this.pageSize() + 1);
-  lastItemIndex  = computed(() => Math.min(this.total(), this.page() * this.pageSize()));
+  lastItemIndex = computed(() => Math.min(this.total(), this.page() * this.pageSize()));
 
   // Para numerar filas visibles
   visibleWithRow = computed(() => {
@@ -98,9 +102,9 @@ export class UsuariosComponent implements OnInit {
     const max = 5;
     const tp = this.totalPages();
     const cur = this.page();
-    const half = Math.floor(max/2);
+    const half = Math.floor(max / 2);
     let start = Math.max(1, cur - half);
-    let end   = Math.min(tp, start + max - 1);
+    let end = Math.min(tp, start + max - 1);
     start = Math.max(1, Math.min(start, end - max + 1));
     const arr: number[] = [];
     for (let n = start; n <= end; n++) arr.push(n);
@@ -116,13 +120,23 @@ export class UsuariosComponent implements OnInit {
   constructor(
     private http: HttpClient,
     private cfg: ConfigService,
-    private router: Router
-  ) {}
+    private router: Router,
+    private auth: AuthService,
+  ) { }
 
   ngOnInit(): void {
     this.apiBase = this.cfg.get<string>('apiBaseUrl', '');
+    this.auth.refreshFromStorage?.();
+    this._claims.set(this.auth.claims());
     this.loadPage();
   }
+
+  // + NUEVO: ¿es el propio usuario?
+  isSelf(u: UsuarioLite): boolean {
+    const me = this.currentUsername();
+    return !!me && u.usuario?.toLowerCase().trim() === me;
+  }
+
 
   // Buscar
   onSearch() {
@@ -216,6 +230,7 @@ export class UsuariosComponent implements OnInit {
 
   // Modal
   openConfirm(u: UsuarioLite) {
+    if (this.isSelf(u)) return;
     this.userToDelete.set(u);
     this.confirmOpen.set(true);
   }

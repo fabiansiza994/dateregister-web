@@ -10,16 +10,16 @@ import { AuthService } from '../core/auth.service';
 
 // ====== Catálogos ======
 interface Pais { id: number; nombre: string; codigoPais: string; }
-interface PaisListOk { data: Pais[]; dataResponse: { response: 'SUCCESS'|'ERROR' } }
+interface PaisListOk { data: Pais[]; dataResponse: { response: 'SUCCESS' | 'ERROR' } }
 
 interface Sector { id: number; nombre: string; }
-interface SectorListOk { data: Sector[]; dataResponse: { response: 'SUCCESS'|'ERROR' } }
+interface SectorListOk { data: Sector[]; dataResponse: { response: 'SUCCESS' | 'ERROR' } }
 
 // ====== Grupos (search) ======
 interface ApiErrorItem { codError?: string; descError?: string; msgError?: string; }
 interface GroupLite { id: number; nombre: string; }
 interface GroupSearchOk {
-  dataResponse: { response: 'SUCCESS'|'ERROR' };
+  dataResponse: { response: 'SUCCESS' | 'ERROR' };
   data: { items: GroupLite[]; totalElements: number; page: number; size: number; totalPages: number; sort: string; query?: string; last: boolean; };
 }
 
@@ -34,14 +34,14 @@ interface UsuarioAdminCreateRequest {
     id: number;          // 0 = nueva empresa
     nombre: string;
     nit: string;
-    pais:   { id: number | null };
+    pais: { id: number | null };
     sector: { id: number | null };
   };
   grupo: { id: number | null };
-  rol:   { id: number };    // USER id=2
+  rol: { id: number };    // USER id=2
 }
-interface UsuarioCreateOk   { dataResponse: { idTx: string|null; response: 'SUCCESS'|'ERROR' }; data?: { id?: number } }
-interface UsuarioCreateError{ dataResponse?: { response?: 'ERROR'|'SUCCESS' }; error?: ApiErrorItem[]; message?: string; }
+interface UsuarioCreateOk { dataResponse: { idTx: string | null; response: 'SUCCESS' | 'ERROR' }; data?: { id?: number } }
+interface UsuarioCreateError { dataResponse?: { response?: 'ERROR' | 'SUCCESS' }; error?: ApiErrorItem[]; message?: string; }
 
 @Component({
   selector: 'app-usuario-nuevo',
@@ -65,7 +65,7 @@ export class UsuarioNuevoComponent implements OnInit {
       id: 0,
       nombre: '',     // se setea desde claims
       nit: '',
-      pais:   { id: null },
+      pais: { id: null },
       sector: { id: null },
     },
     grupo: { id: null },
@@ -74,24 +74,24 @@ export class UsuarioNuevoComponent implements OnInit {
 
   // UI
   loading = signal(false);
-  error   = signal<string|null>(null);
-  success = signal<string|null>(null);
-  fieldErrors = signal<Record<string,string>>({});
+  error = signal<string | null>(null);
+  success = signal<string | null>(null);
+  fieldErrors = signal<Record<string, string>>({});
 
   // Grupos (search)
   qGroup = '';
   grupos = signal<GroupLite[]>([]);
   loadingGrupos = signal(false);
-  errorGrupos = signal<string|null>(null);
+  errorGrupos = signal<string | null>(null);
   totalGrupos = signal(0);
 
   // Catálogos
-  paises   = signal<Pais[]>([]);
+  paises = signal<Pais[]>([]);
   sectores = signal<Sector[]>([]);
-  loadingPaises   = signal(false);
+  loadingPaises = signal(false);
   loadingSectores = signal(false);
-  errorPaises   = signal<string|null>(null);
-  errorSectores = signal<string|null>(null);
+  errorPaises = signal<string | null>(null);
+  errorSectores = signal<string | null>(null);
 
   // ====== Lógica de autogenerar usuario (como en register) ======
   private userEditedUsername = false;
@@ -108,7 +108,7 @@ export class UsuarioNuevoComponent implements OnInit {
 
   private computeUsername(): string {
     const first = this.normalizeToken(this.model().nombre);
-    const last  = this.normalizeToken(this.model().apellido);
+    const last = this.normalizeToken(this.model().apellido);
     if (!first || !last) return '';
     return `${first}.${last}`;
   }
@@ -136,14 +136,14 @@ export class UsuarioNuevoComponent implements OnInit {
   isStep1Valid = computed(() => {
     const m = this.model();
     return !!m.usuario.trim() && !!m.email.trim() && !!m.nombre.trim()
-        && !!m.apellido.trim() && !!m.password.trim();
+      && !!m.apellido.trim() && !!m.password.trim();
   });
   isStep2Valid = computed(() => {
     const e = this.model().empresa;
     return this.model().grupo.id !== null
-        && !!e.nombre.trim()
-        && e.pais.id   !== null
-        && e.sector.id !== null;
+      && !!e.nombre.trim()
+      && e.pais.id !== null
+      && e.sector.id !== null;
   });
 
   private apiBase = '';
@@ -153,10 +153,10 @@ export class UsuarioNuevoComponent implements OnInit {
     private cfg: ConfigService,
     private auth: AuthService,
     private router: Router,
-  ) {}
+  ) { }
 
   async ngOnInit() {
-    this.apiBase = this.cfg.get<string>('apiBaseUrl','');
+    this.apiBase = this.cfg.get<string>('apiBaseUrl', '');
 
     // Prefill desde claims
     const claims = this.auth.claims();
@@ -165,13 +165,13 @@ export class UsuarioNuevoComponent implements OnInit {
       empresa: {
         ...m.empresa,
         nombre: (claims?.empresa ?? '').toString(),
-        pais:   { id: null },
+        pais: { id: null },
         sector: { id: null },
       }
     }));
 
     // Cargar catálogos en paralelo y mapear pais/sector desde claims
-    await Promise.all([ this.loadPaises(), this.loadSectores() ]);
+    await Promise.all([this.loadPaises(), this.loadSectores()]);
     this.autoselectEmpresaFromClaims(claims?.pais, claims?.sector);
 
     // Cargar grupos (q obligatorio: enviar q='')
@@ -186,7 +186,7 @@ export class UsuarioNuevoComponent implements OnInit {
         this.http.get<PaisListOk>(`${this.apiBase}/country/list`).pipe(timeout(10000))
       );
       this.paises.set(res?.data ?? []);
-    } catch (e:any) {
+    } catch (e: any) {
       this.errorPaises.set(e?.error?.message || e?.message || 'No fue posible cargar países.');
       this.paises.set([]);
     } finally {
@@ -201,7 +201,7 @@ export class UsuarioNuevoComponent implements OnInit {
         this.http.get<SectorListOk>(`${this.apiBase}/sector/list`).pipe(timeout(10000))
       );
       this.sectores.set(res?.data ?? []);
-    } catch (e:any) {
+    } catch (e: any) {
       this.errorSectores.set(e?.error?.message || e?.message || 'No fue posible cargar sectores.');
       this.sectores.set([]);
     } finally {
@@ -245,15 +245,15 @@ export class UsuarioNuevoComponent implements OnInit {
     this.model.update(m => ({ ...m, empresa: { ...m.empresa, nit: v } }));
     this.clearFieldError('empresa.nit');
   }
-  onEmpresaPais(id: number|null) {
+  onEmpresaPais(id: number | null) {
     this.model.update(m => ({ ...m, empresa: { ...m.empresa, pais: { id } } }));
     this.clearFieldError('empresa.pais.id');
   }
-  onEmpresaSector(id: number|null) {
+  onEmpresaSector(id: number | null) {
     this.model.update(m => ({ ...m, empresa: { ...m.empresa, sector: { id } } }));
     this.clearFieldError('empresa.sector.id');
   }
-  onGrupoChange(id: number|null) {
+  onGrupoChange(id: number | null) {
     this.model.update(m => ({ ...m, grupo: { id } }));
     this.clearFieldError('grupo.id');
   }
@@ -290,7 +290,7 @@ export class UsuarioNuevoComponent implements OnInit {
       this.grupos.set(items);
       this.totalGrupos.set(res?.data?.totalElements ?? items.length);
 
-    } catch (e:any) {
+    } catch (e: any) {
       this.errorGrupos.set(e?.error?.message || e?.message || 'No fue posible cargar los grupos.');
       this.grupos.set([]); this.totalGrupos.set(0);
     } finally {
@@ -325,19 +325,56 @@ export class UsuarioNuevoComponent implements OnInit {
       const flash = `✅ Usuario creado${id ? ' (ID ' + id + ')' : ''}.`;
       this.router.navigate(['/usuarios'], { state: { flash } });
 
-    } catch (e:any) {
+    } catch (e: any) {
       if (e instanceof TimeoutError) {
         this.error.set('La solicitud tardó demasiado. Intenta de nuevo.');
       } else {
         const be = (e?.error ?? e) as UsuarioCreateError;
         const arr = be?.error ?? [];
+
         if (arr.length > 0) {
+          // Campos que sí reconocemos en el form
+          const knownFields = new Set([
+            'usuario', 'email', 'nombre', 'apellido', 'password',
+            'empresa.nombre', 'empresa.nit', 'empresa.pais.id', 'empresa.sector.id',
+            'grupo.id'
+          ]);
+
+          const globalMsgs: string[] = [];
+
           arr.forEach(it => {
-            const field = (it?.msgError ?? '').trim() || 'global';
-            const msg   = (it?.descError ?? it?.codError ?? 'Error').trim();
-            if (field === 'global') this.error.set(msg);
-            else this.setFieldError(field, msg);
+            const cod = (it?.codError ?? '').trim();        // p.ej. "ERROR"
+            const desc = (it?.descError ?? '').trim();        // p.ej. "E001" ó mensaje humano
+            const msg = (it?.msgError ?? '').trim();        // p.ej. "El usuario ya existe." ó campo
+
+            // ¿descError luce como código tipo E001?
+            const descPareceCodigo = /^E\d{3,}$/.test(desc);
+            // Mensaje humano final (soporta ambas variantes)
+            const humanMessage = descPareceCodigo
+              ? (msg || cod || 'Error')                       // BE -> desc=E001, msg=humano
+              : (desc || msg || cod || 'Error');              // BE -> desc=humano
+
+            // ¿msgError parece un nombre de campo?
+            const msgPareceCampo = !!msg && !/\s/.test(msg) &&
+              (knownFields.has(msg) || msg.includes('.'));
+
+            if (msgPareceCampo) {
+              this.setFieldError(msg, humanMessage);
+            } else {
+              globalMsgs.push(humanMessage);
+            }
+
+            // (Opcional) mapea códigos conocidos a campos
+            if (desc === 'E001') { // usuario duplicado
+              this.setFieldError('usuario', humanMessage);
+            }
           });
+
+          if (globalMsgs.length) {
+            this.error.set(globalMsgs.join(' | '));
+          } else if (!Object.keys(this.fieldErrors()).length) {
+            this.error.set(be?.message || 'Validación rechazada.');
+          }
         } else {
           this.error.set(be?.message || e?.error?.message || e?.message || 'No se pudo crear el usuario.');
         }
