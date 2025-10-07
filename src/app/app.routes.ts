@@ -8,7 +8,8 @@ export const routes: Routes = [
   { path: 'register', loadComponent: () => import('./register/register').then(m => m.Register) },
   { path: 'verify/:userId', loadComponent: () => import('./verifycode/verifycode').then(m => m.VerifyCodeComponent) },
   { path: 'mapa-uso', loadComponent: () => import('./usage-map/usage-map').then(m => m.UsageMap) },
-
+  { path: 'usuario-online', loadComponent: () => import('./usuarios-online/usuarios-online').then(m => m.UsuariosOnlineComponent) },
+  {path: 'usuario-online', loadComponent: () => import('./usuarios-online/usuarios-online').then(m => m.UsuariosOnlineComponent)},
   // Grupo protegido por el layout + guard
   {
     path: '',
@@ -34,7 +35,11 @@ export const routes: Routes = [
       { path: 'usuarios/nuevo', loadComponent: () => import('./usuarios/usuario-nuevo').then(m => m.UsuarioNuevoComponent) },
       // app.routes.ts (dentro de children protegidas)
       { path: 'usuarios', loadComponent: () => import('./usuarios/usuarios').then(m => m.UsuariosComponent) },
-
+      {
+        path: 'usuarios/:id',
+        loadComponent: () =>
+          import('./usuarios/usuario-detalle.component').then(m => m.UsuarioDetalleComponent),
+      },
       { path: 'formas-pago', loadComponent: () => import('./method-of-payment/method-of-payment').then(m => m.MethodOfPaymentComponent) },
       { path: 'grupos', loadComponent: () => import('./grupos/grupos').then(m => m.GruposComponent) },
       { path: 'reportes', loadComponent: () => import('./reportes-component/reportes-component').then(m => m.ReportesComponent) },

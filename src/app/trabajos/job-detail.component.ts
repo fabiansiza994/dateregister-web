@@ -9,6 +9,31 @@ import { AuthService } from '../core/auth.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+// ===== Estados (fuente única) =====
+export type EstadoValue =
+  | 'PENDIENTE' | 'EN CURSO' | 'EN REVISION' | 'REVISADO'
+  | 'PAGO' | 'FINALIZADO' | 'CANCELADO' | 'DEVUELTO' | 'PROGRAMADO' | 'NO ASISTE';
+
+export interface EstadoOption {
+  value: EstadoValue;
+  label: string;
+  badgeClass: string;
+}
+
+export const ESTADO_OPTIONS: EstadoOption[] = [
+  { value: 'PENDIENTE',    label: '⏳ Pendiente',     badgeClass: 'badge bg-warning-subtle text-dark' },
+  { value: 'PROGRAMADO',   label: '🗓️ Programado',   badgeClass: 'badge bg-primary-subtle text-dark' },
+  { value: 'EN CURSO',     label: '🔧 En curso',      badgeClass: 'badge bg-info-subtle text-dark' },
+  { value: 'EN REVISION',  label: '🧪 En revisión',   badgeClass: 'badge bg-secondary-subtle text-dark' },
+  { value: 'REVISADO',     label: '🔍 Revisado',      badgeClass: 'badge bg-secondary-subtle text-dark' },
+  { value: 'PAGO',         label: '✅ Pago',          badgeClass: 'badge bg-success-subtle text-dark' },
+  { value: 'FINALIZADO',   label: '🏁 Finalizado',    badgeClass: 'badge bg-success-subtle text-dark' },
+  { value: 'CANCELADO',    label: '❌ Cancelado',     badgeClass: 'badge bg-danger-subtle' },
+  { value: 'DEVUELTO',     label: '↩️ Devuelto',      badgeClass: 'badge bg-dark-subtle text-dark' },
+  { value: 'NO ASISTE',    label: '🚫 No asiste',     badgeClass: 'badge bg-dark-subtle text-dark' },
+];
+
+// ====== Tipos de tu modelo ======
 interface FormaPago { id: number; formaPago: string; estado?: number; }
 interface ClienteMin { id: number; nombre: string; apellido?: string | null; }
 interface UsuarioMin {
@@ -46,7 +71,7 @@ interface TrabajoDetail {
   foto2?: string | null;
   foto3?: string | null;
   foto4?: string | null;
-  estado?: 'PENDIENTE' | 'PAGO' | 'CANCELADO' | string;
+  estado?: EstadoValue | string;
 }
 
 interface JobDetailOk {
@@ -61,6 +86,7 @@ interface JobDetailOk {
   standalone: true,
   imports: [CommonModule, RouterLink],
   templateUrl: './trabajo-detalle.html',
+  styleUrls: ['./job-detail.component.css'],
 })
 export class JobDetailComponent implements OnInit {
 
@@ -105,14 +131,13 @@ export class JobDetailComponent implements OnInit {
 
   private htmlToPlainText(html: string): string {
     if (!html) return '';
-    // Quita tags y normaliza espacios
     return html
-      .replace(/<br\s*\/?>/gi, '\n')      // <br> a saltos de línea
-      .replace(/<\/p>/gi, '\n')           // cierre de <p> a salto de línea
-      .replace(/<[^>]+>/g, '')            // quita el resto de etiquetas
-      .replace(/\u00A0/g, ' ')            // &nbsp; a espacio normal
-      .replace(/[ \t]+\n/g, '\n')         // quita espacios al final de línea
-      .replace(/\n{3,}/g, '\n\n')         // colapsa saltos
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .replace(/\u00A0/g, ' ')
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
       .trim();
   }
 
@@ -121,7 +146,6 @@ export class JobDetailComponent implements OnInit {
       .replace(/<li[^>]*>/gi, '• ')
       .replace(/<\/li>/gi, '\n');
   }
-
 
   // ========= PDF =========
   downloadPdf() {
@@ -157,7 +181,6 @@ export class JobDetailComponent implements OnInit {
       doc.text(`Cliente/Paciente: —`, 40, 102);
     }
 
-    // Forma de pago y estado
     const mop = j.formaPago?.formaPago || '—';
     const estado = j.estado || '—';
     doc.text(`Forma de pago: ${mop}`, 40, 118);
@@ -172,9 +195,7 @@ export class JobDetailComponent implements OnInit {
     const descLines = doc.splitTextToSize(descPlain || '—', 515);
     doc.text(descLines, 40, 180);
 
-
     // --- Tabla de valores ---
-    // Calculamos por si no vienen los campos
     const manoObra = j.valorLabor ?? 0;
     const materiales = j.valorMateriales ?? 0;
     const total = typeof j.valorTotal === 'number'
@@ -184,7 +205,7 @@ export class JobDetailComponent implements OnInit {
     const fmt = (n: number | null | undefined) => this.formatMoney(Number(n ?? 0));
 
     autoTable(doc, {
-      startY: 220 + (descLines.length > 1 ? (descLines.length - 1) * 12 : 0), // baja si la descr. es larga
+      startY: 220 + (descLines.length > 1 ? (descLines.length - 1) * 12 : 0),
       head: [['Concepto', 'Valor']],
       body: [
         ['Mano de obra', fmt(manoObra)],
@@ -205,19 +226,15 @@ export class JobDetailComponent implements OnInit {
     doc.setTextColor(120);
     doc.text('Generado por DataRegister', 40, pageH - 30);
 
-    // --- Guardar ---
     const nombre = `detalle_trabajo_${id}_${fecha}.pdf`;
     doc.save(nombre);
   }
 
   estadoBadge(estado?: string) {
-    const s = (estado || '').toUpperCase();
-    if (s === 'PAGO') return 'badge bg-success-subtle text-dark';
-    if (s === 'CANCELADO') return 'badge bg-danger-subtle';
-    // default / PENDIENTE
-    return 'badge bg-warning-subtle text-dark';
+    const s = (estado || '').toUpperCase() as EstadoValue;
+    const found = ESTADO_OPTIONS.find(o => o.value === s);
+    return found?.badgeClass || 'badge bg-light text-dark';
   }
-
 
   async loadDetail(id: number) {
     this.loading.set(true);
@@ -225,7 +242,6 @@ export class JobDetailComponent implements OnInit {
     try {
       if (!this.apiBase) throw new Error('Config no cargada: falta apiBaseUrl');
 
-      // Ajusta si tu backend usa otra ruta (p. ej. /job/get/{id})
       const url = `${this.apiBase}/job/detail/${id}`;
       const res = await firstValueFrom(
         this.http.get<JobDetailOk>(url).pipe(timeout(12000))
@@ -257,10 +273,8 @@ export class JobDetailComponent implements OnInit {
     } catch { return `$${n}`; }
   }
 
-  // Si tu BE no devuelve ganancias/total desglosado:
   totalCalc(j: TrabajoDetail | null) {
     if (!j) return 0;
-    // preferir el valor ya calculado si viene:
     if (typeof j.valorTotal === 'number') return j.valorTotal;
     const mano = Number(j.valorLabor ?? 0);
     const mat = Number(j.valorMateriales ?? 0);

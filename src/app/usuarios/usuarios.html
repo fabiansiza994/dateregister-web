@@ -121,7 +121,7 @@
         <td>{{ u.rolNombre || '—' }}</td>
         <td>
           <div class="btn-group btn-group-sm">
-            <button class="btn btn-outline-info" (click)="verUsuario(u)" disabled>
+            <button class="btn btn-outline-info" (click)="verUsuario(u)">
               <i class="bi bi-eye"></i> Ver
             </button>
             <button class="btn btn-outline-primary" (click)="editarUsuario(u)" [disabled]="isSelf(u)"

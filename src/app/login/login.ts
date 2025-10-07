@@ -52,13 +52,13 @@ export class Login {
     return raw
       .normalize('NFD').replace(/\p{Diacritic}/gu, '') // quita tildes
       .toLowerCase()
-      .replace(/[^a-z.]/g, '')   // solo letras y punto
-      .replace(/\.+/g, '.')      // colapsa puntos repetidos
+      .replace(/[^a-z0-9.]/g, '')   // ✅ permite letras, números y punto
+      .replace(/\.+/g, '.')         // colapsa puntos repetidos
       .trim();
   }
 
-  // exactamente letras.punto.letras (un solo punto)
-  private usernameRegex = /^[a-z]+\.[a-z]+$/;
+  // exactamente letras/números.punto.letras/números (un solo punto)
+  private usernameRegex = /^[a-z0-9]+\.[a-z0-9]+$/;
 
   onUserInput(v: string) {
     const n = this.normalizeUsername(v);

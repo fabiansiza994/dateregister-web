@@ -2,11 +2,12 @@ import { Component, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../core/auth.service';
+import { PresenceBadgeComponent } from "../shared/presence-badge.component";
 
 @Component({
   selector: 'app-menu',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink, RouterLinkActive, PresenceBadgeComponent],
   templateUrl: './menu.html',
   styleUrls: ['./menu.css']
 })

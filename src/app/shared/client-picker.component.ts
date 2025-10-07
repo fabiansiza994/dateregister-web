@@ -33,7 +33,7 @@ interface ApiOk<T> {
   dataResponse?: { idTx?: string | null; response?: 'SUCCESS'|'ERROR' };
   data?: T;
   message?: string;
-  error?: Array<{ descError?: string; msgError?: string }>;
+  error?: Array<{ codError?: string; descError?: string; msgError?: string }>;
 }
 
 @Component({
@@ -98,7 +98,34 @@ export class ClientPickerComponent {
 
   constructor(private http: HttpClient) {}
 
+  // ----------- Helper de errores backend -----------
+
+  /** Extrae el/los descError|msgError del backend (soporta 200 con response=ERROR o errores HTTP) */
+  private extractBackendErrorMessage(err: any): string | null {
+    const src = err?.error ?? err; // en errores HTTP, Angular pone el body en err.error
+
+    // Caso típico: { error: [{ descError, msgError, ... }] }
+    const arr = Array.isArray(src?.error) ? src.error
+              : Array.isArray(src) ? src
+              : Array.isArray(err?.error?.error) ? err.error.error
+              : null;
+
+    if (Array.isArray(arr)) {
+      const msgs = arr
+        .map((x: any) => x?.descError || x?.msgError)
+        .filter(Boolean);
+      if (msgs.length) return msgs.join(' | ');
+    }
+
+    // A veces viene en nivel raíz
+    if (typeof src?.message === 'string' && src.message) return src.message;
+    if (typeof err?.message === 'string' && err.message) return err.message;
+
+    return null;
+  }
+
   // ----------- Búsqueda -----------
+
   private headersOpt(): { headers?: HttpHeaders } {
     return this.token ? { headers: new HttpHeaders({ Authorization: `Bearer ${this.token}` }) } : {};
   }
@@ -126,15 +153,17 @@ export class ClientPickerComponent {
       this.items.set(list);
       this.total.set(res?.data?.totalElements ?? list.length);
     } catch (e:any) {
-      if (e instanceof TimeoutError) this.error.set('La consulta tardó demasiado.');
-      else {
-        const msg = e?.error?.error?.map((x:any)=>x?.descError||x?.msgError)?.filter(Boolean)?.join(' | ');
-        this.error.set(msg || e?.error?.message || e?.message || 'Error al cargar clientes');
+      if (e instanceof TimeoutError) {
+        this.error.set('La consulta tardó demasiado.');
+      } else {
+        const msg = this.extractBackendErrorMessage(e);
+        this.error.set(msg || 'Error al cargar clientes');
       }
     } finally {
       this.loading.set(false);
     }
   }
+
   async onSearch(){ this.page.set(1); this._loadedThisOpen = true; await this.loadPage(); }
   async next(){ if (this.page()<this.totalPages()) { this.page.set(this.page()+1); this._loadedThisOpen = true; await this.loadPage(); } }
   async prev(){ if (this.page()>1) { this.page.set(this.page()-1); this._loadedThisOpen = true; await this.loadPage(); } }
@@ -142,6 +171,7 @@ export class ClientPickerComponent {
   choose(c: Cliente){ this.selected.emit(c); }
 
   // ----------- Crear -----------
+
   createForm: Partial<Cliente> = {
     identificacion: '',
     nombre: '',
@@ -177,6 +207,7 @@ export class ClientPickerComponent {
   }
 
   async createClient() {
+    // Validación mínima local
     if (!this.createForm.nombre?.trim()) { this.error.set('El nombre es obligatorio.'); return; }
 
     const empresaId = this.resolveEmpresaId();
@@ -204,16 +235,28 @@ export class ClientPickerComponent {
       const res = await firstValueFrom(
         this.http.post<ApiOk<Cliente>>(url, payload, this.headersOpt()).pipe(timeout(12000))
       );
-      if (res?.dataResponse?.response === 'ERROR') {
-        const msg = res?.error?.map(x=>x?.descError||x?.msgError)?.filter(Boolean)?.join(' | ');
-        throw new Error(msg || res?.message || 'Error al crear cliente');
+
+      // Caso 200 con response=ERROR del backend
+      if (res?.dataResponse?.response?.toUpperCase() === 'ERROR') {
+        const msgFromRes = this.extractBackendErrorMessage(res);
+        const msg = msgFromRes || res?.message || 'Error al crear cliente';
+        throw new Error(msg);
       }
+
       const nuevo = res?.data as Cliente;
-      if (nuevo?.id) this.selected.emit(nuevo);
-      else this.error.set('Cliente creado pero sin ID retornado.');
+      if (nuevo?.id) {
+        this.selected.emit(nuevo);
+      } else {
+        this.error.set('Cliente creado pero sin ID retornado.');
+      }
     } catch (e:any) {
-      if (e instanceof TimeoutError) this.error.set('La creación tardó demasiado.');
-      else this.error.set(e?.message || e?.error?.message || 'No se pudo crear el cliente.');
+      if (e instanceof TimeoutError) {
+        this.error.set('La creación tardó demasiado.');
+      } else {
+        // Errores HTTP con el mismo formato { error: [{ descError, msgError }] }
+        const msg = this.extractBackendErrorMessage(e);
+        this.error.set(msg || 'No se pudo crear el cliente.');
+      }
     } finally {
       this.creating.set(false);
     }

@@ -1,20 +1,17 @@
-<!-- Modal (controlado por el padre con [isOpen]) -->
-<div class="modal fade" tabindex="-1"
-     [class.show]="isOpen"
-     [style.display]="isOpen ? 'block' : 'none'"
-     aria-modal="true" role="dialog">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
-    <div class="modal-content shadow-lg rounded-4 border-0">
-      <div class="modal-header border-0">
-        <h5 class="modal-title">
-          <i class="bi bi-heart-pulse me-2"></i> Seleccionar o crear paciente
+<!-- Modal Paciente -->
+<div class="modal modal-light" tabindex="-1" [class.show]="isOpen" [style.display]="isOpen ? 'block' : 'none'">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content rounded-4">
+      <div class="modal-header">
+        <h5 class="modal-title d-flex align-items-center gap-2">
+          <i class="bi bi-heart-pulse"></i> Seleccionar paciente
         </h5>
         <button type="button" class="btn-close" (click)="close()"></button>
       </div>
 
       <div class="modal-body">
-        <!-- Tabs -->
-        <ul class="nav nav-tabs mb-3">
+        <!-- Tabs (buscar/crear) -->
+        <ul class="nav nav-tabs">
           <li class="nav-item">
             <button class="nav-link" [class.active]="tab()==='buscar'" (click)="tab.set('buscar')">Buscar</button>
           </li>
@@ -23,155 +20,128 @@
           </li>
         </ul>
 
-        <!-- Error -->
-        @if (error()) {
-          <div class="alert alert-danger py-2">
-            {{ error() }}
-          </div>
-        }
-
-        <!-- Buscar -->
+        <!-- BUSCAR -->
         @if (tab()==='buscar') {
-          <form class="row g-2 mb-3" (submit)="$event.preventDefault(); onSearch()">
-            <div class="col-md-8">
-              <input class="form-control" placeholder="Nombre, documento, email…"
-                     [(ngModel)]="q" name="q" (keyup.enter)="onSearch()">
-            </div>
-            <div class="col-md-4 d-flex gap-2">
-              <button class="btn btn-outline-success" [disabled]="loading()">Buscar</button>
-              <button type="button" class="btn btn-light" (click)="q=''; onSearch()" [disabled]="loading()">Limpiar</button>
-            </div>
-          </form>
+        <div class="mt-3">
+          <div class="d-flex gap-2">
+            <input class="form-control" type="text" placeholder="Buscar por nombre o apellido…"
+                   [(ngModel)]="q" (keyup.enter)="onSearch()">
+            <button class="btn btn-soft-primary" (click)="onSearch()">
+              <i class="bi bi-search"></i> Buscar
+            </button>
+          </div>
 
-          <div class="table-responsive border rounded-3">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th style="width:70px;">#</th>
-                  <th>Documento</th>
-                  <th>Cliente/Paciente</th>
-                  <th>Email</th>
-                  <th>Teléfono</th>
-                  <th style="width:120px;">Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                @if (loading()) {
-                  <tr>
-                    <td colspan="6" class="text-center py-4">
-                      <span class="spinner-border spinner-border-sm me-2"></span> Cargando…
-                    </td>
-                  </tr>
-                } @else {
-                  @if (visibleWithRow().length===0) {
-                    <tr>
-                      <td colspan="6" class="text-center py-4 text-secondary">Sin resultados.</td>
-                    </tr>
-                  } @else {
-                    @for (p of visibleWithRow(); track p.id) {
-                      <tr>
-                        <td class="text-secondary">{{ p.row }}</td>
-                        <td class="text-monospace">{{ p.documento || '—' }}</td>
-                     
-                         <td><span class="fw-semibold">{{ clientLabel(p) }}</span> <span>{{ pacientLabel(p) }}</span></td>
-                        <td>{{ p.email || '—' }}</td>
-                        <td>{{ p.telefono || '—' }}</td>
-                        <td>
-                          <button class="btn btn-sm btn-success" (click)="choose(p)">Seleccionar</button>
-                        </td>
-                      </tr>
-                    }
-                  }
-                }
-              </tbody>
-            </table>
+          <div class="dr-divider"></div>
+
+          <div *ngIf="loading()" class="text-secondary small mb-2">
+            <i class="bi bi-arrow-repeat me-1"></i> Cargando…
+          </div>
+          <div *ngIf="error()" class="alert alert-danger py-2">{{ error() }}</div>
+
+          <div class="dr-grid">
+            <button type="button" class="dr-item text-start" *ngFor="let p of items()" (click)="choose(p)">
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="fw-semibold">
+                  {{ p.nombre }} {{ p.apellido || '' }}
+                </div>
+                <span class="dr-badge">
+                  <i class="bi bi-person"></i> ID {{ p.id }}
+                </span>
+              </div>
+              <div class="text-secondary small mt-1">
+                {{ clientLabel(p) }}{{ pacientLabel(p) }}
+              </div>
+            </button>
+          </div>
+
+          <div *ngIf="!loading() && items().length === 0" class="text-secondary small mt-3">
+            No hay resultados.
           </div>
 
           <!-- Paginación -->
-          <div class="d-flex justify-content-between align-items-center mt-2">
-            <div class="small text-secondary">Total: {{ total() }}</div>
-            <div class="btn-group btn-group-sm">
-              <button class="btn btn-outline-secondary" (click)="prev()" [disabled]="page()<=1 || loading()">«</button>
-              <button class="btn btn-outline-secondary" disabled>{{ page() }}/{{ totalPages() }}</button>
-              <button class="btn btn-outline-secondary" (click)="next()" [disabled]="page()>=totalPages() || loading()">»</button>
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <button class="btn btn-ghost" (click)="prev()" [disabled]="page()<=1">
+              <i class="bi bi-chevron-left"></i> Anterior
+            </button>
+            <div class="small text-secondary">
+              Página {{ page() }} / {{ totalPages() }} · {{ total() }} resultados
             </div>
+            <button class="btn btn-ghost" (click)="next()" [disabled]="page()>=totalPages()">
+              Siguiente <i class="bi bi-chevron-right"></i>
+            </button>
           </div>
+        </div>
         }
 
-        <!-- Crear -->
+        <!-- CREAR -->
         @if (tab()==='crear') {
-          <form class="row g-3" (submit)="$event.preventDefault(); createPatient()">
+        <div class="mt-3">
+          <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label">Nombre *</label>
-              <input class="form-control" [(ngModel)]="createForm.nombre" name="nombre" required>
+              <label class="form-label">Nombre</label>
+              <input class="form-control" [(ngModel)]="createForm.nombre" name="p_nombre" autocomplete="off">
             </div>
             <div class="col-md-6">
               <label class="form-label">Apellido</label>
-              <input class="form-control" [(ngModel)]="createForm.apellido" name="apellido">
+              <input class="form-control" [(ngModel)]="createForm.apellido" name="p_apellido" autocomplete="off">
             </div>
-
             <div class="col-md-6">
-              <label class="form-label">Documento *</label>
-              <input class="form-control" [(ngModel)]="createForm.documento" name="documento" required>
+              <label class="form-label">Documento</label>
+              <input class="form-control" [(ngModel)]="createForm.documento" name="p_documento" autocomplete="off">
             </div>
             <div class="col-md-6">
               <label class="form-label">Teléfono</label>
-              <input class="form-control" [(ngModel)]="createForm.telefono" name="telefono">
+              <input class="form-control" [(ngModel)]="createForm.telefono" name="p_telefono" autocomplete="off">
             </div>
-
             <div class="col-md-6">
               <label class="form-label">Email</label>
-              <input type="email" class="form-control" [(ngModel)]="createForm.email" name="email">
+              <input class="form-control" [(ngModel)]="createForm.email" name="p_email" autocomplete="off">
             </div>
             <div class="col-md-6">
               <label class="form-label">Dirección</label>
-              <input class="form-control" [(ngModel)]="createForm.direccion" name="direccion">
+              <input class="form-control" [(ngModel)]="createForm.direccion" name="p_direccion" autocomplete="off">
             </div>
 
-            <!-- Asociar Cliente -->
-            <div class="col-md-8">
-              <label class="form-label">Buscar cliente (para asociar)</label>
-              <div class="input-group">
-                <input class="form-control" [(ngModel)]="qCliente" name="qCliente" (keyup.enter)="buscarClientes()" placeholder="Nombre o identificación">
-                <button type="button" class="btn btn-outline-secondary" (click)="buscarClientes()">Buscar</button>
+            <!-- mini buscador de cliente -->
+            <div class="col-12">
+              <label class="form-label">Cliente asociado</label>
+              <div class="d-flex gap-2">
+                <input class="form-control" placeholder="Busca un cliente…" [(ngModel)]="qCliente" name="q_cliente"
+                       (keyup.enter)="buscarClientes()">
+                <button class="btn btn-ghost" (click)="buscarClientes()">
+                  <i class="bi bi-search"></i>
+                </button>
               </div>
+              <div class="dr-grid mt-2">
+                <button type="button" class="dr-item text-start"
+                        *ngFor="let c of clientes()" (click)="createForm.clienteId = c.id">
+                  <div class="d-flex justify-content-between">
+                    <div class="fw-semibold">{{ c.nombre }} {{ c.apellido || '' }}</div>
+                    <span class="dr-badge"><i class="bi bi-person-badge"></i> {{ c.id }}</span>
+                  </div>
+                </button>
+              </div>
+              <div class="form-text mt-1">Seleccionado: {{ createForm.clienteId || '—' }}</div>
             </div>
-            <div class="col-md-4">
-              <label class="form-label">Cliente asociado *</label>
-              <select class="form-select" [(ngModel)]="createForm.clienteId" name="clienteId" required>
-                <option [ngValue]="null" disabled>— Selecciona —</option>
-                @for (c of clientes(); track c.id) {
-                  <option [ngValue]="c.id">
-                    {{ c.nombre }} {{ c.apellido || '' }} — {{ c.identificacion || 's/ID' }}
-                  </option>
-                }
-              </select>
-            </div>
+          </div>
 
-            <div class="col-12 d-flex justify-content-end gap-2">
-              <button type="button" class="btn btn-light"
-                      (click)="createForm={ nombre:'', apellido:'', documento:'', telefono:'', email:'', direccion:'', clienteId: null }"
-                      [disabled]="creating()">
-                Limpiar
-              </button>
-              <button class="btn btn-success" [disabled]="creating()">
-                @if (creating()) {
-                  <span class="spinner-border spinner-border-sm me-2"></span>
-                }
-                Crear y seleccionar
-              </button>
-            </div>
-          </form>
+          @if (error()) {
+            <div class="alert alert-danger mt-3 py-2">{{ error() }}</div>
+          }
+
+          <div class="d-flex justify-content-end mt-3">
+            <button class="btn btn-soft-primary" (click)="createPatient()" [disabled]="creating()">
+              @if (creating()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+              Crear paciente
+            </button>
+          </div>
+        </div>
         }
       </div>
 
-      <div class="modal-footer border-0">
-        <button class="btn btn-light" (click)="close()" [disabled]="loading()">Cerrar</button>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" (click)="close()">Cerrar</button>
       </div>
     </div>
   </div>
 </div>
-
-@if (isOpen) {
-  <div class="modal-backdrop fade show"></div>
-}

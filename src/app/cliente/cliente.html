@@ -28,7 +28,7 @@
                 </button>
                 <button type="button" class="btn btn-outline-secondary w-100" (click)="clearFilters()"
                     [disabled]="loading()">
-                    Limpiar
+                    <i class="bi bi-eraser me-1"></i>Limpiar
                 </button>
             </div>
         </div>
@@ -46,26 +46,24 @@
 </div>
 <!-- 🔴 Alert de error -->
 @if (error()) {
-  <div class="alert alert-danger d-flex align-items-start gap-2 rounded-4 shadow-sm" role="alert">
+<div class="alert alert-danger d-flex align-items-start gap-2 rounded-4 shadow-sm" role="alert">
     <i class="bi bi-exclamation-triangle mt-1"></i>
     <div class="flex-grow-1">
-      {{ error() }}
+        {{ error() }}
     </div>
     <button type="button" class="btn-close" aria-label="Cerrar" (click)="error.set(null)"></button>
-  </div>
+</div>
 }
 <!-- DESKTOP / TABLE (md y arriba) -->
 <div class="table-responsive shadow-sm rounded-4 d-none d-md-block">
     <table class="table table-hover align-middle mb-0 client-table">
         <thead class="table-light sticky-top">
             <tr>
-                <th style="width: 70px;">#</th>
-                <th>Identificación</th>
+                <th>#</th>
                 <th>Nombre</th>
-                <th>Apellido</th>
 
+                <th>Identificación</th>
                 <th>Email</th>
-                <th>Dirección</th>
                 <th>Teléfono</th>
                 <th>Estado</th>
                 <th style="width: 140px;">Acciones</th>
@@ -92,19 +90,19 @@
             } @else {
             @for (c of visibleWithRow(); track c.id) {
             <tr class="align-middle">
-                <td class="text-secondary">{{ c.rowNumber }}</td>
-                <td><span class="text-monospace">{{ c.identificacion }}</span></td>
+                <td>{{c.rowNumber}}</td>
                 <td class="fw-semibold">
-                    <i class="bi bi-person me-1 text-muted"></i>{{ c.nombre }}
+                    <i class="bi bi-person-circle me-1 text-muted"></i> {{ c.nombre }} {{ c.apellido || '—' }}
                 </td>
-                <td>{{ c.apellido || '—' }}</td>
+
+                <td><span class="text-monospace">{{ c.identificacion }}</span></td>
+
                 <td>
                     <a *ngIf="c.email" [href]="'mailto:' + c.email" class="text-decoration-none">
                         {{ c.email }}
                     </a>
                     <span *ngIf="!c.email">—</span>
                 </td>
-                <td>{{ c.direccion || '—' }}</td>
                 <td>{{ c.telefono || '—' }}</td>
                 <td>
                     <span class="badge rounded-pill" [ngClass]="c.estado==='ACTIVO' ? 'bg-success' : 'bg-secondary'">
@@ -155,7 +153,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <div>
-                            <div class="small text-secondary">#{{ c.rowNumber }}</div>
+                         
                             <h6 class="mb-0 fw-semibold">
                                 <i class="bi bi-person me-1 text-muted"></i>{{ c.nombre }} <span class="fw-normal">{{
                                     c.apellido || '' }}</span>

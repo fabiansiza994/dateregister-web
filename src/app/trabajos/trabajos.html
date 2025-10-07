@@ -25,7 +25,7 @@
           <i class="bi bi-search me-1"></i> Buscar
         </button>
         <button type="button" class="btn btn-outline-secondary w-100" (click)="clearFilters()" [disabled]="loading()">
-          Limpiar
+          <i class="bi bi-eraser me-1"></i>Limpiar
         </button>
       </div>
       <div class="col-md-4 d-flex align-items-end justify-content-md-end">
@@ -169,8 +169,8 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start mb-2">
             <div>
-              <div class="small text-secondary">#{{ j.rowNumber }}</div>
-              <h6 class="mb-0 fw-semibold">{{ j.descripcionLabor }}</h6>
+          
+        
               <div class="small text-secondary">{{ j.fecha }}</div>
             </div>
           </div>
@@ -200,9 +200,7 @@
 
           <div class="d-flex justify-content-between align-items-center mt-3">
             <div>
-              <a *ngIf="j.foto1" [href]="j.foto1" target="_blank" rel="noopener">
-                <img [src]="j.foto1" alt="foto" class="rounded" style="width:96px; height:64px; object-fit:cover;">
-              </a>
+              
             </div>
             <div class="d-flex gap-2">
               <button class="btn btn-sm btn-outline-info" (click)="verTrabajo(j)">

@@ -54,7 +54,7 @@
                 id="usuario"
                 type="text"
                 class="form-control"
-                placeholder="p. ej. juan.torrez"
+                placeholder="p. ej. juan.perez"
                 [value]="usuario()"
                 (input)="onUserInput(txtUsuario.value)"
                 (blur)="validateUser()"
@@ -71,7 +71,7 @@
             </div>
             @if (userInvalid()) {
               <small id="usuarioHelp" class="text-danger">
-                Formato inválido. Usa <strong>nombre.apellido</strong> (solo letras y un punto).
+                Formato inválido. Usa <strong>nombre.apellido</strong> (letras/números y un punto).
               </small>
             }
           </div>
@@ -80,7 +80,6 @@
           <div class="mb-2">
             <label for="password" class="form-label">Contraseña</label>
             <div class="input-group input-group-lg">
-             
               <input
                 id="password"
                 [type]="showPassword() ? 'text' : 'password'"

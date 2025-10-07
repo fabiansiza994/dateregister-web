@@ -1,41 +1,295 @@
-@import "driver.js/dist/driver.css";
 @import "leaflet/dist/leaflet.css";
-@import '@fortawesome/fontawesome-free/css/all.min.css';
 
+/* ====================================================================== */
+/* ===============   VARIABLES GLOBALES – TEMA CLARO FIJO   ============= */
+/* ====================================================================== */
+:root{
+  /* Paleta */
+  --dr-bg:#f6f7fb;
+  --dr-surface:#ffffff;
+  --dr-card:#ffffff;
+  --dr-text:#0f172a;
+  --dr-muted:#64748b;               /* slate-500-ish */
+  --dr-brand:#7c3aed;               /* violet-600 */
+  --dr-brand-2:#22d3ee;             /* cyan-400 */
+  --dr-success:#22c55e;
+  --dr-warning:#f59e0b;
+  --dr-danger:#ef4444;
 
-#usage-map {
-  height: 70vh;
-  width: 100%;
+  /* Decoración */
+  --dr-radius:18px;
+  --dr-radius-sm:12px;
+  --dr-shadow-1:0 10px 30px rgba(16,24,40,.25);
+  --dr-shadow-2:0 24px 60px rgba(16,24,40,.35);
+  --dr-border:1px solid rgba(15,23,42,.08);
+
+  /* Campos (light) */
+  --dr-field-bg:#ffffff;
+  --dr-field-bg-hover:#f8fafc;
+  --dr-field-border:rgba(15,23,42,.12);
+  --dr-field-text:#0b1220;
+  --dr-field-placeholder: rgba(15,23,42,.45); /* placeholder CLARO, no negro */
+
+  /* Tipografía global */
+  --dr-font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  --dr-body-size: 16px;       /* base = 16px (evita zoom iOS en inputs) */
+  --dr-body-lh: 1.5;
+  --dr-text-weight: 400;
+  --dr-heading-weight: 700;
+
+  /* Si usas Bootstrap 5.3, sincroniza */
+  --bs-body-font-family: var(--dr-font-sans);
+  --bs-body-font-size: 1rem;         /* 16px */
+  --bs-body-line-height: var(--dr-body-lh);
+  --bs-body-font-weight: var(--dr-text-weight);
 }
-/* Driver por encima del sitio */
-.driver-overlay {               /* sombra */
-  z-index: 1990 !important;
+
+/* ====================================================================== */
+/* ======================   BASE / TYPO GLOBAL   ======================== */
+/* ====================================================================== */
+html, body { height: 100%; }
+html { font-size: 100%; }
+body{
+  display:flex; flex-direction:column; min-height:100vh;
+  background: radial-gradient(1200px 800px at 10% -10%, #eef2ff 10%, #f6f7fb 60%), var(--dr-bg);
+  color: var(--dr-text);
+
+  font-family: var(--dr-font-sans);
+  font-size: var(--bs-body-font-size, 1rem);
+  line-height: var(--dr-body-lh);
+  font-weight: var(--dr-text-weight);
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
 }
+
+/* Encabezados fluidos */
+h1, h2, h3, h4, h5, h6 { font-weight: var(--dr-heading-weight); line-height: 1.2; margin: .5em 0 .25em; }
+h1 { font-size: clamp(1.875rem, 1.25rem + 2vw, 2.375rem); }  /* ~30–38px */
+h2 { font-size: clamp(1.5rem,   1.1rem  + 1.5vw, 2rem);    }  /* ~24–32px */
+h3 { font-size: clamp(1.25rem,  1.0rem  + 1vw,   1.5rem);  }  /* ~20–24px */
+h4 { font-size: 1.125rem; }
+h5 { font-size: 1rem; }
+h6 { font-size: .95rem; }
+p { margin: 0 0 .75rem; }
+small, .small, .form-text { font-size: .875rem !important; line-height: 1.4; } /* 14px */
+
+/* Navbar / dropdown / tablas / botones */
+.navbar .nav-link { font-size: .95rem; font-weight: 500; }
+.dropdown-item { font-size: .95rem; line-height: 1.35; }
+table, .table { font-size: .95rem; line-height: 1.45; }
+.btn { font-size: .95rem; font-weight: 600; line-height: 1.35; }
+
+/* ====================================================================== */
+/* =====================   LAYOUT STICKY FOOTER   ======================= */
+/* ====================================================================== */
+app-root, .app-shell { display:flex; flex-direction:column; min-height:100vh; }
+.main-content { flex: 1 0 auto; }
+app-footer { margin-top:auto; display:block; }
+
+/* ====================================================================== */
+/* ===========================   CARDS   ================================= */
+/* ====================================================================== */
+.dr-card{
+  background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,0));
+  border: var(--dr-border);
+  border-radius: var(--dr-radius);
+  box-shadow: var(--dr-shadow-1);
+  backdrop-filter: saturate(140%) blur(6px);
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.dr-card:hover{ transform: translateY(-4px); box-shadow: var(--dr-shadow-2); border-color: rgba(15,23,42,.14); }
+.dr-card-header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 16px; border-bottom: var(--dr-border);
+  background: linear-gradient(to bottom, rgba(124,58,237,.06), rgba(124,58,237,0));
+  border-top-left-radius: var(--dr-radius); border-top-right-radius: var(--dr-radius);
+}
+
+/* ====================================================================== */
+/* =========================   BOTONES   ================================= */
+/* ====================================================================== */
+.btn-soft-primary{
+  color:#fff; background: linear-gradient(135deg, var(--dr-brand), #5b21b6);
+  border:none; border-radius:12px; padding:.6rem 1rem;
+  box-shadow: 0 10px 24px rgba(124,58,237,.35);
+  transition: transform .15s ease, box-shadow .2s ease, filter .2s ease;
+}
+.btn-soft-primary:hover{ transform: translateY(-2px); filter: brightness(1.05); }
+.btn-soft-primary:active{ transform: translateY(0); box-shadow: 0 6px 16px rgba(124,58,237,.25); }
+
+.btn-ghost{
+  border-radius:12px; padding:.55rem .9rem;
+  border:1px dashed rgba(15,23,42,.18);
+  color:var(--dr-text); background:transparent;
+  transition: background .2s ease, border-color .2s ease;
+}
+.btn-ghost:hover{ border-color: rgba(15,23,42,.35); background: rgba(15,23,42,.04); }
+
+/* ====================================================================== */
+/* ==========================   BADGES   ================================= */
+/* ====================================================================== */
+.dr-badge{
+  display:inline-flex; align-items:center; gap:.4rem;
+  font-size:.75rem; padding:.25rem .55rem; border-radius:999px;
+  border:1px solid rgba(15,23,42,.14);
+  color:var(--dr-muted); background: rgba(15,23,42,.04);
+}
+.dr-badge.success{ color:#16a34a; border-color: rgba(22,163,74,.30); background: rgba(22,163,74,.08); }
+.dr-badge.warn{ color:#b45309; border-color: rgba(180,83,9,.30); background: rgba(245,158,11,.12); }
+.dr-badge.danger{ color:#dc2626; border-color: rgba(220,38,38,.30); background: rgba(239,68,68,.10); }
+
+/* ====================================================================== */
+/* ===================   FORMULARIOS (ALTO CONTRASTE)   ================= */
+/* ====================================================================== */
+.form-control,
+.form-select,
+.form-check-input,
+.form-control-plaintext,
+.input-group-text{
+  background: var(--dr-field-bg) !important;
+  border: 1px solid var(--dr-field-border) !important;
+  color: var(--dr-field-text) !important;
+  -webkit-text-fill-color: var(--dr-field-text) !important;
+  border-radius: 12px !important;
+  caret-color: var(--dr-field-text);
+  font-size: 1rem !important;       /* 16px consistente */
+  line-height: 1.5 !important;
+  font-weight: 400 !important;       /* sin “negrita fantasma” */
+  letter-spacing: 0 !important;
+  color-scheme: light;               /* widgets nativos claros */
+}
+.form-control:hover, .form-select:hover{ background: var(--dr-field-bg-hover) !important; }
+
+/* Placeholders claros (no negros, ni bold) */
+.form-control::placeholder,
+.form-select::placeholder,
+input::placeholder,
+textarea::placeholder{
+  color: var(--dr-field-placeholder) !important;
+  font-weight: 400 !important;
+  opacity: 1 !important;             /* Safari */
+}
+/* WebKit legacy */
+::-webkit-input-placeholder{
+  color: var(--dr-field-placeholder) !important;
+  font-weight: 400 !important;
+}
+
+/* Focus */
+.form-control:focus, .form-select:focus{
+  border-color: rgba(124,58,237,.55) !important;
+  box-shadow: 0 0 0 .18rem rgba(124,58,237,.15) !important;
+}
+
+/* Readonly/Disabled */
+.form-control[readonly]{
+  background:#f8fafc !important;
+  color:#0b1220 !important;
+  -webkit-text-fill-color:#0b1220 !important;
+}
+.form-control:disabled, .form-select:disabled{
+  background:#f8fafc !important;
+  color:#0b1220 !important;
+  opacity:.95 !important;
+}
+
+/* Input group */
+.input-group-text{
+  background:#ffffff !important;
+  border:1px solid rgba(15,23,42,.12) !important;
+  color:#0b1220 !important;
+}
+
+/* Autofill (quita amarillo) */
+input:-webkit-autofill,
+textarea:-webkit-autofill,
+select:-webkit-autofill{
+  -webkit-text-fill-color:#0b1220 !important;
+  box-shadow:0 0 0 1000px #ffffff inset !important;
+  transition: background-color 99999s ease-out, color 99999s ease-out;
+}
+
+/* iOS: evita “zoom” al enfocar (mantén 16px) */
+@media (max-width: 480px){
+  .form-control,
+  .form-select,
+  .input-group-text { font-size: 1rem !important; }
+}
+
+/* Página de login: un pelín más discretos */
+.page-login .form-control,
+.page-login .form-select,
+.page-login .input-group-text {
+  font-size: .95rem !important;      /* ~15.2px en desktop */
+  font-weight: 400 !important;
+}
+.page-login .form-control::placeholder,
+.page-login .form-select::placeholder {
+  color: rgba(15,23,42,.40) !important; /* aún más suaves en login */
+}
+
+/* ====================================================================== */
+/* ==================   PROGRESO / MODALES / VARIANTES   ================= */
+/* ====================================================================== */
+.progress{ background: rgba(15,23,42,.10); border-radius:999px; }
+.progress-bar{ background: linear-gradient(135deg, var(--dr-brand), var(--dr-brand-2)); }
+
+.modal-content{
+  background: var(--dr-card); color: var(--dr-text);
+  border: var(--dr-border); border-radius:16px; box-shadow: var(--dr-shadow-2);
+}
+.modal-header{ border-bottom: var(--dr-border); }
+.modal-footer{ border-top: var(--dr-border); }
+
+/* Variante clara opcional (si la usas en contenedores con .modal-light) */
+.modal-light .modal-content{
+  background:#ffffff !important; color:#0f172a !important;
+  border:1px solid rgba(15,23,42,.08) !important;
+}
+.modal-light .modal-header,
+.modal-light .modal-footer{ border-color: rgba(15,23,42,.08) !important; }
+.modal-light .dr-item{
+  background:#ffffff !important; color:#0f172a !important;
+  border:1px solid rgba(15,23,42,.12) !important;
+}
+.modal-light .dr-item:hover{
+  background:#f8fafc !important; border-color: rgba(15,23,42,.18) !important;
+}
+.modal-light .dr-badge{
+  background:#f1f5f9 !important; color:#334155 !important;
+  border:1px solid rgba(15,23,42,.08) !important;
+}
+
+/* ====================================================================== */
+/* ==================   LISTAS / GRID / MICRO-UX   ====================== */
+/* ====================================================================== */
+.dr-item{
+  border:1px solid rgba(15,23,42,.12); background:#ffffff;
+  border-radius:14px; padding:.8rem 1rem; transition: background .2s, border-color .2s, transform .2s;
+  cursor:pointer;
+}
+.dr-item:hover{ background:#f8fafc; border-color: rgba(15,23,42,.18); transform: translateY(-1px); }
+
+.dr-grid{ display:grid; gap:16px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.dr-divider{ height:1px; background: rgba(15,23,42,.12); margin:.75rem 0; }
+
+.img-thumbnail{ transition: transform .25s ease, filter .25s ease; }
+.img-thumbnail:hover{ transform: scale(1.02); filter: saturate(1.05) contrast(1.02); }
+
+/* ====================================================================== */
+/* =========================   DRIVER.JS   ============================== */
+/* ====================================================================== */
+.driver-overlay{ z-index:1990 !important; }
 .driver-stage,
 .driver-popover,
 .driver-highlighted-element,
-.driver-fix-stacking {          /* recuadro y popover del tour */
-  z-index: 1995 !important;
-}
+.driver-fix-stacking{ z-index:1995 !important; }
 
-/* Durante el tour, eleva modales (Bootstrap/Material) por encima del overlay del tour */
-.tour-elevate .modal,
-.tour-elevate .cdk-overlay-container {
-  z-index: 2000 !important;     /* > driver-overlay y > driver-popover si lo necesitas */
-}
-.tour-elevate .modal-backdrop {
-  z-index: 1985 !important;     /* debajo del overlay del tour para que no lo tape */
-}
+/* Evita transforms/filters que interfieran con el highlight del tour */
+.navbar, .navbar *{ transform:none !important; filter:none !important; }
 
-/* Evita stacking contexts raros en la navbar */
-.navbar, .navbar * {
-  transform: none !important;
-  filter: none !important;
-}
-
-/* Para que los iconos se vean correctamente en builds */
-.leaflet-container {
-  height: 70vh;  /* ajusta a tu gusto */
-  width: 100%;
-}
-
+/* ====================================================================== */
+/* ===========================   LEAFLET   ============================== */
+/* ====================================================================== */
+#usage-map{ height:70vh; width:100%; }
+.leaflet-container{ height:70vh; width:100%; }

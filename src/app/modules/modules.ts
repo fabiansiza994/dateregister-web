@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService, JwtClaims } from '../core/auth.service';
 import { TourService } from '../core/tour.service';
+import { PresenceService } from '../core/presence.service';
 
 // 👇 agrega estos imports
 import { UsageService } from '../core/usage.service';
@@ -33,12 +34,13 @@ export class Modules implements AfterViewInit {
   user      = computed(() => this._claims()?.sub ?? '');
   empresaId = computed(() => Number(this._claims()?.empresaId ?? 0));
 
-  constructor() {
+  constructor(private presence: PresenceService) {
     this.auth.refreshFromStorage();
     this._claims.set(this.auth.claims());
-
+    
     // Configura base del servicio de uso
     this.usage.setApiBase(this.cfg.get<string>('apiBaseUrl', ''));
+    this.presence.start();
   }
 
   async ngAfterViewInit(): Promise<void> {
@@ -49,16 +51,16 @@ export class Modules implements AfterViewInit {
 
       // 1) Si es ADMIN y aún no tiene métodos → forzar flujo de pagos y salir
       if (this.role() === 'ADMIN' && localStorage.getItem(hasOneKey) !== '1') {
-        this.tour.startAdminPaymentEnforcedTour(this.role(), userKeyPart);
+        //this.tour.startAdminPaymentEnforcedTour(this.role(), userKeyPart);
         // Igual enviamos ping de uso (pero no bloqueamos)
         this.safePingOncePerSession();
         return;
       }
 
       // 2) Tour normal + nudge
-      this.tour.startModulesTour(this.role(), this.sector(), userKeyPart, () => {
-        this.tour.startPaymentNudge(this.role(), userKeyPart);
-      });
+      //this.tour.startModulesTour(this.role(), this.sector(), userKeyPart, () => {
+       // this.tour.startPaymentNudge(this.role(), userKeyPart);
+     // });
 
       // 3) Ping de uso (una sola vez por sesión)
       this.safePingOncePerSession();

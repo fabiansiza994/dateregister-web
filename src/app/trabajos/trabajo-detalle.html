@@ -1,179 +1,175 @@
 <div class="container py-3">
 
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h3 class="fw-semibold mb-0">Detalle del trabajo</h3>
-            <small class="text-secondary">Información completa del registro</small>
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h3 class="fw-semibold mb-0">Detalle del trabajo</h3>
+      <small class="text-secondary">Información completa del registro</small>
+    </div>
+    <div class="d-flex gap-2">
+      <a routerLink="/trabajos" class="btn btn-light">
+        <i class="bi bi-arrow-left"></i> Volver
+      </a>
+      @if (id()) {
+      <a [routerLink]="['/trabajos', id(), 'editar']" class="btn btn-primary">
+        <i class="bi bi-pencil"></i> Editar
+      </a>
+      }
+      <button type="button" class="btn btn-outline-secondary" (click)="downloadPdf()"
+              [disabled]="loading() || !job()">
+        <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- Error -->
+  @if (error()) {
+  <div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
+    <i class="bi bi-exclamation-triangle mt-1"></i>
+    <div>{{ error() }}</div>
+  </div>
+  }
+
+  <!-- Loading -->
+  @if (loading()) {
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body">
+      <div class="d-inline-flex align-items-center gap-2 text-secondary">
+        <span class="spinner-border spinner-border-sm"></span> Cargando…
+      </div>
+    </div>
+  </div>
+  } @else {
+
+  @if (job()) {
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body">
+      <div class="row g-3">
+
+        <!-- Fecha -->
+        <div class="col-md-3">
+          <div class="text-secondary small">Fecha</div>
+          <div class="fw-semibold">{{ job()?.fecha }}</div>
         </div>
-        <div class="d-flex gap-2">
-            <a routerLink="/trabajos" class="btn btn-light">
-                <i class="bi bi-arrow-left"></i> Volver
-            </a>
-            @if (id()) {
-            <a [routerLink]="['/trabajos', id(), 'editar']" class="btn btn-primary">
-                <i class="bi bi-pencil"></i> Editar
+
+        <!-- Forma de pago -->
+        <div class="col-md-3">
+          <div class="text-secondary small">Forma de pago</div>
+          <div>
+            <span class="badge bg-info-subtle text-dark">{{ job()?.formaPago?.formaPago || '—' }}</span>
+          </div>
+        </div>
+
+        <!-- Valores -->
+        <div class="col-md-3">
+          <div class="text-secondary small">Valor total</div>
+          <div class="fw-semibold">{{ formatMoney(totalCalc(job())) }}</div>
+        </div>
+        <div class="col-md-3">
+          <div class="text-secondary small">Ganancias</div>
+          <div class="fw-semibold">{{ formatMoney(gananciasCalc(job())) }}</div>
+        </div>
+
+        <!-- Cliente -->
+        <div class="col-md-6">
+          <div class="text-secondary small">Cliente</div>
+          <div class="fw-semibold">
+            <i class="bi bi-person me-1 text-muted"></i>
+            {{ job()?.cliente?.nombre }}
+            <span class="text-secondary">{{ job()?.cliente?.apellido || '' }}</span>
+          </div>
+        </div>
+
+        <!-- Estado -->
+        <div class="col-md-3">
+          <div class="text-secondary small">Estado</div>
+          <div>
+            <span [class]="estadoBadge(job()?.estado)">{{ job()?.estado || '—' }}</span>
+          </div>
+        </div>
+
+        <!-- Paciente (si existe) -->
+        @if (job()?.paciente) {
+        <div class="col-md-6">
+          <div class="text-secondary small">Paciente</div>
+          <div class="fw-semibold">
+            <i class="bi bi-heart-pulse me-1 text-danger"></i>
+            {{ job()?.paciente?.nombre }}
+            <span class="text-secondary">{{ job()?.paciente?.apellido || '' }}</span>
+          </div>
+          <div class="small text-secondary mt-1">
+            @if (job()?.paciente?.documento) { <span class="me-3">Doc: <span class="text-monospace">{{
+              job()?.paciente?.documento }}</span></span> }
+            @if (job()?.paciente?.telefono) { <span class="me-3">Tel: {{ job()?.paciente?.telefono }}</span> }
+            @if (job()?.paciente?.email) { <span class="me-3">Email: {{ job()?.paciente?.email }}</span> }
+          </div>
+        </div>
+        }
+
+        <!-- Descripción -->
+        <div class="col-12">
+          <div class="text-secondary small">Descripción</div>
+          <div class="fw-normal" [innerHTML]="job()?.descripcionLabor"></div>
+        </div>
+
+        <!-- Fotos -->
+        @if (job()?.foto1 || job()?.foto2 || job()?.foto3 || job()?.foto4) {
+        <div class="col-12">
+          <div class="text-secondary small mb-2">Evidencias</div>
+          <div class="d-flex flex-wrap gap-3">
+            @if (job()?.foto1) {
+            <a [href]="job()?.foto1" target="_blank" rel="noopener" class="d-inline-block">
+              <img [src]="job()?.foto1" alt="foto1" class="img-thumbnail"
+                   style="width:180px; height:120px; object-fit:cover;">
             </a>
             }
-            <button type="button" class="btn btn-outline-secondary" (click)="downloadPdf()"
-                [disabled]="loading() || !job()">
-                <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
-            </button>
-        </div>
-    </div>
-
-    <!-- Error -->
-    @if (error()) {
-    <div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
-        <i class="bi bi-exclamation-triangle mt-1"></i>
-        <div>{{ error() }}</div>
-    </div>
-    }
-
-    <!-- Loading -->
-    @if (loading()) {
-    <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body">
-            <div class="d-inline-flex align-items-center gap-2 text-secondary">
-                <span class="spinner-border spinner-border-sm"></span> Cargando…
-            </div>
-        </div>
-    </div>
-    } @else {
-
-    @if (job()) {
-    <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body">
-            <div class="row g-3">
-
-                <!-- Fecha -->
-                <div class="col-md-3">
-                    <div class="text-secondary small">Fecha</div>
-                    <div class="fw-semibold">{{ job()?.fecha }}</div>
-                </div>
-
-                <!-- Forma de pago -->
-                <div class="col-md-3">
-                    <div class="text-secondary small">Forma de pago</div>
-                    <div>
-                        <span class="badge bg-info-subtle text-dark">{{ job()?.formaPago?.formaPago || '—' }}</span>
-                    </div>
-                </div>
-
-
-                <!-- Valores -->
-                <div class="col-md-3">
-                    <div class="text-secondary small">Valor total</div>
-                    <div class="fw-semibold">{{ formatMoney(totalCalc(job())) }}</div>
-                </div>
-                <div class="col-md-3">
-                    <div class="text-secondary small">Ganancias</div>
-                    <div class="fw-semibold">{{ formatMoney(gananciasCalc(job())) }}</div>
-                </div>
-
-                <!-- Cliente -->
-                <div class="col-md-6">
-                    <div class="text-secondary small">Cliente</div>
-                    <div class="fw-semibold">
-                        <i class="bi bi-person me-1 text-muted"></i>
-                        {{ job()?.cliente?.nombre }}
-                        <span class="text-secondary">{{ job()?.cliente?.apellido || '' }}</span>
-                    </div>
-                </div>
-
-                <!-- Estado -->
-                <div class="col-md-3">
-                    <div class="text-secondary small">Estado</div>
-                    <div>
-                        <span [class]="estadoBadge(job()?.estado)">{{ job()?.estado || '—' }}</span>
-                    </div>
-                </div>
-
-
-                <!-- Paciente (si existe) -->
-                @if (job()?.paciente) {
-                <div class="col-md-6">
-                    <div class="text-secondary small">Paciente</div>
-                    <div class="fw-semibold">
-                        <i class="bi bi-heart-pulse me-1 text-danger"></i>
-                        {{ job()?.paciente?.nombre }}
-                        <span class="text-secondary">{{ job()?.paciente?.apellido || '' }}</span>
-                    </div>
-                    <div class="small text-secondary mt-1">
-                        @if (job()?.paciente?.documento) { <span class="me-3">Doc: <span class="text-monospace">{{
-                                job()?.paciente?.documento }}</span></span> }
-                        @if (job()?.paciente?.telefono) { <span class="me-3">Tel: {{ job()?.paciente?.telefono }}</span>
-                        }
-                        @if (job()?.paciente?.email) { <span class="me-3">Email: {{ job()?.paciente?.email }}</span> }
-                    </div>
-                </div>
-                }
-
-                <!-- Descripción -->
-                <div class="col-12">
-                    <div class="text-secondary small">Descripción</div>
-                    <div class="fw-normal" [innerHTML]="job()?.descripcionLabor"></div>
-                </div>
-
-                <!-- Fotos -->
-                @if (job()?.foto1 || job()?.foto2 || job()?.foto3 || job()?.foto4) {
-                <div class="col-12">
-                    <div class="text-secondary small mb-2">Evidencias</div>
-                    <div class="d-flex flex-wrap gap-3">
-                        @if (job()?.foto1) {
-                        <a [href]="job()?.foto1" target="_blank" rel="noopener" class="d-inline-block">
-                            <img [src]="job()?.foto1" alt="foto1" class="img-thumbnail"
-                                style="width:180px; height:120px; object-fit:cover;">
-                        </a>
-                        }
-                        @if (job()?.foto2) {
-                        <a [href]="job()?.foto2" target="_blank" rel="noopener" class="d-inline-block">
-                            <img [src]="job()?.foto2" alt="foto2" class="img-thumbnail"
-                                style="width:180px; height:120px; object-fit:cover;">
-                        </a>
-                        }
-                        @if (job()?.foto3) {
-                        <a [href]="job()?.foto3" target="_blank" rel="noopener" class="d-inline-block">
-                            <img [src]="job()?.foto3" alt="foto3" class="img-thumbnail"
-                                style="width:180px; height:120px; object-fit:cover;">
-                        </a>
-                        }
-                        @if (job()?.foto4) {
-                        <a [href]="job()?.foto4" target="_blank" rel="noopener" class="d-inline-block">
-                            <img [src]="job()?.foto4" alt="foto4" class="img-thumbnail"
-                                style="width:180px; height:120px; object-fit:cover;">
-                        </a>
-                        }
-                    </div>
-                </div>
-                }
-
-                <!-- Metadatos -->
-                @if (job()?.usuario) {
-                <div class="col-12">
-                    <div class="text-secondary small">Registrado por</div>
-                    <div>
-                        <i class="bi bi-person-badge me-1 text-muted"></i>
-                        {{ job()?.usuario?.nombre || job()?.usuario?.usuario }}
-                        <span class="text-secondary">{{ job()?.usuario?.apellido || '' }}</span>
-                        <span class="text-secondary" *ngIf="job()?.usuario?.email"> — {{ job()?.usuario?.email }}</span>
-                    </div>
-                </div>
-                }
-
-            </div>
-        </div>
-
-        <div class="card-footer d-flex justify-content-between align-items-center border-0">
-            <a routerLink="/trabajos" class="btn btn-light">
-                <i class="bi bi-arrow-left"></i> Volver
+            @if (job()?.foto2) {
+            <a [href]="job()?.foto2" target="_blank" rel="noopener" class="d-inline-block">
+              <img [src]="job()?.foto2" alt="foto2" class="img-thumbnail"
+                   style="width:180px; height:120px; object-fit:cover;">
             </a>
-
+            }
+            @if (job()?.foto3) {
+            <a [href]="job()?.foto3" target="_blank" rel="noopener" class="d-inline-block">
+              <img [src]="job()?.foto3" alt="foto3" class="img-thumbnail"
+                   style="width:180px; height:120px; object-fit:cover;">
+            </a>
+            }
+            @if (job()?.foto4) {
+            <a [href]="job()?.foto4" target="_blank" rel="noopener" class="d-inline-block">
+              <img [src]="job()?.foto4" alt="foto4" class="img-thumbnail"
+                   style="width:180px; height:120px; object-fit:cover;">
+            </a>
+            }
+          </div>
         </div>
-    </div>
-    } @else {
-    <div class="alert alert-warning">No se encontró el trabajo.</div>
-    }
+        }
 
-    }
+        <!-- Metadatos -->
+        @if (job()?.usuario) {
+        <div class="col-12">
+          <div class="text-secondary small">Registrado por</div>
+          <div>
+            <i class="bi bi-person-badge me-1 text-muted"></i>
+            {{ job()?.usuario?.nombre || job()?.usuario?.usuario }}
+            <span class="text-secondary">{{ job()?.usuario?.apellido || '' }}</span>
+            <span class="text-secondary" *ngIf="job()?.usuario?.email"> — {{ job()?.usuario?.email }}</span>
+          </div>
+        </div>
+        }
+
+      </div>
+    </div>
+
+    <div class="card-footer d-flex justify-content-between align-items-center border-0">
+      <a routerLink="/trabajos" class="btn btn-light">
+        <i class="bi bi-arrow-left"></i> Volver
+      </a>
+    </div>
+  </div>
+  } @else {
+  <div class="alert alert-warning">No se encontró el trabajo.</div>
+  }
+
+  }
 </div>

@@ -12,7 +12,31 @@ import { ClientPickerComponent } from '../shared/client-picker.component';
 import { PatientPickerComponent } from '../shared/patient-picker.component';
 
 type FotoKey = 'foto1' | 'foto2' | 'foto3' | 'foto4';
-type JobEstado = 'PAGO' | 'PENDIENTE' | 'CANCELADO';
+
+/** === Estados (extiende tu tipo original) === */
+export type JobEstado =
+  | 'PENDIENTE' | 'EN CURSO' | 'EN REVISION' | 'REVISADO'
+  | 'PAGO' | 'FINALIZADO' | 'CANCELADO' | 'DEVUELTO' | 'PROGRAMADO' | 'NO ASISTE';
+
+interface EstadoOption {
+  value: JobEstado;
+  label: string;        // con emoji para UX bonito
+  badgeClass: string;   // reutilizable si luego quieres pintar badges
+}
+
+/** Fuente única para todos los estados */
+export const ESTADO_OPTIONS: EstadoOption[] = [
+  { value: 'PENDIENTE',    label: '⏳ Pendiente',     badgeClass: 'badge bg-warning-subtle text-dark' },
+  { value: 'PROGRAMADO',   label: '🗓️ Programado',   badgeClass: 'badge bg-primary-subtle text-dark' },
+  { value: 'EN CURSO',     label: '🔧 En curso',      badgeClass: 'badge bg-info-subtle text-dark' },
+  { value: 'EN REVISION',  label: '🧪 En revisión',   badgeClass: 'badge bg-secondary-subtle text-dark' },
+  { value: 'REVISADO',     label: '🔍 Revisado',      badgeClass: 'badge bg-secondary-subtle text-dark' },
+  { value: 'PAGO',         label: '✅ Pago',          badgeClass: 'badge bg-success-subtle text-dark' },
+  { value: 'FINALIZADO',   label: '🏁 Finalizado',    badgeClass: 'badge bg-success-subtle text-dark' },
+  { value: 'CANCELADO',    label: '❌ Cancelado',     badgeClass: 'badge bg-danger-subtle' },
+  { value: 'DEVUELTO',     label: '↩️ Devuelto',      badgeClass: 'badge bg-dark-subtle text-dark' },
+  { value: 'NO ASISTE',    label: '🚫 No asiste',     badgeClass: 'badge bg-dark-subtle text-dark' },
+];
 
 interface CreateJobPayload {
   id?: number;
@@ -73,6 +97,7 @@ interface JobDetailOk {
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, ClientPickerComponent, PatientPickerComponent, AngularEditorModule],
   templateUrl: './create-job.html',
+  styleUrls: ['./create-job.css'],
 })
 export class CreateJobComponent implements OnInit {
 
@@ -96,7 +121,6 @@ export class CreateJobComponent implements OnInit {
         'indent', 'outdent', 'heading'
       ]
     ],
-    // 🔹 Solo mostramos lo esencial:
     toolbarPosition: 'top'
   };
 
@@ -126,7 +150,7 @@ export class CreateJobComponent implements OnInit {
   files: Partial<Record<FotoKey, File>> = {};
   previews: Partial<Record<FotoKey, string>> = {};
   existingPhotos: Partial<Record<FotoKey, string>> = {};
-  markedForDelete = new Set<FotoKey>(); // 👈 NUEVO
+  markedForDelete = new Set<FotoKey>();
 
   loading = signal(false);
   error = signal<string | null>(null);
@@ -143,7 +167,8 @@ export class CreateJobComponent implements OnInit {
 
   apiBase = '';
 
-  readonly estadoOptions: JobEstado[] = ['PAGO', 'PENDIENTE', 'CANCELADO'];
+  /** Reutiliza la fuente única */
+  readonly estadoOptions = ESTADO_OPTIONS;
 
   constructor(
     private http: HttpClient,
@@ -165,8 +190,8 @@ export class CreateJobComponent implements OnInit {
     }
 
     if (!this.isEdit()) {
-    this.form.fecha = this.todayStr();
-  }
+      this.form.fecha = this.todayStr();
+    }
 
     this.loadFormasPago(this.empresaId());
     this.recalc();
@@ -177,13 +202,12 @@ export class CreateJobComponent implements OnInit {
   }
 
   private todayStr(): string {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`; // Local, sin usar toISOString() (evita desfase)
-}
-
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
 
   private num(v: any): number {
     const n = Number(v);
@@ -339,6 +363,7 @@ export class CreateJobComponent implements OnInit {
         clienteId: j.cliente?.id ?? 0,
         pacienteId: j.paciente?.id ?? undefined,
         formaPagoId: j.formaPago?.id ?? 0,
+        /** 🔹 Aquí tomamos el estado del backend y lo mapeamos al tipo extendido */
         estado: (j.estado as JobEstado) ?? 'PENDIENTE',
       };
       this.selectedClient = j.cliente ? { id: j.cliente.id, nombre: j.cliente.nombre, apellido: j.cliente.apellido ?? null } : null;

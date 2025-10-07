@@ -1,0 +1,91 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h3 class="fw-semibold mb-0">Detalle de usuario</h3>
+    <small class="text-secondary">Información general y estado</small>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-light" (click)="backToList()">
+      &larr; Volver
+    </a>
+    <a class="btn btn-primary" [routerLink]="['/usuarios', usuario()?.id, 'editar']" *ngIf="usuario()">
+      <i class="bi bi-pencil"></i> Editar
+    </a>
+  </div>
+</div>
+
+@if (error()) {
+  <div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
+    <i class="bi bi-exclamation-triangle mt-1"></i>
+    <div>{{ error() }}</div>
+  </div>
+}
+
+@if (loading()) {
+  <div class="text-center text-secondary py-4">
+    <span class="spinner-border spinner-border-sm"></span> Cargando…
+  </div>
+} @else {
+  @if (!usuario()) {
+    <div class="alert alert-light border">No hay datos para mostrar.</div>
+  } @else {
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="small text-secondary">ID</div>
+            <div class="fw-semibold">{{ usuario()?.id }}</div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="small text-secondary">Usuario</div>
+            <div class="fw-semibold">
+              <i class="bi bi-person me-1 text-muted"></i>{{ usuario()?.usuario }}
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="small text-secondary">Nombre</div>
+            <div>{{ usuario()?.nombre }} {{ usuario()?.apellido || '' }}</div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="small text-secondary">Email</div>
+            <div>
+              @if (usuario()?.email) {
+                <a [href]="'mailto:' + usuario()?.email" class="text-decoration-none">{{ usuario()?.email }}</a>
+              } @else { — }
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="small text-secondary">Grupo</div>
+            <div>
+              <span class="text-monospace me-2" *ngIf="usuario()?.grupoId">#{{ usuario()?.grupoId }}</span>
+              {{ usuario()?.grupoNombre || '—' }}
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="small text-secondary">Rol</div>
+            <div>
+              <span class="text-monospace me-2" *ngIf="usuario()?.rolId">#{{ usuario()?.rolId }}</span>
+              {{ usuario()?.rolNombre || '—' }}
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="small text-secondary">Intentos fallidos</div>
+            <div>{{ usuario()?.intentosFallidos }}</div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="small text-secondary">Estado</div>
+            <span class="{{ badgeBloqueado(usuario()) }}">
+              {{ usuario()?.bloqueado ? 'BLOQUEADO' : 'ACTIVO' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+}
