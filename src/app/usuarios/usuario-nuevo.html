@@ -40,32 +40,40 @@
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label">Usuario *</label>
-              <input type="text" class="form-control"
-                     [class.is-invalid]="fieldErrors()['usuario'] || invalidUsername()"
-                     [ngModel]="model().usuario"
-                     (ngModelChange)="onField('usuario', $event); onUsuarioInput()"
-                     name="usuario"
-                     placeholder="j.doe" autocomplete="off" readonly/>
+              <div class="input-group">
+                <input type="text" class="form-control"
+                       [class.is-invalid]="fieldErrors()['usuario'] || invalidUsername()"
+                       [ngModel]="model().usuario"
+                       (ngModelChange)="onField('usuario', $event); onUsuarioInput()"
+                       name="usuario"
+                       placeholder="juana_38543" autocomplete="off" readonly/>
+                <button class="btn btn-outline-secondary" type="button" (click)="rollUsername()" title="Generar usuario aleatorio">
+                  <i class="bi bi-dice-5"></i>
+                </button>
+              </div>
               @if (fieldErrors()['usuario']) {
                 <div class="invalid-feedback">{{ fieldErrors()['usuario'] }}</div>
               }
               @if (!fieldErrors()['usuario'] && invalidUsername()) {
-                <div class="text-warning small mt-1">El usuario solo debe contener letras, números y puntos.</div>
+                <div class="text-warning small mt-1">Formato: letras/números y terminar con _ + 1–5 dígitos (p. ej. juana_38543 o juana.perez_123).</div>
               }
               <div class="form-text">
-                Se sugiere automáticamente con tu nombre y apellido; si lo editas, ya no se sobrescribe.
+                Usa el botón del dado para generar: nombre_ + un número aleatorio (máx. 5 dígitos).
               </div>
             </div>
 
             <div class="col-md-6">
-              <label class="form-label">Email *</label>
-              <input type="email" class="form-control"
-                     [class.is-invalid]="fieldErrors()['email']"
-                     [ngModel]="model().email" (ngModelChange)="onField('email', $event)" name="email"
-                     placeholder="usuario@correo.com" autocomplete="off" />
+              <label class="form-label">Email (generado automáticamente)</label>
+    <input type="email" class="form-control"
+      [class.is-invalid]="fieldErrors()['email']"
+      [ngModel]="model().email"
+      [ngModelOptions]="{standalone: true}"
+      name="email"
+      placeholder="juana_@38543.com" autocomplete="off" readonly/>
               @if (fieldErrors()['email']) {
                 <div class="invalid-feedback">{{ fieldErrors()['email'] }}</div>
               }
+              <div class="form-text">Se genera con el primer nombre y un número aleatorio (p. ej. juana_@38543.com).</div>
             </div>
 
             <div class="col-md-6">
@@ -106,8 +114,8 @@
             </div>
 
             <div class="col-md-6">
-              <label class="form-label">Rol</label>
-              <input type="text" class="form-control" value="USER (id: 2)" readonly>
+              <!--<label class="form-label">Rol </label>-->
+              <input type="hidden" class="form-control" value="USER (id: 2)" readonly>
             </div>
           </div>
 

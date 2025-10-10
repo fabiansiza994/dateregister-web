@@ -9,7 +9,7 @@ export const routes: Routes = [
   { path: 'verify/:userId', loadComponent: () => import('./verifycode/verifycode').then(m => m.VerifyCodeComponent) },
   { path: 'mapa-uso', loadComponent: () => import('./usage-map/usage-map').then(m => m.UsageMap) },
   { path: 'usuario-online', loadComponent: () => import('./usuarios-online/usuarios-online').then(m => m.UsuariosOnlineComponent) },
-  {path: 'usuario-online', loadComponent: () => import('./usuarios-online/usuarios-online').then(m => m.UsuariosOnlineComponent)},
+  { path: 'usuario-online', loadComponent: () => import('./usuarios-online/usuarios-online').then(m => m.UsuariosOnlineComponent) },
   // Grupo protegido por el layout + guard
   {
     path: '',
@@ -26,6 +26,9 @@ export const routes: Routes = [
       { path: 'modules', loadComponent: () => import('./modules/modules').then(m => m.Modules) },
       { path: 'clientes/:id/editar', loadComponent: () => import('./cliente/cliente-editar').then(m => m.ClienteEditarComponent) },
       { path: 'clientes/:id', loadComponent: () => import('./cliente/cliente-detalle.component').then(m => m.ClienteDetalleComponent) },
+
+      // app.routes.ts (dentro de children protegidos)
+      { path: 'configuracion', loadComponent: () => import('./configuracion/company-settings').then(m => m.CompanySettingsComponent) },
 
       // dentro de children (mantén este orden)
       { path: 'trabajos', loadComponent: () => import('./trabajos/trabajos').then(m => m.JobsComponent) },

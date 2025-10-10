@@ -106,20 +106,6 @@
               }
             </div>
 
-            <div class="col-md-6">
-              <label class="form-label">Cliente ID (opcional)</label>
-              <input
-                type="number"
-                class="form-control"
-                [class.is-invalid]="fieldErrors()['clienteId']"
-                [ngModel]="paciente()!.clienteId"
-                (ngModelChange)="onField('clienteId', $event)"
-                name="clienteId" min="0" step="1">
-              @if (fieldErrors()['clienteId']) {
-                <div class="invalid-feedback">{{ fieldErrors()['clienteId'] }}</div>
-              }
-            </div>
-
             <div class="col-md-6 d-flex align-items-center">
               <div class="form-check form-switch">
                 <input

@@ -106,6 +106,17 @@ export class UsuarioNuevoComponent implements OnInit {
       .split(/\s+/)[0] || '';                          // primer token
   }
 
+  private tokenize(s?: string): string[] {
+    if (!s) return [];
+    const cleaned = s
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .trim();
+    if (!cleaned) return [];
+    return cleaned.split(/\s+/).filter(Boolean).slice(0, 2); // máximo 2 tokens
+  }
+
   private computeUsername(): string {
     const first = this.normalizeToken(this.model().nombre);
     const last = this.normalizeToken(this.model().apellido);
@@ -115,11 +126,20 @@ export class UsuarioNuevoComponent implements OnInit {
 
   updateSuggestedUser(): void {
     if (this.userEditedUsername) return; // no sobrescribir si el usuario ya editó
-    const sugg = this.computeUsername();
-    if (sugg) {
-      this.model.update(m => ({ ...m, usuario: sugg }));
-      this.clearFieldError('usuario');
-    }
+    const fTokens = this.tokenize(this.model().nombre);
+    if (!fTokens.length) return;
+    const lTokens = this.tokenize(this.model().apellido);
+    const f1 = fTokens[0];
+    const f2 = fTokens[1];
+    const l1 = lTokens[0];
+    // Base preferida determinista: first.last1 si existe, si no first.first2 si existe, si no first
+    const base = l1 ? `${f1}.${l1}` : (f2 ? `${f1}.${f2}` : f1);
+    const digits = this.randomDigits(5);
+    const username = `${base}_${digits}`;
+    const email = `${f1}_@${digits}.com`;
+    this.model.update(m => ({ ...m, usuario: username, email }));
+    this.clearFieldError('usuario');
+    this.clearFieldError('email');
   }
 
   onUsuarioInput(): void {
@@ -129,8 +149,64 @@ export class UsuarioNuevoComponent implements OnInit {
   invalidUsername = computed(() => {
     const u = this.model().usuario ?? '';
     if (!u) return false;
-    return !/^[a-z0-9.]+$/.test(u);
+    // Debe cumplir: first(_optionalLastWithDot)_digits, donde el bloque antes del _ puede ser
+    //  - first
+    //  - first.last
+    return !/^[a-z0-9]+(?:\.[a-z0-9]+)?_\d{1,5}$/.test(u);
   });
+
+  private randomDigits(len = 5): string {
+    let s = '';
+    for (let i = 0; i < len; i++) s += Math.floor(Math.random() * 10);
+    return s;
+  }
+
+  private ensureEmailFromFirstToken(): void {
+    const first = this.normalizeToken(this.model().nombre) || 'user';
+    // intenta extraer los dígitos actuales del username si existen
+    const match = (this.model().usuario || '').match(/^[a-z0-9]+_(\d{1,5})$/);
+    const digits = match ? match[1] : this.randomDigits(5);
+    const email = `${first}_@${digits}.com`;
+    if (!this.model().email?.trim()) {
+      this.model.update(m => ({ ...m, email }));
+      this.clearFieldError('email');
+    }
+  }
+
+  private buildRandomUsername(): string {
+    const fTokens = this.tokenize(this.model().nombre);
+    const lTokens = this.tokenize(this.model().apellido);
+    const f1 = fTokens[0] || 'user';
+    const f2 = fTokens[1];
+    const l1 = lTokens[0];
+    const l2 = lTokens[1];
+    const bases = [
+      f1,
+      f2 ? `${f1}.${f2}` : null,
+      l1 ? `${f1}.${l1}` : null,
+      l2 ? `${f1}.${l2}` : null,
+      (f2 && l1) ? `${f2}.${l1}` : null,
+      f2 || null,
+    ].filter((v): v is string => !!v);
+    const base = bases[Math.floor(Math.random() * bases.length)] || f1;
+    const digits = this.randomDigits(5);
+    return `${base}_${digits}`;
+  }
+
+  rollUsername(): void {
+    this.userEditedUsername = true;
+    const username = this.buildRandomUsername();
+    const fTokens = this.tokenize(this.model().nombre);
+    const f1 = fTokens[0] || 'user';
+    // extrae los dígitos del username recién generado para sincronizar email (soporta first[.token]_digits)
+    const match = username.match(/^[a-z0-9]+(?:\.[a-z0-9]+)?_(\d{1,5})$/);
+    const digits = match ? match[1] : this.randomDigits(5);
+    const email = `${f1}_@${digits}.com`;
+
+    this.model.update(m => ({ ...m, usuario: username, email }));
+    this.clearFieldError('usuario');
+    this.clearFieldError('email');
+  }
 
   // Validaciones
   isStep1Valid = computed(() => {

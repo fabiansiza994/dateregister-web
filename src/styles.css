@@ -293,3 +293,48 @@ select:-webkit-autofill{
 /* ====================================================================== */
 #usage-map{ height:70vh; width:100%; }
 .leaflet-container{ height:70vh; width:100%; }
+
+
+/* ===== Fix visual para switches Bootstrap ===== */
+.form-switch .form-check-input{
+  width: 2.5rem;
+  height: 1.35rem;
+  border-radius: 999px !important;
+  background-color: #e2e8f0 !important;           /* gris suave base */
+  background-image: none !important;               /* evita íconos heredados */
+  border-color: var(--dr-field-border) !important;
+  transition: background-color .2s, border-color .2s, box-shadow .2s;
+}
+
+.form-switch .form-check-input:focus{
+  box-shadow: 0 0 0 .18rem rgba(124,58,237,.15) !important;
+  border-color: rgba(124,58,237,.55) !important;
+}
+
+.form-switch .form-check-input:checked{
+  background-color: var(--dr-brand) !important;    /* ON = violeta marca */
+  border-color: var(--dr-brand) !important;
+}
+
+/* “perilla” del switch (emula la de Bootstrap) */
+.form-switch .form-check-input{
+  position: relative;
+}
+.form-switch .form-check-input::after{
+  content: "";
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 1rem; height: 1rem;
+  background: #fff; border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0,0,0,.2);
+  transition: transform .2s ease;
+}
+.form-switch .form-check-input:checked::after{
+  transform: translateX(1.15rem);
+}
+
+/* Deshabilitado */
+.form-switch .form-check-input:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}

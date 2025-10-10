@@ -136,7 +136,7 @@ export class ClienteEditarComponent implements OnInit {
 
     } catch (e: any) {
       if (e instanceof TimeoutError) this.error.set('La actualización tardó demasiado. Intenta de nuevo.');
-      else this.error.set(e?.message || e?.error?.message || 'No se pudo actualizar el cliente');
+      else this.error.set(e?.descError || e?.error?.descError || 'No se pudo actualizar el cliente');
     } finally {
       this.loading.set(false);
     }

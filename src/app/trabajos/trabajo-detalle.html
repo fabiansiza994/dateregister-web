@@ -15,8 +15,7 @@
         <i class="bi bi-pencil"></i> Editar
       </a>
       }
-      <button type="button" class="btn btn-outline-secondary" (click)="downloadPdf()"
-              [disabled]="loading() || !job()">
+      <button type="button" class="btn btn-outline-secondary" (click)="downloadPdf()" [disabled]="loading() || !job()">
         <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
       </button>
     </div>
@@ -65,10 +64,12 @@
           <div class="text-secondary small">Valor total</div>
           <div class="fw-semibold">{{ formatMoney(totalCalc(job())) }}</div>
         </div>
+        @if (canSeeGanancias()) {
         <div class="col-md-3">
           <div class="text-secondary small">Ganancias</div>
           <div class="fw-semibold">{{ formatMoney(gananciasCalc(job())) }}</div>
         </div>
+        }
 
         <!-- Cliente -->
         <div class="col-md-6">
@@ -99,7 +100,7 @@
           </div>
           <div class="small text-secondary mt-1">
             @if (job()?.paciente?.documento) { <span class="me-3">Doc: <span class="text-monospace">{{
-              job()?.paciente?.documento }}</span></span> }
+                job()?.paciente?.documento }}</span></span> }
             @if (job()?.paciente?.telefono) { <span class="me-3">Tel: {{ job()?.paciente?.telefono }}</span> }
             @if (job()?.paciente?.email) { <span class="me-3">Email: {{ job()?.paciente?.email }}</span> }
           </div>
@@ -120,25 +121,25 @@
             @if (job()?.foto1) {
             <a [href]="job()?.foto1" target="_blank" rel="noopener" class="d-inline-block">
               <img [src]="job()?.foto1" alt="foto1" class="img-thumbnail"
-                   style="width:180px; height:120px; object-fit:cover;">
+                style="width:180px; height:120px; object-fit:cover;">
             </a>
             }
             @if (job()?.foto2) {
             <a [href]="job()?.foto2" target="_blank" rel="noopener" class="d-inline-block">
               <img [src]="job()?.foto2" alt="foto2" class="img-thumbnail"
-                   style="width:180px; height:120px; object-fit:cover;">
+                style="width:180px; height:120px; object-fit:cover;">
             </a>
             }
             @if (job()?.foto3) {
             <a [href]="job()?.foto3" target="_blank" rel="noopener" class="d-inline-block">
               <img [src]="job()?.foto3" alt="foto3" class="img-thumbnail"
-                   style="width:180px; height:120px; object-fit:cover;">
+                style="width:180px; height:120px; object-fit:cover;">
             </a>
             }
             @if (job()?.foto4) {
             <a [href]="job()?.foto4" target="_blank" rel="noopener" class="d-inline-block">
               <img [src]="job()?.foto4" alt="foto4" class="img-thumbnail"
-                   style="width:180px; height:120px; object-fit:cover;">
+                style="width:180px; height:120px; object-fit:cover;">
             </a>
             }
           </div>

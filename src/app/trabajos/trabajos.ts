@@ -230,7 +230,7 @@ export class JobsComponent implements OnInit {
       this.success.set('🗑️ Trabajo eliminado correctamente.');
     } catch (e: any) {
       if (e instanceof TimeoutError) this.error.set('La eliminación tardó demasiado. Intenta de nuevo.');
-      else this.error.set(e?.error?.message || e?.message || 'No se pudo eliminar el trabajo.');
+      else this.error.set(e?.error?.descError || e?.descError || 'No se pudo eliminar el trabajo.');
     } finally {
       this.deleting.set(false);
       this.closeConfirm();

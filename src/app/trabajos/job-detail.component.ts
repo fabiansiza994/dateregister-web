@@ -21,16 +21,16 @@ export interface EstadoOption {
 }
 
 export const ESTADO_OPTIONS: EstadoOption[] = [
-  { value: 'PENDIENTE',    label: '⏳ Pendiente',     badgeClass: 'badge bg-warning-subtle text-dark' },
-  { value: 'PROGRAMADO',   label: '🗓️ Programado',   badgeClass: 'badge bg-primary-subtle text-dark' },
-  { value: 'EN CURSO',     label: '🔧 En curso',      badgeClass: 'badge bg-info-subtle text-dark' },
-  { value: 'EN REVISION',  label: '🧪 En revisión',   badgeClass: 'badge bg-secondary-subtle text-dark' },
-  { value: 'REVISADO',     label: '🔍 Revisado',      badgeClass: 'badge bg-secondary-subtle text-dark' },
-  { value: 'PAGO',         label: '✅ Pago',          badgeClass: 'badge bg-success-subtle text-dark' },
-  { value: 'FINALIZADO',   label: '🏁 Finalizado',    badgeClass: 'badge bg-success-subtle text-dark' },
-  { value: 'CANCELADO',    label: '❌ Cancelado',     badgeClass: 'badge bg-danger-subtle' },
-  { value: 'DEVUELTO',     label: '↩️ Devuelto',      badgeClass: 'badge bg-dark-subtle text-dark' },
-  { value: 'NO ASISTE',    label: '🚫 No asiste',     badgeClass: 'badge bg-dark-subtle text-dark' },
+  { value: 'PENDIENTE', label: '⏳ Pendiente', badgeClass: 'badge bg-warning-subtle text-dark' },
+  { value: 'PROGRAMADO', label: '🗓️ Programado', badgeClass: 'badge bg-primary-subtle text-dark' },
+  { value: 'EN CURSO', label: '🔧 En curso', badgeClass: 'badge bg-info-subtle text-dark' },
+  { value: 'EN REVISION', label: '🧪 En revisión', badgeClass: 'badge bg-secondary-subtle text-dark' },
+  { value: 'REVISADO', label: '🔍 Revisado', badgeClass: 'badge bg-secondary-subtle text-dark' },
+  { value: 'PAGO', label: '✅ Pago', badgeClass: 'badge bg-success-subtle text-dark' },
+  { value: 'FINALIZADO', label: '🏁 Finalizado', badgeClass: 'badge bg-success-subtle text-dark' },
+  { value: 'CANCELADO', label: '❌ Cancelado', badgeClass: 'badge bg-danger-subtle' },
+  { value: 'DEVUELTO', label: '↩️ Devuelto', badgeClass: 'badge bg-dark-subtle text-dark' },
+  { value: 'NO ASISTE', label: '🚫 No asiste', badgeClass: 'badge bg-dark-subtle text-dark' },
 ];
 
 // ====== Tipos de tu modelo ======
@@ -129,6 +129,27 @@ export class JobDetailComponent implements OnInit {
     this.loadDetail(id);
   }
 
+  canSeeGanancias = computed(() => {
+    const j = this.job();
+    if (!j?.usuario?.id) return false;
+    const viewer = this.viewerId();
+    if (viewer == null) return false;
+    return j.usuario.id === Number(viewer);
+  });
+
+  private viewerId(): number | null {
+    const c = this._claims();
+    // Ajusta estos posibles nombres de campo según tus claims reales:
+    return (
+      c?.id ??
+      c?.userId ??
+      c?.usuarioId ??
+      c?.sub ?? // si tu "sub" es numérico
+      null
+    ) as number | null;
+  }
+
+
   private htmlToPlainText(html: string): string {
     if (!html) return '';
     return html
@@ -203,6 +224,19 @@ export class JobDetailComponent implements OnInit {
       : (Number(manoObra || 0) + Number(materiales || 0));
 
     const fmt = (n: number | null | undefined) => this.formatMoney(Number(n ?? 0));
+
+    // Armamos filas según permisos
+    const body: Array<[string, string]> = [
+      ['Mano de obra', fmt(manoObra)],
+      ['Materiales', fmt(materiales)],
+      ['Total', fmt(total)],
+    ];
+
+
+    if (this.canSeeGanancias()) {
+      const ganancias = this.gananciasCalc(j);
+      body.splice(2, 0, ['Ganancias', fmt(ganancias)]); // opcional: insertarla antes de Total
+    }
 
     autoTable(doc, {
       startY: 220 + (descLines.length > 1 ? (descLines.length - 1) * 12 : 0),

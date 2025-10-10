@@ -1,0 +1,53 @@
+<!-- src/app/configuracion/company-settings.html -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h3 class="fw-semibold mb-0">Configuración</h3>
+    <small class="text-secondary">Preferencias de colaboración entre grupos</small>
+  </div>
+</div>
+
+@if (error()) {
+  <div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
+    <i class="bi bi-exclamation-triangle mt-1"></i>
+    <div>{{ error() }}</div>
+  </div>
+}
+@if (success()) {
+  <div class="alert alert-success d-flex align-items-start gap-2" role="alert">
+    <i class="bi bi-check-circle mt-1"></i>
+    <div>{{ success() }}</div>
+  </div>
+}
+
+<div class="card border-0 shadow-sm rounded-4">
+  <div class="card-body">
+    <div class="mb-3">
+      <div class="text-secondary small">Empresa</div>
+      <h5 class="mb-0 fw-semibold">{{ empresaNombre() }}</h5>
+    </div>
+
+    <hr>
+
+    <div class="form-check form-switch my-3">
+      <input class="form-check-input" type="checkbox" id="swView"
+             [checked]="allowView()" (change)="onToggleAllowView($event)" [disabled]="loading()">
+      <label class="form-check-label" for="swView">
+        Permitir ver trabajos entre grupos
+      </label>
+      <div class="form-text">Concede visibilidad de trabajos de otros grupos.</div>
+    </div>
+
+    <div class="form-check form-switch my-3">
+      <input class="form-check-input" type="checkbox" id="swEdit"
+             [checked]="allowEdit()" (change)="onToggleAllowEdit($event)" [disabled]="loading()">
+      <label class="form-check-label" for="swEdit">
+        Permitir editar trabajos entre grupos
+      </label>
+      <div class="form-text">Requiere visibilidad. Si activas editar, se activará ver automáticamente.</div>
+    </div>
+
+    <div class="mt-3 text-secondary small" *ngIf="loading()">
+      <span class="spinner-border spinner-border-sm me-2"></span> Guardando…
+    </div>
+  </div>
+</div>
