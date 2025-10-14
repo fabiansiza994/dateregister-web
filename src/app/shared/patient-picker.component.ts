@@ -240,6 +240,7 @@ export class PatientPickerComponent {
         id: nuevoId ?? 0,
         nombre: payload.nombre,
         apellido: payload.apellido || undefined,
+        clienteId: payload.clienteId || undefined,
         documento: payload.documento,
         telefono: payload.telefono || undefined,
         email: payload.email || undefined,
@@ -247,7 +248,7 @@ export class PatientPickerComponent {
         estado: 'ACTIVO',
       };
       this.selected.emit(nuevo);
-      // this.closed.emit(); // si quieres cerrar al crear
+      // this.closed.emit(); // descomenta si quieres cerrar automáticamente al crear
     } catch (e: any) {
       if (e instanceof TimeoutError) this.error.set('La creación tardó demasiado.');
       else this.error.set(e?.message || e?.error?.message || 'No se pudo crear el paciente.');

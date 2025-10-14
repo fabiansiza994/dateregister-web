@@ -1,4 +1,4 @@
 {
-  "apiBaseUrl": "http://localhost:8081",
-  "apiBaseUrlProd": "https://srvdataregisterapp-1-0-0.onrender.com"
+  "apiBaseUrlPrivate": "http://localhost:8081",
+  "apiBaseUrl": "https://srvdataregisterapp-1-0-0.onrender.com"
 }

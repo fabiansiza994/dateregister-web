@@ -30,6 +30,42 @@
   color: #fff;
 }
 
+/* Manejo de nombres largos en marca */
+.navbar .navbar-brand.min-w-0 { min-width: 0; }
+.navbar .brand-text { min-width: 0; max-width: 58vw; }
+.navbar .brand-name { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (min-width: 992px) { /* lg+ puede mostrar más ancho */
+  .navbar .brand-text { max-width: 40vw; }
+}
+
+/* Dos líneas en móvil */
+@media (max-width: 575.98px) {
+  .navbar .brand-text { max-width: 68vw; }
+  .navbar .brand-name-line1 { 
+    font-size: 1rem; 
+    line-height: 1.1;
+    display: -webkit-box;
+    line-clamp: 1;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .navbar .brand-name-line2 { 
+    font-size: .85rem; 
+    opacity: .9; 
+    line-height: 1.1;
+    display: -webkit-box;
+    line-clamp: 1;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: .1rem;
+  }
+}
+
 /* Avatar usuario */
 .user-avatar {
   width: 28px;

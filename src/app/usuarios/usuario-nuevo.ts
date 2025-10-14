@@ -77,6 +77,13 @@ export class UsuarioNuevoComponent implements OnInit {
   error = signal<string | null>(null);
   success = signal<string | null>(null);
   fieldErrors = signal<Record<string, string>>({});
+  // Confirmación de contraseña (solo UI)
+  confirmPassword = signal('');
+  passwordMismatch = computed(() => {
+    const cp = this.confirmPassword();
+    if (!cp) return false;
+    return cp !== (this.model().password || '');
+  });
 
   // Grupos (search)
   qGroup = '';
@@ -211,8 +218,10 @@ export class UsuarioNuevoComponent implements OnInit {
   // Validaciones
   isStep1Valid = computed(() => {
     const m = this.model();
+    const cp = this.confirmPassword();
     return !!m.usuario.trim() && !!m.email.trim() && !!m.nombre.trim()
-      && !!m.apellido.trim() && !!m.password.trim();
+      && !!m.apellido.trim() && !!m.password.trim()
+      && !!cp.trim() && cp === m.password;
   });
   isStep2Valid = computed(() => {
     const e = this.model().empresa;
@@ -332,6 +341,10 @@ export class UsuarioNuevoComponent implements OnInit {
   onGrupoChange(id: number | null) {
     this.model.update(m => ({ ...m, grupo: { id } }));
     this.clearFieldError('grupo.id');
+  }
+  onConfirmPassword(v: string) {
+    this.confirmPassword.set(v);
+    this.clearFieldError('passwordConfirm');
   }
 
   private setFieldError(field: string, msg: string) {

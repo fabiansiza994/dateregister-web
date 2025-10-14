@@ -33,7 +33,7 @@
 
 .illustration-overlay{
   position: absolute; inset: 0;
-  background: linear-gradient(90deg, rgba(1, 2, 77, 0.55) 0%, rgba(18, 50, 156, 0.35) 40%, rgba(7, 14, 116, 0.15) 100%);
+  background: linear-gradient(90deg, rgba(1, 2, 77, 0.55) 0%, rgba(18, 50, 156, 0.35) 100%, rgba(7, 14, 116, 0.15) 100%);
 }
 
 .illustration-content{
@@ -44,6 +44,47 @@
   align-content: center;
   padding: clamp(2rem, 6vw, 5rem);
   z-index: 1;
+}
+
+/* Capa de animación tecnológica: líneas/vectores sutiles en movimiento */
+.tech-anim{
+  position: absolute;
+  inset: 0;
+  z-index: 0; /* bajo el contenido, sobre el fondo */
+  pointer-events: none;
+  opacity: .25;
+  mix-blend-mode: screen;
+  background-image:
+    /* red de líneas horizontales y verticales */
+    repeating-linear-gradient(
+      0deg,
+      rgba(13,110,253,.35) 0px,
+      rgba(13,110,253,.35) 1px,
+      transparent 1px,
+      transparent 40px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(111,66,193,.35) 0px,
+      rgba(111,66,193,.35) 1px,
+      transparent 1px,
+      transparent 40px
+    ),
+    /* partículas diagonales suaves */
+    radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.35), transparent 70%),
+    radial-gradient(2px 2px at 70% 60%, rgba(255,255,255,.25), transparent 70%);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  animation: tech-pan 28s linear infinite, tech-float 9s ease-in-out infinite alternate;
+}
+
+@keyframes tech-pan{
+  0%{ background-position: 0 0, 0 0, 0 0, 0 0; }
+  100%{ background-position: 0 -200px, -200px 0, 20px 30px, -30px 20px; }
+}
+
+@keyframes tech-float{
+  0% { transform: translate3d(0,0,0) scale(1); }
+  100% { transform: translate3d(0,-10px,0) scale(1.02); }
 }
 
 .illustration-content .bi{

@@ -1,12 +1,16 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top">
   <div class="container-fluid">
     <!-- Marca / Empresa -->
-    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" routerLink="/modules" (click)="close()">
+    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold flex-shrink-1 min-w-0" routerLink="/modules" (click)="close()">
       <div class="brand-avatar">{{ initials(empresa()) }}</div>
-      <span>{{ empresa() }}</span>
-      @if (sector()) {
-      <span class="badge bg-light text-primary-emphasis ms-1">{{ sector() }}</span>
-      }
+      <span class="brand-text d-flex flex-column min-w-0">
+        <span class="brand-name-line1 d-block d-sm-none" [attr.title]="empresa()">{{ brandLines().l1 }}</span>
+        <span class="brand-name-line2 d-block d-sm-none">{{ brandLines().l2 }}</span>
+        <span class="brand-name d-none d-sm-inline text-truncate" [attr.title]="empresa()">{{ empresa() }}</span>
+        @if (sector()) {
+        <span class="badge bg-light text-primary-emphasis ms-1 d-none d-sm-inline">{{ sector() }}</span>
+        }
+      </span>
     </a>
     
     <!-- Botón hamburguesa -->
