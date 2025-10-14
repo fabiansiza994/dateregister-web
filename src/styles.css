@@ -59,6 +59,8 @@ body{
   line-height: var(--dr-body-lh);
   font-weight: var(--dr-text-weight);
   -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
@@ -94,7 +96,8 @@ app-footer { margin-top:auto; display:block; }
   border: var(--dr-border);
   border-radius: var(--dr-radius);
   box-shadow: var(--dr-shadow-1);
-  backdrop-filter: saturate(140%) blur(6px);
+  /* Evitar blur en Android WebView por nitidez de fuentes */
+  backdrop-filter: none;
   transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
 }
 .dr-card:hover{ transform: translateY(-4px); box-shadow: var(--dr-shadow-2); border-color: rgba(15,23,42,.14); }

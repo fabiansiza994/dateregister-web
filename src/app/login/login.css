@@ -92,10 +92,11 @@
 }
 
 .glass{
-  background: rgba(255,255,255,.12);
+  background: rgba(255,255,255,.14);
   border: 1px solid rgba(255,255,255,.25);
-  backdrop-filter: blur(8px) saturate(120%);
-  -webkit-backdrop-filter: blur(8px) saturate(120%);
+  /* Evitar blur para nitidez de tipografías en WebView Android */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .avatar{
