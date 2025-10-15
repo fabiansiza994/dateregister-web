@@ -1,34 +1,26 @@
-<div class="container py-3">
-  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+<div class="py-3">
+  <div class="flex flex-wrap items-center justify-between mb-4 gap-2">
     <div>
-      <h3 class="fw-semibold mb-0">Editar paciente</h3>
-      <small class="text-secondary">Actualiza los datos del paciente</small>
+      <h3 class="text-xl font-semibold m-0">Editar paciente</h3>
+      <p class="text-xs text-slate-500 m-0">Actualiza los datos del paciente</p>
     </div>
-    <div class="mt-2 mt-sm-0">
+    <div>
       <button class="btn btn-outline-secondary" (click)="volver()">&larr; Volver</button>
     </div>
   </div>
 
-  @if (error()) {
-    <div class="alert alert-danger d-flex align-items-start gap-2 rounded-4 shadow-sm" role="alert">
-      <i class="bi bi-exclamation-triangle mt-1"></i>
-      <div class="flex-grow-1">{{ error() }}</div>
-      <button type="button" class="btn-close ms-auto" (click)="error.set(null)"></button>
-    </div>
-  }
+  @if (error()) { <div class="rounded-lg border border-red-300 bg-red-50 text-red-700 px-4 py-3 text-sm flex gap-3 items-start mb-4" role="alert"><i class="bi bi-exclamation-triangle mt-1"></i><div class="font-medium flex-1">{{ error() }}</div><button type="button" class="btn btn-close" (click)="error.set(null)"></button></div> }
 
   @if (loading()) {
-    <div class="text-center py-4 text-secondary">
-      <span class="spinner-border spinner-border-sm"></span> Cargando…
-    </div>
+    <div class="text-center py-4 text-slate-500"><span class="spinner-border spinner-border-sm"></span> Cargando…</div>
   } @else {
     @if (paciente()) {
-      <form class="card border-0 shadow-sm rounded-4" (ngSubmit)="actualizar()">
-        <div class="card-body">
-          <div class="row g-3">
+      <form class="bg-white rounded-2xl shadow-card border border-slate-200/70" (ngSubmit)="actualizar()">
+        <div class="p-5">
+          <div class="grid gap-4 md:grid-cols-12">
 
-            <div class="col-md-6">
-              <label class="form-label">Nombre <span class="text-danger">*</span></label>
+            <div class="md:col-span-6">
+              <label class="text-sm font-medium text-slate-700">Nombre <span class="text-red-600">*</span></label>
               <input
                 class="form-control"
                 [class.is-invalid]="fieldErrors()['nombre']"
@@ -40,8 +32,8 @@
               }
             </div>
 
-            <div class="col-md-6">
-              <label class="form-label">Apellido</label>
+            <div class="md:col-span-6">
+              <label class="text-sm font-medium text-slate-700">Apellido</label>
               <input
                 class="form-control"
                 [class.is-invalid]="fieldErrors()['apellido']"
@@ -53,8 +45,8 @@
               }
             </div>
 
-            <div class="col-md-6">
-              <label class="form-label">Identificación</label>
+            <div class="md:col-span-6">
+              <label class="text-sm font-medium text-slate-700">Identificación</label>
               <input
                 class="form-control"
                 [class.is-invalid]="fieldErrors()['documento']"
@@ -66,8 +58,8 @@
               }
             </div>
 
-            <div class="col-md-6">
-              <label class="form-label">Teléfono</label>
+            <div class="md:col-span-6">
+              <label class="text-sm font-medium text-slate-700">Teléfono</label>
               <input
                 class="form-control"
                 [class.is-invalid]="fieldErrors()['telefono']"
@@ -79,8 +71,8 @@
               }
             </div>
 
-            <div class="col-md-6">
-              <label class="form-label">Email</label>
+            <div class="md:col-span-6">
+              <label class="text-sm font-medium text-slate-700">Email</label>
               <input
                 type="email"
                 class="form-control"
@@ -93,8 +85,8 @@
               }
             </div>
 
-            <div class="col-md-6">
-              <label class="form-label">Dirección</label>
+            <div class="md:col-span-6">
+              <label class="text-sm font-medium text-slate-700">Dirección</label>
               <input
                 class="form-control"
                 [class.is-invalid]="fieldErrors()['direccion']"
@@ -106,7 +98,7 @@
               }
             </div>
 
-            <div class="col-md-6 d-flex align-items-center">
+            <div class="md:col-span-6 flex items-center">
               <div class="form-check form-switch">
                 <input
                   class="form-check-input"
@@ -118,10 +110,7 @@
                 />
                 <label class="form-check-label ms-2" for="estadoSwitch">
                   Estado:
-                  <span class="badge rounded-pill"
-                        [ngClass]="(paciente()?.estado === 'ACTIVO') ? 'bg-success' : 'bg-secondary'">
-                    {{ paciente()?.estado || 'INACTIVO' }}
-                  </span>
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-medium" [class.bg-green-100]="(paciente()?.estado === 'ACTIVO')" [class.text-green-700]="(paciente()?.estado === 'ACTIVO')" [class.bg-slate-200]="(paciente()?.estado !== 'ACTIVO')" [class.text-slate-600]="(paciente()?.estado !== 'ACTIVO')">{{ paciente()?.estado || 'INACTIVO' }}</span>
                 </label>
               </div>
             </div>
@@ -129,18 +118,13 @@
           </div>
         </div>
 
-        <div class="card-footer d-flex justify-content-end gap-2 border-0">
+        <div class="px-5 py-3 bg-slate-50/60 flex justify-end gap-2 border-0">
           <button type="button" class="btn btn-light" (click)="volver()">Cancelar</button>
-          <button type="submit" class="btn btn-primary" [disabled]="loading() || !formOk()">
-            @if (loading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
-            Guardar cambios
-          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="loading() || !formOk()">@if (loading()) { <span class="spinner-border spinner-border-sm mr-2"></span> } Guardar cambios</button>
         </div>
       </form>
     } @else {
-      <div class="alert alert-light border text-center text-secondary">
-        No se encontró el paciente.
-      </div>
+      <div class="rounded-xl border border-slate-200/70 bg-white p-4 text-center text-slate-500">No se encontró el paciente.</div>
     }
   }
 </div>

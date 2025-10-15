@@ -1,248 +1,389 @@
-<div class="container py-3 page-create-job">
+<div class="py-3 page-create-job">
   <!-- Header -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-semibold mb-0">
-      {{ isEdit() ? 'Editar trabajo' : 'Crear trabajo' }}
-    </h3>
-    <a routerLink="/trabajos" class="btn btn-link text-decoration-none px-0">&larr; Volver</a>
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-xl font-semibold m-0">{{ isEdit() ? 'Editar trabajo' : 'Crear trabajo' }}</h3>
+    <a routerLink="/trabajos" class="btn btn-outline-secondary">&larr; Volver</a>
   </div>
 
-  <!-- Error global -->
   @if (error()) {
-    <div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
+    <div class="rounded-lg border border-red-300 bg-red-50 text-red-700 px-4 py-3 text-sm flex gap-3 items-start mb-4" role="alert">
       <i class="bi bi-exclamation-triangle mt-1"></i>
-      <div>{{ error() }}</div>
-      <button type="button" class="btn-close ms-auto" (click)="error.set(null)"></button>
+      <div class="font-medium flex-1">{{ error() }}</div>
+      <button type="button" class="btn btn-close" (click)="error.set(null)"></button>
     </div>
   }
 
   <!-- Form -->
-  <form class="card border-0 shadow-sm rounded-4" (submit)="$event.preventDefault(); submit()">
-    <div class="card-body">
-      <div class="row g-3">
-
-        <div class="col-md-3">
-          <label class="form-label">Fecha <span class="text-danger">*</span></label>
+  <form class="bg-white rounded-2xl shadow-card border border-slate-200/60" (submit)="$event.preventDefault(); submit()">
+    <div class="p-5">
+      <div class="grid gap-4 md:grid-cols-12">
+        <div class="md:col-span-3">
+          <label class="text-sm font-medium text-slate-700">Fecha <span class="text-red-600">*</span></label>
           <input type="date" class="form-control" [(ngModel)]="form.fecha" name="fecha" required>
         </div>
 
-        <!-- Estado (solo en edición) -->
         @if (isEdit()) {
-        <div class="col-md-3">
-          <label class="form-label">Estado</label>
-          <select class="form-select form-select-sm pretty-select"
-                  [(ngModel)]="form.estado" name="estado">
+        <div class="md:col-span-3">
+          <label class="text-sm font-medium text-slate-700">Estado</label>
+          <select class="form-control text-sm" [(ngModel)]="form.estado" name="estado">
             <option [ngValue]="null" disabled>— Selecciona un estado —</option>
-            <option *ngFor="let e of estadoOptions" [ngValue]="e.value">
-              {{ e.label }}
-            </option>
+            <option *ngFor="let e of estadoOptions" [ngValue]="e.value">{{ e.label }}</option>
           </select>
-
-         
         </div>
         }
 
-        <!-- Cliente/Paciente según sector -->
         @if (sector() !== 'SALUD') {
-        <div class="col-md-6">
-          <label class="form-label d-flex align-items-center justify-content-between">
-            <span>Cliente <span class="text-danger">*</span></span>
-            @if (selectedClient) {
-              <small class="text-secondary">ID: {{ selectedClient?.id }}</small>
-            }
+        <div class="md:col-span-6">
+          <label class="text-sm font-medium text-slate-700 flex items-center justify-between">
+            <span>Cliente <span class="text-red-600">*</span></span>
+            @if (selectedClient) { <small class="text-slate-500">ID: {{ selectedClient.id }}</small> }
           </label>
-
-          <div class="input-group">
-            <input type="text" class="form-control"
-              [value]="selectedClient ? (selectedClient.nombre + ' ' + (selectedClient.apellido||'')) : ''"
-              placeholder="Sin seleccionar" readonly>
-            <button type="button" class="btn btn-outline-primary" (click)="openClientModal()">
-              <i class="bi bi-search"></i> Seleccionar
-            </button>
-            <button type="button" class="btn btn-outline-secondary" (click)="clearClient()"
-              [disabled]="!selectedClient">
-              Limpiar
-            </button>
+          <div class="flex items-center gap-2">
+            <input type="text" class="form-control flex-1" [value]="selectedClient ? (selectedClient.nombre + ' ' + (selectedClient.apellido||'')) : ''" placeholder="Sin seleccionar" readonly>
+            <button type="button" class="btn btn-outline-primary" (click)="openClientModal()"><i class="bi bi-search"></i> <span class="ml-1">Seleccionar</span></button>
+            <button type="button" class="btn btn-outline-secondary" (click)="clearClient()" [disabled]="!selectedClient">Limpiar</button>
           </div>
-
-          @if (!selectedClient) {
-            <div class="form-text">Debes seleccionar o crear un cliente.</div>
-          }
+          @if (!selectedClient) { <div class="text-xs text-slate-500 mt-1">Debes seleccionar o crear un cliente.</div> }
         </div>
         } @else {
-        <div class="col-md-6">
-          <label class="form-label d-flex align-items-center justify-content-between">
-            <span>Paciente <span class="text-danger">*</span></span>
-            @if (selectedPatient) {
-              <small class="text-secondary">ID: {{ selectedPatient?.id }}</small>
-            }
+        <div class="md:col-span-6">
+          <label class="text-sm font-medium text-slate-700 flex items-center justify-between">
+            <span>Paciente <span class="text-red-600">*</span></span>
+            @if (selectedPatient) { <small class="text-slate-500">ID: {{ selectedPatient.id }}</small> }
           </label>
-
-          <div class="input-group">
-            <input type="text" class="form-control"
-              [value]="selectedPatient ? (selectedPatient.nombre + ' ' + (selectedPatient.apellido||'')) : ''"
-              placeholder="Sin seleccionar" readonly>
-            <button type="button" class="btn btn-outline-success" (click)="openPatientModal()">
-              <i class="bi bi-heart-pulse"></i> Seleccionar
-            </button>
-            <button type="button" class="btn btn-outline-secondary" (click)="clearPatient()"
-              [disabled]="!selectedPatient">
-              Limpiar
-            </button>
+          <div class="flex items-center gap-2">
+            <input type="text" class="form-control flex-1" [value]="selectedPatient ? (selectedPatient.nombre + ' ' + (selectedPatient.apellido||'')) : ''" placeholder="Sin seleccionar" readonly>
+            <button type="button" class="btn btn-outline-success" (click)="openPatientModal()"><i class="bi bi-heart-pulse"></i> <span class="ml-1">Seleccionar</span></button>
+            <button type="button" class="btn btn-outline-secondary" (click)="clearPatient()" [disabled]="!selectedPatient">Limpiar</button>
           </div>
-
-          @if (!selectedPatient) {
-            <div class="form-text">Debes seleccionar o crear un paciente.</div>
-          }
+          @if (!selectedPatient) { <div class="text-xs text-slate-500 mt-1">Debes seleccionar o crear un paciente.</div> }
         </div>
         }
 
-        <!-- Forma de pago -->
-        <div class="col-md-4">
-          <label class="form-label">Forma de pago <span class="text-danger">*</span></label>
-          <select class="form-select" [(ngModel)]="form.formaPagoId" name="formaPagoId" required>
+        <div class="md:col-span-4">
+          <label class="text-sm font-medium text-slate-700">Forma de pago <span class="text-red-600">*</span></label>
+          <select class="form-control" [(ngModel)]="form.formaPagoId" name="formaPagoId" required>
             <option [ngValue]="0" disabled>Seleccione…</option>
             <option *ngFor="let f of formasPago" [ngValue]="f.id">{{ f.formaPago }}</option>
           </select>
-          @if (mopLoading()) {
-            <div class="small text-secondary">Cargando formas de pago…</div>
-          }
+          @if (mopLoading()) { <div class="text-xs text-slate-500 mt-1">Cargando formas de pago…</div> }
         </div>
 
-        <!-- Valores con formateo es-CO -->
-        <div class="col-md-3">
-          <label class="form-label">Valor mano de obra</label>
-          <input type="text" inputmode="numeric" class="form-control" [ngModel]="formatPeso(form.valorLabor)"
-                 (ngModelChange)="onMoneyInput('valorLabor', $event)" name="valorLabor" autocomplete="off">
+        <div class="md:col-span-3">
+          <label class="text-sm font-medium text-slate-700">Valor mano de obra</label>
+          <input type="text" inputmode="numeric" class="form-control" [ngModel]="formatPeso(form.valorLabor)" (ngModelChange)="onMoneyInput('valorLabor', $event)" name="valorLabor" autocomplete="off">
         </div>
-
-        <div class="col-md-3">
-          <label class="form-label">Valor materiales</label>
-          <input type="text" inputmode="numeric" class="form-control" [ngModel]="formatPeso(form.valorMateriales)"
-                 (ngModelChange)="onMoneyInput('valorMateriales', $event)" name="valorMateriales" autocomplete="off">
+        <div class="md:col-span-3">
+          <label class="text-sm font-medium text-slate-700">Valor materiales</label>
+          <input type="text" inputmode="numeric" class="form-control" [ngModel]="formatPeso(form.valorMateriales)" (ngModelChange)="onMoneyInput('valorMateriales', $event)" name="valorMateriales" autocomplete="off">
         </div>
-
-        <div class="col-md-3">
-          <label class="form-label">Valor total (auto)</label>
+        <div class="md:col-span-3">
+          <label class="text-sm font-medium text-slate-700">Valor total (auto)</label>
           <input type="text" class="form-control" [value]="formatPeso(totalCalc())" readonly>
-          <div class="form-text">Se calcula: mano de obra + materiales.</div>
+          <div class="text-xs text-slate-500 mt-1">Se calcula: mano de obra + materiales.</div>
         </div>
-
-        <div class="col-md-3">
-          <label class="form-label">Ganancias (auto)</label>
+        <div class="md:col-span-3">
+          <label class="text-sm font-medium text-slate-700">Ganancias (auto)</label>
           <input type="text" class="form-control" [value]="formatPeso(gananciasCalc())" readonly>
-          <div class="form-text">Se calcula: total − materiales.</div>
+          <div class="text-xs text-slate-500 mt-1">Se calcula: total − materiales.</div>
         </div>
 
-        <!-- Editor enriquecido -->
-        <div class="col-12">
-          <label class="form-label">Descripción de la labor <span class="text-danger">*</span></label>
-          <angular-editor [(ngModel)]="form.descripcionLabor" name="descripcionLabor" [config]="editorConfig">
-          </angular-editor>
-          <div class="form-text">
-            Usa negrita, listas, enlaces, etc. (se guardará como HTML).
-          </div>
+        <div class="md:col-span-12">
+          <label class="text-sm font-medium text-slate-700">Descripción de la labor <span class="text-red-600">*</span></label>
+          <angular-editor [(ngModel)]="form.descripcionLabor" name="descripcionLabor" [config]="editorConfig"></angular-editor>
+          <div class="text-xs text-slate-500 mt-1">Usa negrita, listas, enlaces, etc. (se guardará como HTML).</div>
         </div>
 
-        <!-- Imágenes (existentes + nuevas) -->
-        <div class="col-12">
+        <div class="md:col-span-12">
           @if (isEdit() && (existingPhotos.foto1 || existingPhotos.foto2 || existingPhotos.foto3 || existingPhotos.foto4)) {
-            <div class="text-secondary small mb-2">Evidencias actuales</div>
-            <div class="d-flex flex-wrap gap-3 mb-3">
+            <div class="text-xs text-slate-500 mb-2">Evidencias actuales</div>
+            <div class="flex flex-wrap gap-3 mb-3">
               @if (existingPhotos.foto1) {
-                <a [href]="existingPhotos.foto1" target="_blank" rel="noopener" class="d-inline-block">
-                  <img [src]="existingPhotos.foto1" alt="foto1" class="img-thumbnail"
-                       style="width:180px; height:120px; object-fit:cover;">
-                </a>
+                <div class="rounded-lg border border-slate-200 overflow-hidden relative group">
+                  <img [src]="existingPhotos.foto1" alt="foto1"
+                       class="block"
+                       style="width:180px; height:120px; object-fit:cover; cursor: pointer;"
+                       (click)="armReplace('foto1')"
+                       [style.opacity]="replaceTarget() === 'foto1' ? 0.4 : 1">
+                  @if (replaceTarget() === 'foto1') {
+                    <div class="absolute inset-0 flex items-center justify-center">
+                      <button type="button" class="btn btn-primary btn-xs" (click)="openReplace('foto1')">Reemplazar</button>
+                    </div>
+                  }
+                  <div class="p-2 flex items-center gap-2 text-xs bg-white border-t border-slate-200">
+                    <button type="button" class="btn btn-outline-danger btn-xs" (click)="openConfirm('foto1')">
+                      <i class="bi bi-trash"></i> 
+                    </button>
+                  </div>
+                  <input id="replace-foto1" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto1')">
+                </div>
               }
               @if (existingPhotos.foto2) {
-                <a [href]="existingPhotos.foto2" target="_blank" rel="noopener" class="d-inline-block">
-                  <img [src]="existingPhotos.foto2" alt="foto2" class="img-thumbnail"
-                       style="width:180px; height:120px; object-fit:cover;">
-                </a>
+                <div class="rounded-lg border border-slate-200 overflow-hidden relative group">
+                  <img [src]="existingPhotos.foto2" alt="foto2"
+                       class="block"
+                       style="width:180px; height:120px; object-fit:cover; cursor: pointer;"
+                       (click)="armReplace('foto2')"
+                       [style.opacity]="replaceTarget() === 'foto2' ? 0.4 : 1">
+                  @if (replaceTarget() === 'foto2') {
+                    <div class="absolute inset-0 flex items-center justify-center">
+                      <button type="button" class="btn btn-primary btn-xs" (click)="openReplace('foto2')">Reemplazar</button>
+                    </div>
+                  }
+                  <div class="p-2 flex items-center gap-2 text-xs bg-white border-t border-slate-200">
+                    <button type="button" class="btn btn-outline-danger btn-xs" (click)="openConfirm('foto2')">
+                      <i class="bi bi-trash"></i> Eliminar
+                    </button>
+                  </div>
+                  <input id="replace-foto2" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto2')">
+                </div>
               }
               @if (existingPhotos.foto3) {
-                <a [href]="existingPhotos.foto3" target="_blank" rel="noopener" class="d-inline-block">
-                  <img [src]="existingPhotos.foto3" alt="foto3" class="img-thumbnail"
-                       style="width:180px; height:120px; object-fit:cover;">
-                </a>
+                <div class="rounded-lg border border-slate-200 overflow-hidden relative group">
+                  <img [src]="existingPhotos.foto3" alt="foto3"
+                       class="block"
+                       style="width:180px; height:120px; object-fit:cover; cursor: pointer;"
+                       (click)="armReplace('foto3')"
+                       [style.opacity]="replaceTarget() === 'foto3' ? 0.4 : 1">
+                  @if (replaceTarget() === 'foto3') {
+                    <div class="absolute inset-0 flex items-center justify-center">
+                      <button type="button" class="btn btn-primary btn-xs" (click)="openReplace('foto3')">Reemplazar</button>
+                    </div>
+                  }
+                  <div class="p-2 flex items-center gap-2 text-xs bg-white border-t border-slate-200">
+                    <button type="button" class="btn btn-outline-danger btn-xs" (click)="openConfirm('foto3')">
+                      <i class="bi bi-trash"></i> Eliminar
+                    </button>
+                  </div>
+                  <input id="replace-foto3" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto3')">
+                </div>
               }
               @if (existingPhotos.foto4) {
-                <a [href]="existingPhotos.foto4" target="_blank" rel="noopener" class="d-inline-block">
-                  <img [src]="existingPhotos.foto4" alt="foto4" class="img-thumbnail"
-                       style="width:180px; height:120px; object-fit:cover;">
-                </a>
+                <div class="rounded-lg border border-slate-200 overflow-hidden relative group">
+                  <img [src]="existingPhotos.foto4" alt="foto4"
+                       class="block"
+                       style="width:180px; height:120px; object-fit:cover; cursor: pointer;"
+                       (click)="armReplace('foto4')"
+                       [style.opacity]="replaceTarget() === 'foto4' ? 0.4 : 1">
+                  @if (replaceTarget() === 'foto4') {
+                    <div class="absolute inset-0 flex items-center justify-center">
+                      <button type="button" class="btn btn-primary btn-xs" (click)="openReplace('foto4')">Reemplazar</button>
+                    </div>
+                  }
+                  <div class="p-2 flex items-center gap-2 text-xs bg-white border-t border-slate-200">
+                    <button type="button" class="btn btn-outline-danger btn-xs" (click)="openConfirm('foto4')">
+                      <i class="bi bi-trash"></i> Eliminar
+                    </button>
+                  </div>
+                  <input id="replace-foto4" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto4')">
+                </div>
               }
             </div>
           }
         </div>
 
-        <div class="col-md-6">
-          <label class="form-label">Foto 1 (opcional)</label>
-          <input type="file" class="form-control" accept="image/*" (change)="onFileChange($event, 'foto1')">
-          @if (previews.foto1) {
-            <div class="mt-2">
-              <img [src]="previews.foto1" alt="foto1" class="img-thumbnail" style="max-width: 220px; object-fit: cover;">
+        <!-- Fotos: UI moderna tipo dropzone / tarjeta -->
+        <div class="md:col-span-12">
+          <label class="text-sm font-medium text-slate-700">
+            Evidencias (hasta 4 fotos)
+            <span class="text-slate-500 font-normal text-xs ml-2" *ngIf="isEdit()">disponibles: {{ getFreeSlotsCount() }}</span>
+          </label>
+          @if (!isEdit() || getFreeSlotsCount() > 0) {
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-2">
+            <!-- Foto 1 -->
+            @if (isSlotFree('foto1')) {
+            <div class="relative rounded-xl border border-slate-200/70 bg-slate-50/40 p-3 flex flex-col items-center justify-center text-center hover:border-primary/60 transition-colors"
+                 (drop)="onDrop($event, 'foto1')" (dragover)="onDragOver($event, 'foto1')" (dragleave)="onDragLeave($event, 'foto1')"
+                 [ngClass]="{'border-primary': dragging['foto1'], 'bg-primary/5': dragging['foto1']}">
+              <input id="file-foto1" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto1')">
+    <label for="file-foto1" class="cursor-pointer w-full"
+      [attr.draggable]="previews.foto1 ? true : null"
+      (dragstart)="startReorder($event, 'foto1')" (dragend)="endReorder()">
+                @if (!previews.foto1) {
+                  <div class="py-6 flex flex-col items-center gap-2 text-slate-500">
+                    <i class="bi bi-image text-3xl"></i>
+                    <div class="text-sm"><span class="text-primary">Subir imagen</span> o arrastrar aquí</div>
+                    <div class="text-xs">JPG, PNG o HEIC • máx 10MB</div>
+                  </div>
+                } @else {
+                  <div class="w-full">
+                    <img [src]="previews.foto1" alt="foto1" class="w-full h-36 object-cover rounded-lg border border-slate-200">
+                  </div>
+                }
+              </label>
+              @if (previews.foto1) {
+                <div class="mt-2 flex gap-2">
+                  <a class="btn btn-light btn-sm" [href]="previews.foto1" target="_blank" rel="noopener"><i class="bi bi-eye"></i> Ver</a>
+                  <button type="button" class="btn btn-outline-danger btn-sm" (click)="clearPhoto('foto1')"><i class="bi bi-trash"></i></button>
+                </div>
+              }
+              @if (readingProgress['foto1']) {
+                <div class="w-full mt-2">
+                  <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                    <div class="h-1.5 bg-primary transition-[width] duration-200" [style.width.%]="readingProgress['foto1'] || 0"></div>
+                  </div>
+                </div>
+              }
             </div>
-          }
-        </div>
+            }
 
-        <div class="col-md-6">
-          <label class="form-label">Foto 2 (opcional)</label>
-          <input type="file" class="form-control" accept="image/*" (change)="onFileChange($event, 'foto2')">
-          @if (previews.foto2) {
-            <div class="mt-2">
-              <img [src]="previews.foto2" alt="foto2" class="img-thumbnail" style="max-width: 220px; object-fit: cover;">
+            <!-- Foto 2 -->
+            @if (isSlotFree('foto2')) {
+            <div class="relative rounded-xl border border-slate-200/70 bg-slate-50/40 p-3 flex flex-col items-center justify-center text-center hover:border-primary/60 transition-colors"
+                 (drop)="onDrop($event, 'foto2')" (dragover)="onDragOver($event, 'foto2')" (dragleave)="onDragLeave($event, 'foto2')"
+                 [ngClass]="{'border-primary': dragging['foto2'], 'bg-primary/5': dragging['foto2']}">
+              <input id="file-foto2" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto2')">
+    <label for="file-foto2" class="cursor-pointer w-full"
+      [attr.draggable]="previews.foto2 ? true : null"
+      (dragstart)="startReorder($event, 'foto2')" (dragend)="endReorder()">
+                @if (!previews.foto2) {
+                  <div class="py-6 flex flex-col items-center gap-2 text-slate-500">
+                    <i class="bi bi-image text-3xl"></i>
+                    <div class="text-sm"><span class="text-primary">Subir imagen</span> o arrastrar aquí</div>
+                    <div class="text-xs">JPG, PNG o HEIC • máx 10MB</div>
+                  </div>
+                } @else {
+                  <div class="w-full">
+                    <img [src]="previews.foto2" alt="foto2" class="w-full h-36 object-cover rounded-lg border border-slate-200">
+                  </div>
+                }
+              </label>
+              @if (previews.foto2) {
+                <div class="mt-2 flex gap-2">
+                  <a class="btn btn-light btn-sm" [href]="previews.foto2" target="_blank" rel="noopener"><i class="bi bi-eye"></i> Ver</a>
+                  <button type="button" class="btn btn-outline-danger btn-sm" (click)="clearPhoto('foto2')"><i class="bi bi-trash"></i></button>
+                </div>
+              }
+              @if (readingProgress['foto2']) {
+                <div class="w-full mt-2">
+                  <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                    <div class="h-1.5 bg-primary transition-[width] duration-200" [style.width.%]="readingProgress['foto2'] || 0"></div>
+                  </div>
+                </div>
+              }
             </div>
-          }
-        </div>
+            }
 
-        <div class="col-md-6">
-          <label class="form-label">Foto 3 (opcional)</label>
-          <input type="file" class="form-control" accept="image/*" (change)="onFileChange($event, 'foto3')">
-          @if (previews.foto3) {
-            <div class="mt-2">
-              <img [src]="previews.foto3" alt="foto3" class="img-thumbnail" style="max-width: 220px; object-fit: cover;">
+            <!-- Foto 3 -->
+            @if (isSlotFree('foto3')) {
+            <div class="relative rounded-xl border border-slate-200/70 bg-slate-50/40 p-3 flex flex-col items-center justify-center text-center hover:border-primary/60 transition-colors"
+                 (drop)="onDrop($event, 'foto3')" (dragover)="onDragOver($event, 'foto3')" (dragleave)="onDragLeave($event, 'foto3')"
+                 [ngClass]="{'border-primary': dragging['foto3'], 'bg-primary/5': dragging['foto3']}">
+              <input id="file-foto3" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto3')">
+    <label for="file-foto3" class="cursor-pointer w-full"
+      [attr.draggable]="previews.foto3 ? true : null"
+      (dragstart)="startReorder($event, 'foto3')" (dragend)="endReorder()">
+                @if (!previews.foto3) {
+                  <div class="py-6 flex flex-col items-center gap-2 text-slate-500">
+                    <i class="bi bi-image text-3xl"></i>
+                    <div class="text-sm"><span class="text-primary">Subir imagen</span> o arrastrar aquí</div>
+                    <div class="text-xs">JPG, PNG o HEIC • máx 10MB</div>
+                  </div>
+                } @else {
+                  <div class="w-full">
+                    <img [src]="previews.foto3" alt="foto3" class="w-full h-36 object-cover rounded-lg border border-slate-200">
+                  </div>
+                }
+              </label>
+              @if (previews.foto3) {
+                <div class="mt-2 flex gap-2">
+                  <a class="btn btn-light btn-sm" [href]="previews.foto3" target="_blank" rel="noopener"><i class="bi bi-eye"></i> Ver</a>
+                  <button type="button" class="btn btn-outline-danger btn-sm" (click)="clearPhoto('foto3')"><i class="bi bi-trash"></i></button>
+                </div>
+              }
+              @if (readingProgress['foto3']) {
+                <div class="w-full mt-2">
+                  <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                    <div class="h-1.5 bg-primary transition-[width] duration-200" [style.width.%]="readingProgress['foto3'] || 0"></div>
+                  </div>
+                </div>
+              }
             </div>
-          }
-        </div>
+            }
 
-        <div class="col-md-6">
-          <label class="form-label">Foto 4 (opcional)</label>
-          <input type="file" class="form-control" accept="image/*" (change)="onFileChange($event, 'foto4')">
-          @if (previews.foto4) {
-            <div class="mt-2">
-              <img [src]="previews.foto4" alt="foto4" class="img-thumbnail" style="max-width: 220px; object-fit: cover;">
+            <!-- Foto 4 -->
+            @if (isSlotFree('foto4')) {
+            <div class="relative rounded-xl border border-slate-200/70 bg-slate-50/40 p-3 flex flex-col items-center justify-center text-center hover:border-primary/60 transition-colors"
+                 (drop)="onDrop($event, 'foto4')" (dragover)="onDragOver($event, 'foto4')" (dragleave)="onDragLeave($event, 'foto4')"
+                 [ngClass]="{'border-primary': dragging['foto4'], 'bg-primary/5': dragging['foto4']}">
+              <input id="file-foto4" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto4')">
+    <label for="file-foto4" class="cursor-pointer w-full"
+      [attr.draggable]="previews.foto4 ? true : null"
+      (dragstart)="startReorder($event, 'foto4')" (dragend)="endReorder()">
+                @if (!previews.foto4) {
+                  <div class="py-6 flex flex-col items-center gap-2 text-slate-500">
+                    <i class="bi bi-image text-3xl"></i>
+                    <div class="text-sm"><span class="text-primary">Subir imagen</span> o arrastrar aquí</div>
+                    <div class="text-xs">JPG, PNG o HEIC • máx 10MB</div>
+                  </div>
+                } @else {
+                  <div class="w-full">
+                    <img [src]="previews.foto4" alt="foto4" class="w-full h-36 object-cover rounded-lg border border-slate-200">
+                  </div>
+                }
+              </label>
+              @if (previews.foto4) {
+                <div class="mt-2 flex gap-2">
+                  <a class="btn btn-light btn-sm" [href]="previews.foto4" target="_blank" rel="noopener"><i class="bi bi-eye"></i> Ver</a>
+                  <button type="button" class="btn btn-outline-danger btn-sm" (click)="clearPhoto('foto4')"><i class="bi bi-trash"></i></button>
+                </div>
+              }
+              @if (readingProgress['foto4']) {
+                <div class="w-full mt-2">
+                  <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                    <div class="h-1.5 bg-primary transition-[width] duration-200" [style.width.%]="readingProgress['foto4'] || 0"></div>
+                  </div>
+                </div>
+              }
             </div>
+            }
+          </div>
+          <div class="text-xs text-slate-500 mt-2">
+            Consejo: fotos horizontales se ven mejor. Acepta hasta 4 archivos.
+            @if (isEdit()) {
+              <span class="ml-1">Puedes añadir {{ getFreeSlotsCount() }} más.</span>
+            }
+          </div>
+          } @else {
+            <div class="mt-2 text-xs text-slate-500">Ya alcanzaste el máximo (4). Elimina o reemplaza alguna evidencia para habilitar más espacios.</div>
           }
         </div>
 
         @if (progress() > 0) {
-          <div class="col-12">
-            <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-              <div class="progress-bar" [style.width.%]="progress()">{{ progress() }}%</div>
+          <div class="md:col-span-12">
+            <div class="h-2 w-full bg-slate-200 rounded-full overflow-hidden" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+              <div class="h-2 bg-primary rounded-full transition-[width] duration-300" [style.width.%]="progress()"></div>
             </div>
+            <div class="text-xs text-slate-500 mt-1">{{ progress() }}%</div>
           </div>
         }
-
       </div>
     </div>
 
-    <div class="card-footer d-flex justify-content-end gap-2 border-0">
+    <div class="px-5 py-3 border-t border-slate-200 flex justify-end gap-2">
       <button type="button" class="btn btn-light" [disabled]="loading()" (click)="resetForm()">Limpiar</button>
-      <button type="submit" class="btn btn-primary"
-              [disabled]="loading() || (sector()==='SALUD' ? !selectedPatient : !selectedClient)">
-        @if (loading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
-        {{ isEdit() ? 'Guardar cambios' : 'Guardar' }}
-      </button>
+      <button type="submit" class="btn btn-primary" [disabled]="loading() || (sector()==='SALUD' ? !selectedPatient : !selectedClient)"> @if (loading()) { <span class="spinner-border spinner-border-sm mr-2"></span> } {{ isEdit() ? 'Guardar cambios' : 'Guardar' }}</button>
     </div>
   </form>
 </div>
 
 <!-- Modal selector de PACIENTE -->
-<app-patient-picker [apiBase]="apiBase" [token]="tokenStr" [isOpen]="patientModalOpen()" (closed)="onPatientClose()"
-  (selected)="onPatientPicked($event)"></app-patient-picker>
+<app-patient-picker [apiBase]="apiBase" [token]="tokenStr" [isOpen]="patientModalOpen()" (closed)="onPatientClose()" (selected)="onPatientPicked($event)"></app-patient-picker>
 
 <!-- Modal selector de CLIENTE -->
-<app-client-picker [apiBase]="apiBase" [token]="tokenStr" [isOpen]="clientModalOpen()" (closed)="onClientClose()"
-  (selected)="onClientPicked($event)"></app-client-picker>
+<app-client-picker [apiBase]="apiBase" [token]="tokenStr" [isOpen]="clientModalOpen()" (closed)="onClientClose()" (selected)="onClientPicked($event)"></app-client-picker>
+
+<!-- Modal confirmar eliminación de evidencia -->
+@if (confirmOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40"></div>
+    <div class="relative bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-4">
+      <h4 class="text-base font-semibold mb-2">Eliminar evidencia</h4>
+      <p class="text-sm text-slate-600">¿Seguro que deseas eliminar esta foto? Podrás subir otra después.</p>
+      <div class="mt-4 flex justify-end gap-2">
+        <button type="button" class="btn btn-light" (click)="cancelConfirm()">Cancelar</button>
+        <button type="button" class="btn btn-outline-danger" (click)="confirmDelete()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+}

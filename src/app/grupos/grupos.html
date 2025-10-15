@@ -1,3 +1,4 @@
+<div class="bg-white rounded-2xl shadow-card border border-slate-200/70 p-4">
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
   <div>
     <h3 class="fw-semibold mb-0">Grupos</h3>
@@ -43,48 +44,7 @@
   </div>
 </form>
 
-<!-- Filtro / Orden / Tamaño página -->
-<form class="card border-0 shadow-sm rounded-4 mb-3" (submit)="$event.preventDefault(); onSearch()">
-  <div class="card-body">
-    <div class="row g-3 align-items-end">
-      <div class="col-md-6">
-        <label class="form-label">Buscar</label>
-        <input type="text" class="form-control"
-               placeholder="Nombre del grupo"
-               [(ngModel)]="q" name="q"
-               (keyup.enter)="onSearch()" autocomplete="off">
-        <div class="form-text">Usa el nombre del grupo.</div>
-      </div>
-      <div class="col-md-3 d-flex gap-2">
-        <button type="submit" class="btn btn-outline-primary w-100" [disabled]="loading()">
-          <i class="bi bi-search me-1"></i> Buscar
-        </button>
-        <button type="button" class="btn btn-outline-secondary w-100" (click)="clearFilters()" [disabled]="loading()">
-          Limpiar
-        </button>
-      </div>
-      <div class="col-md-3 d-flex align-items-end justify-content-end gap-2">
-        <div class="d-flex align-items-center gap-2">
-          <label class="text-secondary small mb-0">Orden:</label>
-          <select class="form-select form-select-sm w-auto" [ngModel]="sortBy()" (ngModelChange)="changeSort($event)" name="sortBy">
-            <option value="id">ID</option>
-            <option value="nombre">Nombre</option>
-          </select>
 
-          <button type="button" class="btn btn-sm btn-light" (click)="changeSort(sortBy())">
-            {{ direction()==='ASC' ? 'Asc ↑' : 'Desc ↓' }}
-          </button>
-
-          <label class="text-secondary small mb-0">/ pág:</label>
-          <select class="form-select form-select-sm w-auto"
-                  [ngModel]="pageSize()" (ngModelChange)="setPageSize($event)" name="pageSize">
-            <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  </div>
-</form>
 
 <!-- Tabla -->
 <div class="table-responsive shadow-sm rounded-4">
@@ -214,3 +174,4 @@
   </div>
 </div>
 <div class="modal-backdrop fade" [class.show]="confirmOpen()" *ngIf="confirmOpen()"></div>
+</div>

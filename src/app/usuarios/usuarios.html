@@ -1,96 +1,90 @@
-<div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-  <div>
-    <h3 class="fw-semibold mb-0">Usuarios</h3>
-    <small class="text-secondary">Busca por usuario, nombre, apellido o email</small>
-  </div>
-  <div class="mt-2 mt-sm-0">
-    <a class="btn btn-primary" routerLink="/usuarios/nuevo">
-      <i class="bi bi-person-plus me-1"></i> Crear usuario
-    </a>
+<div class="flex flex-wrap items-center justify-between mb-6 gap-4">
+  <div class="space-y-1">
+    <h3 class="text-xl font-semibold m-0">Usuarios</h3>
+    <p class="text-xs text-slate-500">Busca por usuario, nombre, apellido o email</p>
   </div>
 </div>
 
 @if (error()) {
-<div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
+<div class="rounded-lg border border-red-300 bg-red-50 text-red-700 px-4 py-3 text-sm flex gap-3 items-start mb-4" role="alert">
   <i class="bi bi-exclamation-triangle mt-1"></i>
-  <div>{{ error() }}</div>
+  <div class="font-medium">{{ error() }}</div>
 </div>
 }
 @if (success()) {
-<div class="alert alert-success d-flex align-items-start gap-2" role="alert">
+<div class="rounded-lg border border-green-300 bg-green-50 text-green-700 px-4 py-3 text-sm flex gap-3 items-start mb-4" role="alert">
   <i class="bi bi-check-circle mt-1"></i>
-  <div>{{ success() }}</div>
+  <div class="font-medium">{{ success() }}</div>
 </div>
 }
 
-<form class="card border-0 shadow-sm rounded-4 mb-4" (submit)="$event.preventDefault(); onSearch()">
-  <div class="card-body">
-    <div class="row g-3 align-items-end">
-      <div class="col-md-10">
-        <label for="q" class="form-label">Filtro</label>
-        <input id="q" type="text" class="form-control" placeholder="Ej: nick | Ana | correo@mail" [(ngModel)]="q"
-          name="q" (keyup.enter)="onSearch()" autocomplete="off">
-        <div class="form-text">El filtro aplica a usuario, nombre, apellido o email</div>
+<form (submit)="$event.preventDefault(); onSearch()" class="mt-4 bg-white rounded-2xl shadow-card mb-6 border border-slate-200/60">
+  <div class="p-5 pt-4">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-5 items-end">
+      <div class="col-span-12 md:col-span-8 xl:col-span-8 space-y-1 min-w-0">
+        <label for="q" class="text-sm font-medium text-slate-700">Filtro</label>
+        <input id="q" type="text" class="form-control" placeholder="Ej: nick | Ana | correo@mail" [(ngModel)]="q" name="q" (keyup.enter)="onSearch()" autocomplete="off">
+        <p class="text-xs text-slate-500">El filtro aplica a usuario, nombre, apellido o email</p>
       </div>
-      <div class="col-md-2 d-flex gap-2">
-        <button type="submit" class="btn btn-outline-primary w-100" [disabled]="loading()">
-          <i class="bi bi-search me-1"></i> Buscar
+      <div class="col-span-12 md:col-span-4 xl:col-span-4 flex flex-col lg:flex-row gap-2 w-full md:justify-end mt-2 md:mt-0">
+        <button type="submit" class="btn btn-outline-primary flex-1" [disabled]="loading()">
+          <i class="bi bi-search"></i>
+          <span class="ml-1">Buscar</span>
         </button>
-        <button type="button" class="btn btn-outline-secondary w-100" (click)="clearFilters()" [disabled]="loading()">
-          Limpiar
-        </button>
+        <button type="button" class="btn btn-outline-secondary flex-1" (click)="clearFilters()" [disabled]="loading()">Limpiar</button>
       </div>
     </div>
   </div>
 </form>
 
-<div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-  <div class="text-secondary small">
-    Mostrando {{ firstItemIndex() }}–{{ lastItemIndex() }} de {{ total() }} registros
-  </div>
+<!-- Botón crear: entre filtro y tabla -->
+<div class="mb-3">
+  <a routerLink="/usuarios/nuevo" class="btn btn-primary">
+    <i class="bi bi-person-plus"></i><span class="ml-1">Crear usuario</span>
+  </a>
+  
+</div>
 
-  <div class="d-flex align-items-center gap-2">
-    <div class="btn-group btn-group-sm" role="group" aria-label="Orden">
-      <button class="btn btn-outline-secondary" (click)="changeSort('id')" [class.active]="sortBy()==='id'">
+<div class="flex flex-wrap items-center justify-between mb-4 gap-4">
+  <div class="text-xs text-slate-600">Mostrando {{ firstItemIndex() }}–{{ lastItemIndex() }} de {{ total() }} registros</div>
+  <div class="flex items-center gap-3">
+    <div class="inline-flex rounded-lg shadow-sm overflow-hidden border border-slate-300 bg-white">
+      <button (click)="changeSort('id')" [class.bg-slate-100]="sortBy()==='id'" class="px-3 py-1.5 text-xs font-medium flex items-center gap-1 hover:bg-slate-50 transition">
         ID <i class="bi" [ngClass]="sortBy()==='id' && direction()==='ASC' ? 'bi-sort-down' : 'bi-sort-up'"></i>
       </button>
-      <button class="btn btn-outline-secondary" (click)="changeSort('usuario')" [class.active]="sortBy()==='usuario'">
-        Usuario <i class="bi"
-          [ngClass]="sortBy()==='usuario' && direction()==='ASC' ? 'bi-sort-down' : 'bi-sort-up'"></i>
+      <button (click)="changeSort('usuario')" [class.bg-slate-100]="sortBy()==='usuario'" class="px-3 py-1.5 text-xs font-medium flex items-center gap-1 hover:bg-slate-50 transition border-l border-slate-300">
+        Usuario <i class="bi" [ngClass]="sortBy()==='usuario' && direction()==='ASC' ? 'bi-sort-down' : 'bi-sort-up'"></i>
       </button>
-      <button class="btn btn-outline-secondary" (click)="changeSort('nombre')" [class.active]="sortBy()==='nombre'">
+      <button (click)="changeSort('nombre')" [class.bg-slate-100]="sortBy()==='nombre'" class="px-3 py-1.5 text-xs font-medium flex items-center gap-1 hover:bg-slate-50 transition border-l border-slate-300">
         Nombre <i class="bi" [ngClass]="sortBy()==='nombre' && direction()==='ASC' ? 'bi-sort-down' : 'bi-sort-up'"></i>
       </button>
     </div>
-
-    <div class="ms-2">
-      <select class="form-select form-select-sm" [ngModel]="pageSize()" (ngModelChange)="changePageSize($event)">
-        <option *ngFor="let s of pageSizes" [ngValue]="s">{{ s }} / pág.</option>
-      </select>
-    </div>
+    <select class="form-control w-24 text-xs" [ngModel]="pageSize()" (ngModelChange)="changePageSize($event)">
+      <option *ngFor="let s of pageSizes" [ngValue]="s">{{ s }} / pág.</option>
+    </select>
   </div>
 </div>
 
 <!-- DESKTOP -->
-<div class="table-responsive shadow-sm rounded-4 d-none d-md-block">
-  <table class="table table-hover align-middle mb-0">
-    <thead class="table-light sticky-top">
+<div class="hidden md:block rounded-2xl shadow-card overflow-hidden border border-slate-200/70 bg-white">
+  <table class="table-modern align-middle">
+    <thead>
       <tr>
-        <th style="width:70px;">#</th>
-        <th>ID</th>
-        <th>Usuario</th>
-        <th>Nombre</th>
-        <th>Email</th>
-        <th>Grupo</th>
-        <th>Rol</th>
-        <th style="width: 170px;">Acciones</th>
+        <th class="px-3 py-2 w-[70px]">#</th>
+        <th class="px-3 py-2">ID</th>
+        <th class="px-3 py-2">Usuario</th>
+        <th class="px-3 py-2">Nombre</th>
+        <th class="px-3 py-2">Email</th>
+        <th class="px-3 py-2">Grupo</th>
+        <th class="px-3 py-2">Rol</th>
+        <th class="px-3 py-2 w-[170px]">Acciones</th>
       </tr>
     </thead>
     <tbody>
       @if (loading()) {
       <tr>
-        <td colspan="8" class="text-center py-4">
-          <div class="d-inline-flex align-items-center gap-2 text-secondary">
+        <td colspan="8" class="text-center px-3 py-6">
+          <div class="inline-flex items-center gap-2 text-slate-500">
             <span class="spinner-border spinner-border-sm"></span> Cargando…
           </div>
         </td>
@@ -98,41 +92,31 @@
       } @else {
       @if (visibleWithRow().length === 0) {
       <tr>
-        <td colspan="8" class="text-center py-4 text-secondary">
+        <td colspan="8" class="text-center px-3 py-6 text-slate-500">
           No se encontraron usuarios con el filtro aplicado.
         </td>
       </tr>
       } @else {
       @for (u of visibleWithRow(); track u.id) {
-      <tr class="align-middle">
-        <td class="text-secondary">{{ u.rowNumber }}</td>
-        <td class="text-monospace">{{ u.id }}</td>
-        <td class="fw-semibold">
-          <i class="bi bi-person me-1 text-muted"></i>{{ u.usuario }}
-          <span *ngIf="isSelf(u)" class="badge bg-secondary ms-2">Tú</span>
+      <tr>
+        <td class="px-3 py-2 text-xs text-slate-500">{{ u.rowNumber }}</td>
+        <td class="px-3 py-2 font-mono text-sm">{{ u.id }}</td>
+        <td class="px-3 py-2 font-semibold">
+          <i class="bi bi-person text-slate-400 mr-1"></i>{{ u.usuario }}
+          <span *ngIf="isSelf(u)" class="ml-2 inline-flex items-center rounded-full bg-slate-600 text-white px-2 py-0.5 text-[10px] font-medium">Tú</span>
         </td>
-
-        <td>{{ u.nombre }} {{ u.apellido || '' }}</td>
-        <td>
-          <a *ngIf="u.email" [href]="'mailto:' + u.email" class="text-decoration-none">{{ u.email }}</a>
+        <td class="px-3 py-2">{{ u.nombre }} {{ u.apellido || '' }}</td>
+        <td class="px-3 py-2">
+          <a *ngIf="u.email" [href]="'mailto:' + u.email" class="text-primary hover:underline">{{ u.email }}</a>
           <span *ngIf="!u.email">—</span>
         </td>
-        <td>{{ u.grupoNombre || '—' }}</td>
-        <td>{{ u.rolNombre || '—' }}</td>
-        <td>
-          <div class="btn-group btn-group-sm">
-            <button class="btn btn-outline-info" (click)="verUsuario(u)">
-              <i class="bi bi-eye"></i> Ver
-            </button>
-            <button class="btn btn-outline-primary" (click)="editarUsuario(u)" [disabled]="isSelf(u)"
-              *ngIf="!isSelf(u)" disabled>
-              <i class="bi bi-pencil"></i> Editar
-            </button>
-
-            <!-- Eliminar: oculto si es Tú (o deshabilitado, como prefieras) -->
-            <button class="btn btn-outline-danger" (click)="openConfirm(u)" [disabled]="loading()" *ngIf="!isSelf(u)">
-              <i class="bi bi-trash"></i> Eliminar
-            </button>
+        <td class="px-3 py-2">{{ u.grupoNombre || '—' }}</td>
+        <td class="px-3 py-2">{{ u.rolNombre || '—' }}</td>
+        <td class="px-3 py-2">
+          <div class="flex flex-wrap gap-2">
+            <button class="btn btn-outline-info btn-sm" (click)="verUsuario(u)"><i class="bi bi-eye"></i><span class="ml-1"></span></button>
+            <!-- <button class="btn btn-outline-primary btn-sm" (click)="editarUsuario(u)" [disabled]="isSelf(u)" *ngIf="!isSelf(u)"><i class="bi bi-pencil"></i><span class="ml-1"></span></button> -->
+            <button class="btn btn-outline-danger btn-sm" (click)="openConfirm(u)" [disabled]="loading()" *ngIf="!isSelf(u)"><i class="bi bi-trash"></i><span class="ml-1"></span></button>
           </div>
         </td>
       </tr>
@@ -144,65 +128,52 @@
 </div>
 
 <!-- MOBILE -->
-<div class="d-md-none">
+<div class="md:hidden">
   @if (loading()) {
-  <div class="text-center py-4 text-secondary">
-    <div class="d-inline-flex align-items-center gap-2">
+  <div class="text-center py-6 text-slate-500">
+    <div class="inline-flex items-center gap-2">
       <span class="spinner-border spinner-border-sm"></span> Cargando…
     </div>
   </div>
   } @else {
   @if (visibleWithRow().length === 0) {
-  <div class="alert alert-light border text-center text-secondary">
+  <div class="rounded-lg border border-slate-300 bg-slate-50 text-center text-slate-500 px-4 py-3 text-sm">
     No se encontraron usuarios con el filtro aplicado.
   </div>
   } @else {
-  <div class="row g-3">
+  <div class="grid gap-4">
     @for (u of visibleWithRow(); track u.id) {
-    <div class="col-12">
-      <div class="card border-0 shadow-sm rounded-4 h-100">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start mb-2">
-            <div>
-              <div class="small text-secondary">#{{ u.rowNumber }} · ID {{ u.id }}</div>
-              <h6 class="mb-0 fw-semibold">
-                <i class="bi bi-person me-1 text-muted"></i>{{ u.usuario }}
-                <span *ngIf="isSelf(u)" class="badge bg-secondary ms-2">Tú</span>
-              </h6>
-
-              <div class="small text-secondary">{{ u.nombre }} {{ u.apellido || '' }}</div>
+    <div class="bg-white rounded-2xl shadow-card border border-slate-200/60">
+      <div class="p-4">
+          <div class="mb-2">
+            <div class="text-[11px] text-slate-500">#{{ u.rowNumber }} · ID {{ u.id }}</div>
+            <div class="font-semibold text-sm mt-0 flex items-center">
+              <i class="bi bi-person text-slate-400 mr-1"></i>{{ u.usuario }}
+              <span *ngIf="isSelf(u)" class="ml-2 inline-flex items-center rounded-full bg-slate-600 text-white px-2 py-0.5 text-[10px] font-medium">Tú</span>
             </div>
+            <div class="text-xs text-slate-500">{{ u.nombre }} {{ u.apellido || '' }}</div>
           </div>
 
-          <ul class="list-unstyled mb-0 small">
-            <li class="mb-1" *ngIf="u.email">
-              <span class="text-secondary">Email:</span>
-              <a [href]="'mailto:' + u.email" class="ms-1 text-decoration-none">{{ u.email }}</a>
+          <ul class="space-y-1 mb-0 text-[11px]">
+            <li *ngIf="u.email" class="flex items-center flex-wrap">
+              <span class="text-slate-500">Email:</span>
+              <a [href]="'mailto:' + u.email" class="ml-1 text-primary hover:underline break-all">{{ u.email }}</a>
             </li>
-            <li class="mb-1">
-              <span class="text-secondary">Grupo:</span>
-              <span class="ms-1">{{ u.grupoNombre?.nombre || '—' }}</span>
+            <li class="flex items-center">
+              <span class="text-slate-500">Grupo:</span>
+              <span class="ml-1">{{ u.grupoNombre || '—' }}</span>
             </li>
-            <li class="mb-0">
-              <span class="text-secondary">Rol:</span>
-              <span class="ms-1">{{ u.rolNombre?.nombre || '—' }}</span>
+            <li class="flex items-center">
+              <span class="text-slate-500">Rol:</span>
+              <span class="ml-1">{{ u.rolNombre || '—' }}</span>
             </li>
           </ul>
-          <div class="d-flex justify-content-end gap-2 mt-3">
-            <button class="btn btn-sm btn-outline-info" (click)="verUsuario(u)">
-              <i class="bi bi-eye"></i> Ver
-            </button>
-            <button class="btn btn-sm btn-outline-primary" (click)="editarUsuario(u)" [disabled]="isSelf(u)"
-              *ngIf="!isSelf(u)">
-              <i class="bi bi-pencil"></i> Editar
-            </button>
-            <button class="btn btn-sm btn-outline-danger" (click)="openConfirm(u)" [disabled]="loading()"
-              *ngIf="!isSelf(u)">
-              <i class="bi bi-trash"></i> Eliminar
-            </button>
+          <div class="flex justify-end flex-wrap gap-2 mt-3">
+            <button class="btn btn-outline-info btn-sm" (click)="verUsuario(u)"><i class="bi bi-eye"></i><span class="ml-1">Ver</span></button>
+            <button class="btn btn-outline-primary btn-sm" (click)="editarUsuario(u)" [disabled]="isSelf(u)" *ngIf="!isSelf(u)"><i class="bi bi-pencil"></i><span class="ml-1">Editar</span></button>
+            <button class="btn btn-outline-danger btn-sm" (click)="openConfirm(u)" [disabled]="loading()" *ngIf="!isSelf(u)"><i class="bi bi-trash"></i><span class="ml-1">Eliminar</span></button>
           </div>
 
-        </div>
       </div>
     </div>
     }
@@ -212,53 +183,46 @@
 </div>
 
 <!-- Paginador -->
-<nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Paginación">
-  <ul class="pagination mb-0">
-    <li class="page-item" [class.disabled]="page()===1">
-      <button class="page-link" (click)="prevPage()" [disabled]="page()===1">Anterior</button>
+<nav class="mt-6" aria-label="Paginación">
+  <ul class="flex flex-wrap gap-2 items-center">
+    <li>
+      <button (click)="prevPage()" [disabled]="page()===1" class="px-3 py-1.5 rounded-md border text-xs font-medium bg-white disabled:opacity-50 hover:bg-slate-50">Anterior</button>
     </li>
-    <li class="page-item" *ngFor="let n of pagesToShow()" [class.active]="n===page()">
-      <button class="page-link" (click)="goToPage(n)">{{ n }}</button>
+    <li *ngFor="let n of pagesToShow()">
+      <button (click)="goToPage(n)" class="px-3 py-1.5 rounded-md border text-xs font-medium  hover:bg-primary/10" [class.bg-primary]="n===page()" [class.text-white]="n===page()" [class.border-primary]="n===page()">{{ n }}</button>
     </li>
-    <li class="page-item" [class.disabled]="page()===totalPages()">
-      <button class="page-link" (click)="nextPage()" [disabled]="page()===totalPages()">Siguiente</button>
+    <li>
+      <button (click)="nextPage()" [disabled]="page()===totalPages()" class="px-3 py-1.5 rounded-md border text-xs font-medium bg-white disabled:opacity-50 hover:bg-slate-50">Siguiente</button>
     </li>
   </ul>
 </nav>
 
 <!-- Modal Confirmación -->
-<div class="modal fade" tabindex="-1" [class.show]="confirmOpen()" [style.display]="confirmOpen() ? 'block' : 'none'"
-  aria-modal="true" role="dialog">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content shadow-lg rounded-4 border-0">
-      <div class="modal-header border-0">
-        <h5 class="modal-title">
-          <i class="bi bi-trash me-2 text-danger"></i>
-          Confirmar eliminación
-        </h5>
-        <button type="button" class="btn-close" aria-label="Close" (click)="closeConfirm()"></button>
+@if (confirmOpen()) {
+<div class="fixed inset-0 z-[60] flex items-center justify-center">
+  <div class="fixed inset-0 bg-black/40 z-[55]" (click)="closeConfirm()"></div>
+  <div class="relative w-full max-w-md mx-auto z-[65]">
+    <div class="bg-white rounded-2xl shadow-card p-5 border border-slate-200/70">
+      <div class="flex items-start justify-between mb-3">
+        <h5 class="font-semibold flex items-center gap-2 text-red-600"><i class="bi bi-trash"></i><span>Confirmar eliminación</span></h5>
+        <button type="button" (click)="closeConfirm()" class="btn btn-close"></button>
       </div>
-
-      <div class="modal-body">
+      <div class="space-y-2 text-sm">
         @if (userToDelete()) {
-        <p class="mb-1">
-          ¿Eliminar al usuario
-          <span class="fw-semibold">{{ userToDelete()?.usuario }}</span>?
-        </p>
-        <p class="small text-secondary mb-0">Esta acción no se puede deshacer.</p>
+          <p class="m-0">¿Eliminar al usuario <span class="font-semibold">{{ userToDelete()?.usuario }}</span>?</p>
+          <p class="m-0 text-slate-500 text-xs">Esta acción no se puede deshacer.</p>
         } @else {
-        <p>¿Seguro que deseas eliminar este usuario?</p>
+          <p class="m-0">¿Seguro que deseas eliminar este usuario?</p>
         }
       </div>
-
-      <div class="modal-footer border-0">
-        <button type="button" class="btn btn-light" (click)="closeConfirm()" [disabled]="loading()">Cancelar</button>
-        <button type="button" class="btn btn-danger" (click)="confirmDelete()" [disabled]="loading()">
-          @if (loading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+      <div class="flex justify-end gap-2 mt-5">
+        <button type="button" (click)="closeConfirm()" [disabled]="loading()" class="btn btn-outline-secondary">Cancelar</button>
+        <button type="button" (click)="confirmDelete()" [disabled]="loading()" class="btn btn-danger">
+          @if (loading()) { <span class="spinner-border spinner-border-sm mr-2"></span> }
           Eliminar
         </button>
       </div>
     </div>
   </div>
 </div>
-<div class="modal-backdrop fade" [class.show]="confirmOpen()" *ngIf="confirmOpen()"></div>
+}

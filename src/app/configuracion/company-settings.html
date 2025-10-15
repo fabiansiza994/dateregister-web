@@ -1,52 +1,49 @@
 <!-- src/app/configuracion/company-settings.html -->
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="flex items-center justify-between mb-4">
   <div>
-    <h3 class="fw-semibold mb-0">Configuración</h3>
-    <small class="text-secondary">Preferencias de colaboración entre grupos</small>
+    <h3 class="text-xl font-semibold m-0">Configuración</h3>
+    <p class="text-xs text-slate-500 m-0">Preferencias de colaboración entre grupos</p>
   </div>
-</div>
+  <div></div>
+ </div>
 
 @if (error()) {
-  <div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
+  <div class="rounded-lg border border-red-300 bg-red-50 text-red-700 px-4 py-3 text-sm flex gap-3 items-start mb-4" role="alert">
     <i class="bi bi-exclamation-triangle mt-1"></i>
-    <div>{{ error() }}</div>
+    <div class="font-medium flex-1">{{ error() }}</div>
+    <button type="button" class="btn btn-close" (click)="error.set(null)"></button>
   </div>
 }
 @if (success()) {
-  <div class="alert alert-success d-flex align-items-start gap-2" role="alert">
+  <div class="rounded-lg border border-green-300 bg-green-50 text-green-700 px-4 py-3 text-sm flex gap-3 items-start mb-4" role="alert">
     <i class="bi bi-check-circle mt-1"></i>
-    <div>{{ success() }}</div>
+    <div class="font-medium flex-1">{{ success() }}</div>
+    <button type="button" class="btn btn-close" (click)="success.set(null)"></button>
   </div>
 }
 
-<div class="card border-0 shadow-sm rounded-4">
-  <div class="card-body">
-    <div class="mb-3">
-      <div class="text-secondary small">Empresa</div>
-      <h5 class="mb-0 fw-semibold">{{ empresaNombre() }}</h5>
+<div class="bg-white rounded-2xl shadow-card border border-slate-200/70">
+  <div class="p-5">
+    <div class="mb-4">
+      <div class="text-slate-500 text-xs">Empresa</div>
+      <h5 class="m-0 font-semibold text-base">{{ empresaNombre() }}</h5>
     </div>
 
-    <hr>
+    <div class="border-t border-slate-200 my-4"></div>
 
     <div class="form-check form-switch my-3">
-      <input class="form-check-input" type="checkbox" id="swView"
-             [checked]="allowView()" (change)="onToggleAllowView($event)" [disabled]="loading()">
-      <label class="form-check-label" for="swView">
-        Permitir ver trabajos entre grupos
-      </label>
-      <div class="form-text">Concede visibilidad de trabajos de otros grupos.</div>
+      <input class="form-check-input" type="checkbox" id="swView" [checked]="allowView()" (change)="onToggleAllowView($event)" [disabled]="loading()">
+      <label class="form-check-label ml-2" for="swView">Permitir ver trabajos entre grupos</label>
+      <div class="text-xs text-slate-500">Concede visibilidad de trabajos de otros grupos.</div>
     </div>
 
     <div class="form-check form-switch my-3">
-      <input class="form-check-input" type="checkbox" id="swEdit"
-             [checked]="allowEdit()" (change)="onToggleAllowEdit($event)" [disabled]="loading()">
-      <label class="form-check-label" for="swEdit">
-        Permitir editar trabajos entre grupos
-      </label>
-      <div class="form-text">Requiere visibilidad. Si activas editar, se activará ver automáticamente.</div>
+      <input class="form-check-input" type="checkbox" id="swEdit" [checked]="allowEdit()" (change)="onToggleAllowEdit($event)" [disabled]="loading()">
+      <label class="form-check-label ml-2" for="swEdit">Permitir editar trabajos entre grupos</label>
+      <div class="text-xs text-slate-500">Requiere visibilidad. Si activas editar, se activará ver automáticamente.</div>
     </div>
 
-    <div class="mt-3 text-secondary small" *ngIf="loading()">
+    <div class="mt-3 text-slate-500 text-sm" *ngIf="loading()">
       <span class="spinner-border spinner-border-sm me-2"></span> Guardando…
     </div>
   </div>

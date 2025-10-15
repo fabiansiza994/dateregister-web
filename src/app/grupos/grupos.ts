@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { firstValueFrom, TimeoutError } from 'rxjs';
 import { timeout } from 'rxjs/operators';
-import { RouterLink } from '@angular/router';
 
 import { ConfigService } from '../core/config.service';
 import { AuthService } from '../core/auth.service';
@@ -52,7 +51,7 @@ interface UpdateDto {
 @Component({
   selector: 'app-grupos',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './grupos.html',
 })
 export class GruposComponent implements OnInit {

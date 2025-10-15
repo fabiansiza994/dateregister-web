@@ -1,80 +1,45 @@
 <!-- Header -->
-<div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-  <div>
-    <h3 class="fw-semibold mb-0">Pacientes</h3>
-    <small class="text-secondary">Busca por nombre o identificación y administra tus pacientes</small>
+<div class="flex flex-wrap items-center justify-between mb-4 gap-2">
+  <div class="space-y-1">
+    <h3 class="text-xl font-semibold m-0">Pacientes</h3>
+    <p class="text-xs text-slate-500 m-0">Busca por nombre o identificación y administra tus pacientes</p>
   </div>
-  <div class="mt-2 mt-sm-0">
-    <!-- <a class="btn btn-primary" routerLink="/pacientes/nuevo">
-      <i class="bi bi-person-plus me-1"></i>
-      Crear paciente
-    </a> -->
-  </div>
+  <div></div>
 </div>
 
 <!-- Mensajes -->
-@if (error()) {
-<div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
-  <i class="bi bi-exclamation-triangle mt-1"></i>
-  <div>{{ error() }}</div>
-</div>
-}
-@if (success()) {
-<div class="alert alert-success d-flex align-items-start gap-2" role="alert">
-  <i class="bi bi-check-circle mt-1"></i>
-  <div>{{ success() }}</div>
-</div>
-}
+@if (error()) { <div class="rounded-lg border border-red-300 bg-red-50 text-red-700 px-4 py-3 text-sm flex gap-3 items-start mb-4" role="alert"><i class="bi bi-exclamation-triangle mt-1"></i><div class="font-medium flex-1">{{ error() }}</div></div> }
+@if (success()) { <div class="rounded-lg border border-green-300 bg-green-50 text-green-700 px-4 py-3 text-sm flex gap-3 items-start mb-4" role="alert"><i class="bi bi-check-circle mt-1"></i><div class="font-medium flex-1">{{ success() }}</div></div> }
 
 <!-- Filtros -->
-<form class="card border-0 shadow-sm rounded-4 mb-4" (submit)="$event.preventDefault(); onSearch()">
-  <div class="card-body">
-    <div class="row g-3">
-      <div class="col-md-10">
-        <label for="q" class="form-label">Nombre o identificación</label>
-        <input id="q" type="text" class="form-control" placeholder="Ej: Ana | 10203040" [(ngModel)]="q" name="q"
-          (keyup.enter)="onSearch()" autocomplete="off">
+<form class="bg-white rounded-2xl shadow-card border border-slate-200/60 mb-4" (submit)="$event.preventDefault(); onSearch()">
+  <div class="p-5 pt-4">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+      <div class="col-span-12 md:col-span-8 xl:col-span-8 space-y-1 min-w-0">
+        <label for="q" class="text-sm font-medium text-slate-700">Nombre o identificación</label>
+        <input id="q" type="text" class="form-control" placeholder="Ej: Ana | 10203040" [(ngModel)]="q" name="q" (keyup.enter)="onSearch()" autocomplete="off">
       </div>
-
-      <div class="col-md-2 d-flex align-items-end gap-2">
-        <button type="submit" class="btn btn-outline-primary w-100" [disabled]="loading()">
-          <i class="bi bi-search me-1"></i> Buscar
-        </button>
-        <button type="button" class="btn btn-outline-secondary w-100" (click)="clearFilters()" [disabled]="loading()">
-          <i class="bi bi-eraser me-1"></i>Limpiar
-        </button>
+      <div class="col-span-12 md:col-span-4 xl:col-span-2 flex flex-col lg:flex-row gap-2 w-full items-stretch  mt-2 md:mt-0">
+        <button type="submit" class="btn btn-outline-primary flex-1" [disabled]="loading()"><i class="bi bi-search"></i><span class="ml-1">Buscar</span></button>
+        <button type="button" class="btn btn-outline-secondary flex-1" (click)="clearFilters()" [disabled]="loading()"><i class="bi bi-eraser"></i><span class="ml-1">Limpiar</span></button>
       </div>
     </div>
   </div>
-</form>
-<div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+ </form>
 
-  <div class="mt-2 mt-sm-0">
-    <a class="btn btn-primary" routerLink="/pacientes/nuevo">
-      <i class="bi bi-person-plus me-1"></i>
-      Crear paciente
-    </a>
-  </div>
-</div>
+ <!-- Botón crear: entre filtro y tabla, alineado a la izquierda -->
+ <div class="mb-3">
+   <a class="btn btn-primary" routerLink="/pacientes/nuevo"><i class="bi bi-person-plus"></i><span class="ml-1">Crear paciente</span></a>
+ </div>
 <!-- Controles paginación / orden -->
-<div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-  <div class="text-secondary small">
-    Mostrando {{ firstItemIndex() }}–{{ lastItemIndex() }} de {{ total() }} registros
-  </div>
-
-  <div class="d-flex align-items-center gap-2">
-    <div class="btn-group btn-group-sm" role="group" aria-label="Orden">
-      <button class="btn btn-outline-secondary" (click)="changeSort('id')" [class.active]="sortBy()==='id'">
-        ID
-        <i class="bi" [ngClass]="sortBy()==='id' && direction()==='ASC' ? 'bi-sort-down' : 'bi-sort-up'"></i>
-      </button>
-      <button class="btn btn-outline-secondary" (click)="changeSort('nombre')" [class.active]="sortBy()==='nombre'">
-        Nombre
-        <i class="bi" [ngClass]="sortBy()==='nombre' && direction()==='ASC' ? 'bi-sort-down' : 'bi-sort-up'"></i>
-      </button>
+<div class="flex flex-wrap items-center justify-between mb-3 gap-2">
+  <div class="text-slate-500 text-xs">Mostrando {{ firstItemIndex() }}–{{ lastItemIndex() }} de {{ total() }} registros</div>
+  <div class="flex items-center gap-2">
+    <div class="flex gap-2">
+      <button class="btn btn-outline-secondary btn-sm" (click)="changeSort('id')" [class.active]="sortBy()==='id'">ID <i class="bi ml-1" [ngClass]="sortBy()==='id' && direction()==='ASC' ? 'bi-sort-down' : 'bi-sort-up'"></i></button>
+      <button class="btn btn-outline-secondary btn-sm" (click)="changeSort('nombre')" [class.active]="sortBy()==='nombre'">Nombre <i class="bi ml-1" [ngClass]="sortBy()==='nombre' && direction()==='ASC' ? 'bi-sort-down' : 'bi-sort-up'"></i></button>
     </div>
-
-    <div class="ms-2">
+    <div>
       <select class="form-select form-select-sm" [ngModel]="pageSize()" (ngModelChange)="changePageSize($event)">
         <option *ngFor="let s of pageSizes" [ngValue]="s">{{ s }} / pág.</option>
       </select>
@@ -83,63 +48,41 @@
 </div>
 
 <!-- DESKTOP TABLE -->
-<div class="table-responsive shadow-sm rounded-4 d-none d-md-block">
-  <table class="table table-hover align-middle mb-0">
-    <thead class="table-light sticky-top">
+<div class="hidden md:block rounded-2xl shadow-card overflow-hidden border border-slate-200/70 bg-white">
+  <table class="table-modern align-middle">
+    <thead>
       <tr>
-        <th>#</th>
-        <th>Cliente</th>
-        <th>Paciente</th>
-        <th>Identificación</th>
-        <th>Email</th>
-        <th>Estado</th>
-        <th style="width: 140px;">Acciones</th>
+        <th class="px-3 py-2">#</th>
+        <th class="px-3 py-2">Cliente</th>
+        <th class="px-3 py-2">Paciente</th>
+        <th class="px-3 py-2">Identificación</th>
+        <th class="px-3 py-2">Email</th>
+        <th class="px-3 py-2">Estado</th>
+        <th class="px-3 py-2 w-[180px]">Acciones</th>
       </tr>
     </thead>
     <tbody>
       @if (loading()) {
-      <tr>
-        <td colspan="9" class="text-center py-4">
-          <div class="d-inline-flex align-items-center gap-2 text-secondary">
-            <span class="spinner-border spinner-border-sm"></span> Cargando…
-          </div>
-        </td>
-      </tr>
+      <tr><td colspan="7" class="text-center px-3 py-6"><span class="spinner-border spinner-border-sm mr-2"></span> Cargando…</td></tr>
       } @else {
       @if (visibleWithRow().length === 0) {
-      <tr>
-        <td colspan="9" class="text-center py-4 text-secondary">
-          No se encontraron pacientes con el filtro aplicado.
-        </td>
-      </tr>
+      <tr><td colspan="7" class="text-center px-3 py-6 text-slate-500">No se encontraron pacientes con el filtro aplicado.</td></tr>
       } @else {
       @for (p of visibleWithRow(); track p.id) {
-      <tr class="align-middle">
-        <td>{{p.rowNumber}}</td>
-        <td><i class="bi bi-building me-1 text-muted"></i>{{p.clienteNombre}}</td>
-        <td class="fw-semibold"> <i class="bi bi-person me-1 text-muted"></i> {{ p.nombre }} {{ p.apellido || '—' }}
+      <tr>
+        <td class="px-3 py-2 text-xs text-slate-500">{{p.rowNumber}}</td>
+        <td class="px-3 py-2"><i class="bi bi-building mr-1 text-slate-400"></i>{{p.clienteNombre}}</td>
+        <td class="px-3 py-2 font-semibold"><i class="bi bi-person mr-1 text-slate-400"></i>{{ p.nombre }} <span class="font-normal">{{ p.apellido || '—' }}</span></td>
+        <td class="px-3 py-2"><span class="font-mono">{{ p.documento || '—' }}</span></td>
+        <td class="px-3 py-2">{{ p.email }} <span *ngIf="!p.email">—</span></td>
+        <td class="px-3 py-2">
+          <span class="px-2 py-0.5 rounded-full text-[11px] font-medium" [class.bg-green-100]="p.estado==='ACTIVO'" [class.text-green-700]="p.estado==='ACTIVO'" [class.bg-slate-200]="p.estado!=='ACTIVO'" [class.text-slate-600]="p.estado!=='ACTIVO'">{{ p.estado || '—' }}</span>
         </td>
-        <td><span class="text-monospace">{{ p.documento || '—' }}</span></td>
-        <td>
-          {{ p.email }}
-          <span *ngIf="!p.email">—</span>
-        </td>
-        <td>
-          <span class="badge rounded-pill" [ngClass]="p.estado==='ACTIVO' ? 'bg-success' : 'bg-secondary'">
-            {{ p.estado || '—' }}
-          </span>
-        </td>
-        <td>
-          <div class="btn-group btn-group-sm">
-            <button class="btn btn-outline-info" (click)="verPaciente(p)">
-              <i class="bi bi-eye"></i> Ver
-            </button>
-            <button class="btn btn-outline-primary" (click)="editarPaciente(p)">
-              <i class="bi bi-pencil"></i> Editar
-            </button>
-            <button class="btn btn-outline-danger" (click)="openConfirm(p)" [disabled]="loading()">
-              <i class="bi bi-trash"></i> Eliminar
-            </button>
+        <td class="px-3 py-2">
+          <div class="flex flex-wrap gap-2">
+            <button class="btn btn-outline-info btn-sm" (click)="verPaciente(p)"><i class="bi bi-eye"></i><span class="ml-1"></span></button>
+            <button class="btn btn-outline-primary btn-sm" (click)="editarPaciente(p)"><i class="bi bi-pencil"></i><span class="ml-1"></span></button>
+            <button class="btn btn-outline-danger btn-sm" (click)="openConfirm(p)" [disabled]="loading()"><i class="bi bi-trash"></i><span class="ml-1"></span></button>
           </div>
         </td>
       </tr>
@@ -148,70 +91,30 @@
       }
     </tbody>
   </table>
-</div>
+ </div>
 
 <!-- MOBILE CARDS -->
-<div class="d-md-none">
-  @if (loading()) {
-  <div class="text-center py-4 text-secondary">
-    <div class="d-inline-flex align-items-center gap-2">
-      <span class="spinner-border spinner-border-sm"></span> Cargando…
-    </div>
-  </div>
-  } @else {
-  @if (visibleWithRow().length === 0) {
-  <div class="alert alert-light border text-center text-secondary">
-    No se encontraron pacientes con el filtro aplicado.
-  </div>
-  } @else {
-  <div class="row g-3">
+<div class="md:hidden">
+  @if (loading()) { <div class="text-center py-4 text-slate-500"><span class="spinner-border spinner-border-sm mr-2"></span> Cargando…</div> } @else {
+  @if (visibleWithRow().length === 0) { <div class="rounded-xl border border-slate-200/70 bg-white p-4 text-center text-slate-500">No se encontraron pacientes con el filtro aplicado.</div> } @else {
+  <div class="grid gap-3">
     @for (p of visibleWithRow(); track p.id) {
-    <div class="col-12">
-      <div class="card border-0 shadow-sm rounded-4 h-100">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start mb-2">
-            <div>
-
-              <h6 class="mb-0 fw-semibold">
-                <i class="bi bi-person me-1 text-muted"></i>{{ p.nombre }}
-                <span class="fw-normal">{{ p.apellido || '' }}</span>
-              </h6>
-            </div>
-            <span class="badge rounded-pill" [ngClass]="p.estado==='ACTIVO' ? 'bg-success' : 'bg-secondary'">
-              {{ p.estado || '—' }}
-            </span>
-          </div>
-
-          <ul class="list-unstyled mb-0 small">
-            <li class="mb-1" *ngIf="p.documento">
-              <span class="text-secondary">Identificación:</span>
-              <span class="text-monospace ms-1">{{ p.documento }}</span>
-            </li>
-            <li class="mb-1" *ngIf="p.email">
-              <span class="text-secondary">Email:</span>
-              <a [href]="'mailto:' + p.email" class="ms-1 text-decoration-none">{{ p.email }}</a>
-            </li>
-            <li class="mb-1" *ngIf="p.telefono">
-              <span class="text-secondary">Teléfono:</span>
-              <span class="ms-1">{{ p.telefono }}</span>
-            </li>
-            <li class="mb-1" *ngIf="p.direccion">
-              <span class="text-secondary">Dirección:</span>
-              <span class="ms-1">{{ p.direccion }}</span>
-            </li>
-          </ul>
-
-          <div class="d-flex justify-content-end gap-2 mt-3">
-            <button class="btn btn-sm btn-outline-info" (click)="verPaciente(p)">
-              <i class="bi bi-eye"></i> Ver
-            </button>
-            <button class="btn btn-sm btn-outline-primary" (click)="editarPaciente(p)">
-              <i class="bi bi-pencil"></i> Editar
-            </button>
-            <button class="btn btn-sm btn-outline-danger" (click)="openConfirm(p)" [disabled]="loading()">
-              <i class="bi bi-trash"></i> Eliminar
-            </button>
-          </div>
+    <div class="bg-white rounded-2xl shadow-card border border-slate-200/70">
+      <div class="p-4">
+        <div class="flex items-start justify-between mb-2">
+          <h6 class="m-0 font-semibold text-sm"><i class="bi bi-person mr-1 text-slate-400"></i>{{ p.nombre }} <span class="font-normal">{{ p.apellido || '' }}</span></h6>
+          <span class="px-2 py-0.5 rounded-full text-[11px] font-medium" [class.bg-green-100]="p.estado==='ACTIVO'" [class.text-green-700]="p.estado==='ACTIVO'" [class.bg-slate-200]="p.estado!=='ACTIVO'" [class.text-slate-600]="p.estado!=='ACTIVO'">{{ p.estado || '—' }}</span>
+        </div>
+        <ul class="m-0 p-0 list-none text-xs space-y-1">
+          <li *ngIf="p.documento"><span class="text-slate-500">Identificación:</span> <span class="font-mono">{{ p.documento }}</span></li>
+          <li *ngIf="p.email"><span class="text-slate-500">Email:</span> <a [href]="'mailto:' + p.email" class="ml-1">{{ p.email }}</a></li>
+          <li *ngIf="p.telefono"><span class="text-slate-500">Teléfono:</span> <span class="ml-1">{{ p.telefono }}</span></li>
+          <li *ngIf="p.direccion"><span class="text-slate-500">Dirección:</span> <span class="ml-1">{{ p.direccion }}</span></li>
+        </ul>
+        <div class="flex justify-end gap-2 mt-3">
+          <button class="btn btn-outline-info btn-sm" (click)="verPaciente(p)"><i class="bi bi-eye"></i><span class="ml-1">Ver</span></button>
+          <button class="btn btn-outline-primary btn-sm" (click)="editarPaciente(p)"><i class="bi bi-pencil"></i><span class="ml-1">Editar</span></button>
+          <button class="btn btn-outline-danger btn-sm" (click)="openConfirm(p)" [disabled]="loading()"><i class="bi bi-trash"></i><span class="ml-1">Eliminar</span></button>
         </div>
       </div>
     </div>
@@ -219,58 +122,38 @@
   </div>
   }
   }
-</div>
+ </div>
 
 <!-- Paginador -->
-<nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Paginación">
-  <ul class="pagination mb-0">
-    <li class="page-item" [class.disabled]="page()===1">
-      <button class="page-link" (click)="prevPage()" [disabled]="page()===1">Anterior</button>
-    </li>
-    <li class="page-item" *ngFor="let n of pagesToShow()" [class.active]="n===page()">
-      <button class="page-link" (click)="goToPage(n)">{{ n }}</button>
-    </li>
-    <li class="page-item" [class.disabled]="page()===totalPages()">
-      <button class="page-link" (click)="nextPage()" [disabled]="page()===totalPages()">Siguiente</button>
-    </li>
-  </ul>
-</nav>
+<nav class="flex items-center justify-between mt-3" aria-label="Paginación">
+  <div class="flex gap-2">
+    <button class="btn btn-outline-secondary btn-sm" (click)="prevPage()" [disabled]="page()===1">Anterior</button>
+    <div class="flex gap-1">
+      <button class="btn btn-light btn-sm" *ngFor="let n of pagesToShow()" [class.active]="n===page()" (click)="goToPage(n)">{{ n }}</button>
+    </div>
+    <button class="btn btn-outline-secondary btn-sm" (click)="nextPage()" [disabled]="page()===totalPages()">Siguiente</button>
+  </div>
+  <div class="text-xs text-slate-500">Página {{ page() }} de {{ totalPages() }}</div>
+ </nav>
 
-<!-- Modal Confirmación (fuera de wrappers responsivos) -->
-<div class="modal fade" tabindex="-1" [class.show]="confirmOpen()" [style.display]="confirmOpen() ? 'block' : 'none'"
-  aria-modal="true" role="dialog">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content shadow-lg rounded-4 border-0">
-      <div class="modal-header border-0">
-        <h5 class="modal-title">
-          <i class="bi bi-trash me-2 text-danger"></i>
-          Confirmar eliminación
-        </h5>
-        <button type="button" class="btn-close" aria-label="Close" (click)="closeConfirm()"></button>
-      </div>
-
-      <div class="modal-body">
-        @if (pacienteToDelete()) {
-        <p class="mb-1">
-          ¿Seguro que deseas eliminar a
-          <span class="fw-semibold">{{ pacienteToDelete()?.nombre }} {{ pacienteToDelete()?.apellido || '' }}</span>?
-        </p>
-        <p class="small text-secondary mb-0">Esta acción no se puede deshacer.</p>
-        } @else {
-        <p>¿Seguro que deseas eliminar este paciente?</p>
-        }
-      </div>
-
-      <div class="modal-footer border-0">
-        <button type="button" class="btn btn-light" (click)="closeConfirm()" [disabled]="loading()">Cancelar</button>
-        <button type="button" class="btn btn-danger" (click)="confirmDelete()" [disabled]="loading()">
-          @if (loading()) {
-          <span class="spinner-border spinner-border-sm me-2"></span>
-          }
-          Eliminar
-        </button>
+<!-- Modal Confirmación -->
+@if (confirmOpen()) {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center">
+    <div class="fixed inset-0 bg-black/40 z-[55]" (click)="closeConfirm()"></div>
+    <div class="relative w-full max-w-md mx-auto z-[65]">
+      <div class="bg-white rounded-2xl shadow-card p-5 border border-slate-200/70">
+        <div class="flex items-start justify-between mb-3">
+          <h5 class="font-semibold flex items-center gap-2 text-red-600 m-0"><i class="bi bi-trash"></i><span>Confirmar eliminación</span></h5>
+          <button type="button" class="btn btn-close" aria-label="Cerrar" (click)="closeConfirm()"></button>
+        </div>
+        <div class="space-y-2 text-sm">
+          @if (pacienteToDelete(); as p) { <p class="m-0">¿Seguro que deseas eliminar a <span class="font-semibold">{{ p.nombre }} {{ p.apellido || '' }}</span>?</p><p class="m-0 text-slate-500 text-xs">Esta acción no se puede deshacer.</p> } @else { <p class="m-0">¿Seguro que deseas eliminar este paciente?</p> }
+        </div>
+        <div class="flex justify-end gap-2 mt-5">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeConfirm()" [disabled]="loading()">Cancelar</button>
+          <button type="button" class="btn btn-danger" (click)="confirmDelete()" [disabled]="loading()">@if (loading()) { <span class="spinner-border spinner-border-sm mr-2"></span> } Eliminar</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
-<div class="modal-backdrop fade" [class.show]="confirmOpen()" *ngIf="confirmOpen()"></div>
+}

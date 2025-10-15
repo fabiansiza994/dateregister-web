@@ -1,15 +1,7 @@
-.icon-circle {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background-color: #f1f3f5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.8rem;
-  color: #0d6efd;
-}
+/* Módulos: estilos mínimos complementarios tras migración a Tailwind */
 
-.card .card-body {
-  padding: 1rem; /* Bootstrap usa 1.25rem por defecto */
-}
+/* Animación suave para levantar la tarjeta (utility classes ya manejan sombra) */
+.group:hover { will-change: transform; }
+
+/* Fuente monoespaciada opcional si se usa en este componente posteriormente */
+.font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }

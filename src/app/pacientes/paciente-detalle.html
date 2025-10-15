@@ -1,97 +1,68 @@
-<div class="container py-3">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-      <h3 class="fw-semibold mb-0">Detalle del paciente</h3>
-      <small class="text-secondary">Información completa del registro</small>
+<div class="py-3">
+  <div class="flex items-center justify-between mb-4 gap-2">
+    <div class="space-y-1">
+      <h3 class="text-xl font-semibold m-0">Detalle del paciente</h3>
+      <p class="text-xs text-slate-500 m-0">Información completa del registro</p>
     </div>
-    <div class="d-flex gap-2">
-      <a class="btn btn-light" (click)="backToList()">
-        <i class="bi bi-arrow-left"></i> Volver
-      </a>
-      <a class="btn btn-primary" (click)="goToEdit()">
-        <i class="bi bi-pencil"></i> Editar
-      </a>
+    <div class="flex gap-2">
+      <a class="btn btn-light" (click)="backToList()"><i class="bi bi-arrow-left"></i><span class="ml-1">Volver</span></a>
+      <a class="btn btn-primary" (click)="goToEdit()"><i class="bi bi-pencil"></i><span class="ml-1">Editar</span></a>
     </div>
   </div>
 
-  @if (error()) {
-    <div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
-      <i class="bi bi-exclamation-triangle mt-1"></i>
-      <div>{{ error() }}</div>
-    </div>
-  }
+  @if (error()) { <div class="rounded-lg border border-red-300 bg-red-50 text-red-700 px-4 py-3 text-sm flex gap-3 items-start mb-4" role="alert"><i class="bi bi-exclamation-triangle mt-1"></i><div class="font-medium flex-1">{{ error() }}</div></div> }
 
   @if (loading()) {
-    <div class="card border-0 shadow-sm rounded-4">
-      <div class="card-body">
-        <div class="d-inline-flex align-items-center gap-2 text-secondary">
-          <span class="spinner-border spinner-border-sm"></span> Cargando…
-        </div>
+    <div class="bg-white rounded-2xl shadow-card border border-slate-200/70">
+      <div class="p-5">
+        <div class="inline-flex items-center gap-2 text-slate-500 text-sm"><span class="spinner-border spinner-border-sm"></span> Cargando…</div>
       </div>
     </div>
   } @else {
     @if (paciente()) {
-      <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body">
-          <div class="row g-3">
-
-            <div class="col-md-4">
-              <div class="text-secondary small">Paciente</div>
-              <div class="fw-semibold">
-                <i class="bi bi-person me-1 text-muted"></i>
-                {{ paciente()?.nombre }} <span class="text-secondary">{{ paciente()?.apellido || '' }}</span>
-              </div>
+      <div class="bg-white rounded-2xl shadow-card border border-slate-200/70 overflow-hidden">
+        <div class="p-5">
+          <div class="grid gap-4 md:grid-cols-12">
+            <div class="md:col-span-4">
+              <div class="text-slate-500 text-xs">Paciente</div>
+              <div class="font-semibold"><i class="bi bi-person mr-1 text-slate-400"></i>{{ paciente()?.nombre }} <span class="text-slate-500 font-normal">{{ paciente()?.apellido || '' }}</span></div>
             </div>
-
-            <div class="col-md-4">
-              <div class="text-secondary small">Identificación</div>
-              <div class="text-monospace">{{ paciente()?.documento || '—' }}</div>
+            <div class="md:col-span-4">
+              <div class="text-slate-500 text-xs">Identificación</div>
+              <div class="font-mono">{{ paciente()?.documento || '—' }}</div>
             </div>
-
-            <div class="col-md-4">
-              <div class="text-secondary small">Estado</div>
-              <span class="badge rounded-pill"
-                    [ngClass]="paciente()?.estado==='ACTIVO' ? 'bg-success' : 'bg-secondary'">
-                {{ paciente()?.estado || '—' }}
-              </span>
+            <div class="md:col-span-4">
+              <div class="text-slate-500 text-xs">Estado</div>
+              <span class="px-2 py-0.5 rounded-full text-[11px] font-medium" [class.bg-green-100]="paciente()?.estado==='ACTIVO'" [class.text-green-700]="paciente()?.estado==='ACTIVO'" [class.bg-slate-200]="paciente()?.estado!=='ACTIVO'" [class.text-slate-600]="paciente()?.estado!=='ACTIVO'">{{ paciente()?.estado || '—' }}</span>
             </div>
-
-            <div class="col-md-4">
-              <div class="text-secondary small">Email</div>
+            <div class="md:col-span-4">
+              <div class="text-slate-500 text-xs">Email</div>
               <div>
                 <a *ngIf="paciente()?.email" [href]="'mailto:'+paciente()?.email">{{ paciente()?.email }}</a>
                 <span *ngIf="!paciente()?.email">—</span>
               </div>
             </div>
-
-            <div class="col-md-4">
-              <div class="text-secondary small">Teléfono</div>
+            <div class="md:col-span-4">
+              <div class="text-slate-500 text-xs">Teléfono</div>
               <div>{{ paciente()?.telefono || '—' }}</div>
             </div>
-
-            <div class="col-md-4">
-              <div class="text-secondary small">Dirección</div>
+            <div class="md:col-span-4">
+              <div class="text-slate-500 text-xs">Dirección</div>
               <div>{{ paciente()?.direccion || '—' }}</div>
             </div>
-
-            <div class="col-md-6">
-              <div class="text-secondary small">Cliente asociado</div>
-              <div>
-                <i class="bi bi-building me-1 text-muted"></i>
-                {{ paciente()?.clienteNombre || ('ID ' + (paciente()?.clienteId || '—')) }}
-              </div>
+            <div class="md:col-span-6">
+              <div class="text-slate-500 text-xs">Cliente asociado</div>
+              <div><i class="bi bi-building mr-1 text-slate-400"></i>{{ paciente()?.clienteNombre || ('ID ' + (paciente()?.clienteId || '—')) }}</div>
             </div>
-
           </div>
         </div>
-
-        <div class="card-footer d-flex justify-content-between align-items-center border-0">
-          <a class="btn btn-light" (click)="backToList()"><i class="bi bi-arrow-left"></i> Volver</a>
-          <a class="btn btn-primary" (click)="goToEdit()"><i class="bi bi-pencil"></i> Editar</a>
+        <div class="px-5 py-3 bg-slate-50/60 flex items-center justify-between">
+          <a class="btn btn-light" (click)="backToList()"><i class="bi bi-arrow-left"></i><span class="ml-1">Volver</span></a>
+          <a class="btn btn-primary" (click)="goToEdit()"><i class="bi bi-pencil"></i><span class="ml-1">Editar</span></a>
         </div>
       </div>
     } @else {
-      <div class="alert alert-warning">No se encontró el paciente.</div>
+      <div class="rounded-lg border border-amber-300 bg-amber-50 text-amber-800 px-4 py-3">No se encontró el paciente.</div>
     }
   }
 </div>

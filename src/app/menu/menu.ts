@@ -2,12 +2,11 @@ import { Component, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../core/auth.service';
-import { PresenceBadgeComponent } from "../shared/presence-badge.component";
 
 @Component({
   selector: 'app-menu',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, PresenceBadgeComponent],
+  imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './menu.html',
   styleUrls: ['./menu.css']
 })
@@ -27,9 +26,20 @@ export class Menu {
     return String(this.user());
   });
 
-  isOpen = signal(false);
-  toggle() { this.isOpen.update(v => !v); }
-  close() { this.isOpen.set(false); }
+  // Estados UI
+  mobileOpen = signal(false);
+  adminOpen  = signal(false);
+  userOpen   = signal(false);
+
+  toggleMobile() { this.mobileOpen.update(v => !v); }
+  toggleAdmin()  { this.adminOpen.update(v => !v); }
+  toggleUser()   { this.userOpen.update(v => !v); }
+
+  closeAll() {
+    this.mobileOpen.set(false);
+    this.adminOpen.set(false);
+    this.userOpen.set(false);
+  }
 
   constructor(private router: Router, private auth: AuthService) {
     this.auth.refreshFromStorage();
@@ -39,6 +49,7 @@ export class Menu {
   logout() {
     localStorage.removeItem('token');
     this.router.navigate(['/login']);
+    this.closeAll();
   }
 
   initials(text?: string): string {

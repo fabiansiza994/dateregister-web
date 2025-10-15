@@ -1,77 +1,51 @@
-<div class="container py-2">
-  <h2 class="mb-4 text-center fw-semibold">Módulos principales</h2>
+<div class="mx-auto max-w-6xl px-4 py-6">
+ 
 
-  <div class="row g-4 justify-content-center">
-    <!-- Card Clientes -->
-    <div class="col-md-4 col-sm-6">
-      <div id="mod-clientes" class="card h-100 shadow-sm border-0 rounded-3 text-center">
-        <div class="card-body d-flex flex-column align-items-center justify-content-center">
-          <div class="icon-circle mb-3">
-            <i class="bi bi-people-fill"></i>
-          </div>
-          <h5 class="card-title fw-bold">Clientes</h5>
-          <p class="card-text text-secondary">
-            Gestiona la información de tus clientes, contactos y datos asociados.
-          </p>
-          <a routerLink="/clientes" class="btn btn-primary mt-auto">Ir a Clientes</a>
-        </div>
+  <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <!-- Clientes -->
+  <div id="mod-clientes" class="group bg-white rounded-2xl border border-slate-200 shadow-card hover:shadow-cardHover transition hover:-translate-y-1 flex flex-col items-center text-center p-6">
+      <div class="w-16 h-16 rounded-full bg-slate-100 grid place-items-center text-[2rem] leading-none text-yellow-600 mb-4 group-hover:bg-yellow-200 group-hover:text-yellow-700">
+        <i class="bi bi-people-fill"></i>
       </div>
+      <h5 class="text-lg font-bold mb-2">Clientes</h5>
+      <p class="text-sm text-slate-600 mb-4">Gestiona la información de tus clientes, contactos y datos asociados.</p>
+      <a routerLink="/clientes" class="mt-auto inline-flex justify-center items-center rounded-md bg-yellow-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40">Ir a Clientes</a>
     </div>
 
-    <!-- Card Trabajos -->
-    <div class="col-md-4 col-sm-6">
-      <div id="mod-trabajos" class="card h-100 shadow-sm border-0 rounded-3 text-center">
-        <div class="card-body d-flex flex-column align-items-center justify-content-center">
-          <div class="icon-circle mb-3">
-            <i class="bi bi-briefcase-fill"></i>
-          </div>
-          <h5 class="card-title fw-bold">Trabajos</h5>
-          <p class="card-text text-secondary">
-            Administra trabajos, tareas asignadas y su estado de ejecución.
-          </p>
-          <a routerLink="/trabajos" class="btn btn-primary mt-auto">Ir a Trabajos</a>
-        </div>
+    <!-- Trabajos -->
+  <div id="mod-trabajos" class="group bg-white rounded-2xl border border-slate-200 shadow-card hover:shadow-cardHover transition hover:-translate-y-1 flex flex-col items-center text-center p-6">
+      <div class="w-16 h-16 rounded-full bg-red-100 grid place-items-center text-[2rem] leading-none text-red-500 mb-4 group-hover:bg-red-200 group-hover:text-red-700">
+        <i class="bi bi-briefcase-fill"></i>
       </div>
+      <h5 class="text-lg font-bold mb-2">Trabajos</h5>
+      <p class="text-sm text-slate-600 mb-4">Administra trabajos, tareas asignadas y su estado de ejecución.</p>
+      <a routerLink="/trabajos" class="mt-auto inline-flex justify-center items-center rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-primary/40">Ir a Trabajos</a>
     </div>
 
-    <!-- Card Reportes -->
-    <div class="col-md-4 col-sm-6">
-      <div id="mod-reportes" class="card h-100 shadow-sm border-0 rounded-3 text-center">
-        <div class="card-body d-flex flex-column align-items-center justify-content-center">
-          <div class="icon-circle mb-3">
-            <i class="bi bi-bar-chart-fill"></i>
-          </div>
-          <h5 class="card-title fw-bold">Reportes</h5>
-          <p class="card-text text-secondary">
-            Visualiza reportes y estadísticas detalladas de tus operaciones.
-          </p>
-          <!-- Si aún no tienes ruta, puedes dejar /modules o desactivar -->
-          <a routerLink="/reportes" class="btn btn-primary mt-auto" tabindex="-1" aria-disabled="true">Ir a Reportes</a>
-        </div>
+    <!-- Reportes -->
+  <div id="mod-reportes" class="group bg-white rounded-2xl border border-slate-200 shadow-card hover:shadow-cardHover transition hover:-translate-y-1 flex flex-col items-center text-center p-6">
+      <div class="w-16 h-16 rounded-full bg-slate-100 grid place-items-center text-[2rem] leading-none text-primary mb-4 group-hover:bg-primary/10 group-hover:text-primary">
+        <i class="bi bi-bar-chart-fill"></i>
       </div>
+      <h5 class="text-lg font-bold mb-2">Reportes</h5>
+      <p class="text-sm text-slate-600 mb-4">Visualiza reportes y estadísticas detalladas de tus operaciones.</p>
+      <a routerLink="/reportes" class="mt-auto inline-flex justify-center items-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40" tabindex="-1" aria-disabled="true">Ir a Reportes</a>
     </div>
 
-    <!-- Card Pacientes (solo para sector SALUD) -->
+    <!-- Pacientes (sector SALUD) -->
     @if (sector() === 'SALUD') {
-      <div class="col-md-4 col-sm-6">
-        <div id="mod-pacientes" class="card h-100 shadow-sm border-0 rounded-3 text-center border-success">
-          <div class="card-body d-flex flex-column align-items-center justify-content-center">
-            <div class="icon-circle mb-3">
-              <i class="bi bi-heart-pulse-fill"></i>
-            </div>
-            <h5 class="card-title fw-bold">Pacientes</h5>
-            <p class="card-text text-secondary">
-              Administra historiales clínicos, citas y seguimiento de pacientes.
-            </p>
-            <a routerLink="/pacientes" class="btn btn-success mt-auto">Ir a Pacientes</a>
-          </div>
+  <div id="mod-pacientes" class="group bg-white rounded-2xl border border-green-300 shadow-card hover:shadow-cardHover transition hover:-translate-y-1 flex flex-col items-center text-center p-6">
+        <div class="w-16 h-16 rounded-full bg-green-100 grid place-items-center text-[2rem] leading-none text-green-600 mb-4 group-hover:bg-green-200 group-hover:text-green-700">
+          <i class="bi bi-heart-pulse-fill"></i>
         </div>
+        <h5 class="text-lg font-bold mb-2">Pacientes</h5>
+        <p class="text-sm text-slate-600 mb-4">Administra historiales clínicos, citas y seguimiento de pacientes.</p>
+        <a routerLink="/pacientes" class="mt-auto inline-flex justify-center items-center rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-400">Ir a Pacientes</a>
       </div>
     }
   </div>
 
-  <!-- (Opcional) Botón para repetir tour desde esta misma vista -->
-  <!-- <div class="text-center mt-4">
-    <button class="btn btn-outline-primary btn-sm" (click)="runTourAgain()">Repetir tour de módulos</button>
+  <!-- <div class="text-center mt-8">
+    <button class="inline-flex items-center rounded-md border border-primary text-primary px-3 py-1.5 text-sm font-medium hover:bg-primary/10" (click)="runTourAgain()">Repetir tour de módulos</button>
   </div> -->
 </div>

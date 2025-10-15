@@ -1,199 +1,165 @@
-<div class="container-fluid px-0">
-  <div class="row g-0 min-vh-100">
+<div class="min-h-screen grid grid-cols-12">
+  <!-- Col izquierda: Form -->
+  <div class="col-span-12 lg:col-span-5 xl:col-span-4 flex items-center justify-center p-4 sm:p-6">
+    <div class="form-shell w-full">
 
-    <!-- Col izquierda: Form -->
-    <div class="col-12 col-lg-5 col-xxl-4 d-flex align-items-center justify-content-center">
-      <div class="form-shell w-100 p-4 p-sm-5">
-
-        <!-- Marca -->
-        <div class="d-flex align-items-center gap-2 mb-4">
-          <div class="brand-mark d-inline-flex align-items-center justify-content-center">
-            <i class="bi bi-shield-lock"></i>
-          </div>
-          <div>
-            <h6 class="mb-0 fw-semibold">DataRegister</h6>
-            <small class="text-secondary">Acceso seguro</small>
-          </div>
+      <!-- Marca -->
+      <div class="flex items-center gap-2 mb-4">
+        <div class="brand-mark inline-flex items-center justify-center">
+          <i class="bi bi-shield-lock"></i>
         </div>
+        <div>
+          <h6 class="m-0 font-semibold">DataRegister</h6>
+          <small class="text-slate-500">Acceso seguro</small>
+        </div>
+      </div>
 
-        <!-- Flash de éxito -->
-        @if(successFlash()) {
-          <div class="alert alert-success d-flex align-items-start gap-2 rounded-3" role="alert" aria-live="polite">
-            <i class="bi bi-check-circle mt-1"></i>
-            <div class="flex-grow-1">{{ successFlash() }}</div>
-            <button class="btn-close" (click)="successFlash.set(null)" aria-label="Cerrar"></button>
-          </div>
-        }
+      <!-- Flash de éxito -->
+      @if(successFlash()) {
+        <div class="rounded-lg border border-green-300 bg-green-50 text-green-700 px-4 py-3 text-sm flex gap-3 items-start mb-3" role="alert" aria-live="polite">
+          <i class="bi bi-check-circle mt-1"></i>
+          <div class="font-medium flex-1">{{ successFlash() }}</div>
+          <button type="button" class="p-1 rounded hover:bg-green-100/70" (click)="successFlash.set(null)" aria-label="Cerrar">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      }
 
-        <!-- Encabezado -->
+      <!-- Encabezado -->
+      <div class="mb-3">
+        <h3 class="text-xl font-semibold mb-1">Iniciar sesión</h3>
+        <p class="text-slate-500 m-0 text-sm">Bienvenido de vuelta</p>
+      </div>
+
+      <!-- Error -->
+      @if(error() !== null) {
+        <div class="rounded-lg border border-red-300 bg-red-50 text-red-700 px-4 py-3 text-sm flex gap-3 items-start mb-3" role="alert" aria-live="assertive">
+          <i class="bi bi-exclamation-triangle mt-1"></i>
+          <div class="font-medium flex-1">{{ error() }}</div>
+          <button type="button" class="p-1 rounded hover:bg-red-100/70" (click)="error.set(null)" aria-label="Cerrar">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      }
+
+      <!-- Formulario -->
+      <form (submit)="$event.preventDefault(); login()" novalidate>
+        <!-- Usuario -->
         <div class="mb-3">
-          <h3 class="fw-semibold mb-1">Iniciar sesión</h3>
-          <p class="text-secondary mb-0 small">Bienvenido de vuelta</p>
+          <label for="usuario" class="text-sm font-medium text-slate-700">Usuario</label>
+          <div class="mt-1 flex rounded-lg shadow-sm">
+            <span class="inline-flex items-center px-3 rounded-l-lg border border-gray-300 bg-gray-50 text-gray-500 text-sm">
+              <i class="bi bi-person"></i>
+            </span>
+            <input
+              name="login_user"
+              id="usuario"
+              type="text"
+              class="block w-full min-w-0 flex-1 rounded-r-lg border border-l-0 border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              placeholder="p. ej. juan.perez"
+              [value]="usuario()"
+              (input)="onUserInput(txtUsuario.value)"
+              (blur)="validateUser()"
+              #txtUsuario
+              autocomplete="off"
+              inputmode="text"
+              spellcheck="false"
+              autocapitalize="none"
+              [attr.aria-invalid]="userInvalid() ? 'true' : null"
+              [attr.aria-describedby]="userInvalid() ? 'usuarioHelp' : null"
+              required
+              autofocus
+            >
+          </div>
+          @if (userInvalid()) { <small id="usuarioHelp" class="text-red-600">Formato inválido. Usa <strong>nombre.apellido</strong> (letras/números y un punto).</small> }
         </div>
 
-        <!-- Error -->
-        @if(error() !== null) {
-          <div class="alert alert-danger d-flex align-items-start gap-2 py-2 rounded-3" role="alert" aria-live="assertive">
-            <i class="bi bi-exclamation-triangle mt-1"></i>
-            <div class="flex-grow-1">{{ error() }}</div>
-            <button class="btn-close" (click)="error.set(null)" aria-label="Cerrar"></button>
-          </div>
-        }
-
-        <!-- Formulario -->
-        <form (submit)="$event.preventDefault(); login()" novalidate>
-          <!-- Usuario -->
-          <div class="mb-3">
-            <label for="usuario" class="form-label">Usuario</label>
-            <div class="input-group input-group-lg">
-              <span class="input-group-text" aria-hidden="true">
-                <i class="bi bi-person"></i>
-              </span>
-              <input
-                name="login_user"
-                id="usuario"
-                type="text"
-                class="form-control"
-                placeholder="p. ej. juan.perez"
-                [value]="usuario()"
-                (input)="onUserInput(txtUsuario.value)"
-                (blur)="validateUser()"
-                #txtUsuario
-                autocomplete="off"
-                inputmode="text"
-                spellcheck="false"
-                autocapitalize="none"
-                [attr.aria-invalid]="userInvalid() ? 'true' : null"
-                [attr.aria-describedby]="userInvalid() ? 'usuarioHelp' : null"
-                required
-                autofocus
-              >
-            </div>
-            @if (userInvalid()) {
-              <small id="usuarioHelp" class="text-danger">
-                Formato inválido. Usa <strong>nombre.apellido</strong> (letras/números y un punto).
-              </small>
-            }
-          </div>
-
-          <!-- Contraseña -->
-          <div class="mb-2">
-            <label for="password" class="form-label">Contraseña</label>
-            <div class="input-group input-group-lg">
-              <input
-                id="password"
-                [type]="showPassword() ? 'text' : 'password'"
-                class="form-control"
-                placeholder="••••••••"
-                [value]="password()"
-                (input)="password.set(txtPassword.value)"
-                (keydown)="onPasswordKey($event)"
-                (keyup)="onPasswordKey($event)"
-                #txtPassword
-                autocomplete="current-password"
-                required
-              >
-              <button
-                type="button"
-                class="btn btn-outline-secondary"
-                (click)="toggleShowPassword()"
-                aria-controls="password"
-                [attr.aria-pressed]="showPassword()"
-                [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Ver contraseña'">
-                <i class="bi" [ngClass]="showPassword() ? 'bi-eye-slash' : 'bi-eye'"></i>
-              </button>
-            </div>
-            @if (capsOn()) {
-              <small class="text-warning d-inline-flex align-items-center gap-1 mt-1">
-                <i class="bi bi-exclamation-triangle"></i> Bloq Mayús activado.
-              </small>
-            }
-          </div>
-
-          <!-- Recordarme + Olvidé -->
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <div class="form-check">
-              <input class="form-check-input"
-                     type="checkbox"
-                     id="remember"
-                     name="remember"
-                     autocomplete="on"
-                     [checked]="remember()"
-                     (change)="onRememberChange($any($event.target).checked)" />
-              <label class="form-check-label" for="remember">Recordarme</label>
-            </div>
-            <a class="small text-decoration-none" routerLink="/forgot">¿Olvidaste tu contraseña?</a>
-          </div>
-
-          <!-- Botones -->
-          <div class="d-grid gap-2">
-            <button type="submit" class="btn btn-primary btn-lg" [disabled]="!isFormValid || userInvalid() || loading()">
-              @if(loading()) {
-                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-              }
-              {{ loading() ? 'Ingresando…' : 'Ingresar' }}
+        <!-- Contraseña -->
+        <div class="mb-2">
+          <label for="password" class="text-sm font-medium text-slate-700">Contraseña</label>
+          <div class="mt-1 flex rounded-lg shadow-sm">
+            <input
+              id="password"
+              [type]="showPassword() ? 'text' : 'password'"
+              class="block w-full min-w-0 flex-1 rounded-l-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              placeholder="••••••••"
+              [value]="password()"
+              (input)="password.set(txtPassword.value)"
+              (keydown)="onPasswordKey($event)"
+              (keyup)="onPasswordKey($event)"
+              #txtPassword
+              autocomplete="current-password"
+              required
+            >
+            <button type="button" class="px-3 rounded-r-lg border border-l-0 border-gray-300 bg-white text-gray-500 hover:bg-gray-50" (click)="toggleShowPassword()" aria-controls="password" [attr.aria-pressed]="showPassword()" [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Ver contraseña'">
+              <i class="bi" [ngClass]="showPassword() ? 'bi-eye-slash' : 'bi-eye'"></i>
             </button>
-
-            <button type="button" class="btn btn-outline-secondary" (click)="reset()" [disabled]="loading()">
-              Limpiar
-            </button>
-
-            <div class="text-center mt-2 small">
-              ¿No tienes cuenta?
-              <a class="text-decoration-none fw-semibold" routerLink="/register">Regístrate aquí</a>
-            </div>
           </div>
-        </form>
-
-        <!-- Footer -->
-        <div class="text-center small text-secondary mt-4">
-          © {{ currentYear }} DataRegister · Seguridad y productividad
+          @if (capsOn()) { <small class="text-amber-600 inline-flex items-center gap-1 mt-1"><i class="bi bi-exclamation-triangle"></i> Bloq Mayús activado.</small> }
         </div>
 
-      </div>
+        <!-- Recordarme + Olvidé -->
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <input class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" type="checkbox" id="remember" name="remember" autocomplete="on" [checked]="remember()" (change)="onRememberChange($any($event.target).checked)" />
+            <label class="text-sm text-slate-700" for="remember">Recordarme</label>
+          </div>
+          <a class="text-xs" routerLink="/forgot">¿Olvidaste tu contraseña?</a>
+        </div>
+
+        <!-- Botones -->
+        <div class="grid gap-2">
+          <button type="submit" class="px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 flex items-center justify-center gap-2" [disabled]="!isFormValid || userInvalid() || loading()">
+            @if(loading()) {
+              <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+              </svg>
+            }
+            {{ loading() ? 'Ingresando…' : 'Ingresar' }}
+          </button>
+          <button type="button" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50" (click)="reset()" [disabled]="loading()">Limpiar</button>
+          <div class="text-center mt-2 text-xs">
+            ¿No tienes cuenta?
+            <a class="font-semibold" routerLink="/register">Regístrate aquí</a>
+          </div>
+        </div>
+      </form>
+
+      <!-- Footer -->
+      <div class="text-center text-xs text-slate-500 mt-4">© {{ currentYear }} DataRegister · Seguridad y productividad</div>
+
     </div>
+  </div>
 
-    <!-- Col derecha: Imagen + copy -->
-    <div class="col-12 col-lg-7 col-xxl-8 d-none d-lg-block position-relative illustration">
-      <div class="illustration-overlay"></div>
-      <!-- Capa de animación tecnológica -->
-      <div class="tech-anim" aria-hidden="true"></div>
+  <!-- Col derecha: Imagen + copy -->
+  <div class="hidden lg:block col-span-7 xl:col-span-8 relative illustration">
+    <div class="illustration-overlay"></div>
+    <!-- Capa de animación tecnológica -->
+    <div class="tech-anim" aria-hidden="true"></div>
 
-      <!-- Contenido promocional -->
-      <div class="illustration-content">
-        <div class="tagline badge rounded-pill text-bg-light mb-3">DataRegister by Hacker994 & IA</div>
-        <h2 class="display-6 fw-semibold mb-3">Organiza tus procesos<br>como un profesional</h2>
-        <p class="lead opacity-75 mb-4">
-          Administra clientes, pacientes y trabajos con reportes claros y control total.
-        </p>
+    <!-- Contenido promocional -->
+    <div class="illustration-content">
+      <div class="inline-block rounded-full bg-white/90 text-slate-700 px-3 py-1 text-xs mb-3 shadow-sm">DataRegister by Hacker994 & IA</div>
+      <h2 class="text-3xl font-semibold mb-3">Organiza tus procesos<br>como un profesional</h2>
+      <p class="text-base/7 opacity-80 mb-4">Administra clientes, pacientes y trabajos con reportes claros y control total.</p>
 
-        <ul class="list-unstyled mb-4">
-          <li class="d-flex align-items-center gap-2 mb-2">
-            <i class="bi bi-check-circle-fill"></i> Flujo de trabajo centralizado
-          </li>
-          <li class="d-flex align-items-center gap-2 mb-2">
-            <i class="bi bi-check-circle-fill"></i> Reportes detallados y exportables
-          </li>
-          <li class="d-flex align-items-center gap-2">
-            <i class="bi bi-check-circle-fill"></i> Seguridad empresarial (JWT + roles)
-          </li>
-        </ul>
+      <ul class="m-0 p-0 list-none mb-4 space-y-2">
+        <li class="flex items-center gap-2"><i class="bi bi-check-circle-fill"></i> Flujo de trabajo centralizado</li>
+        <li class="flex items-center gap-2"><i class="bi bi-check-circle-fill"></i> Reportes detallados y exportables</li>
+        <li class="flex items-center gap-2"><i class="bi bi-check-circle-fill"></i> Seguridad empresarial (JWT + roles)</li>
+      </ul>
 
-        <!-- Mini glass card -->
-        <div class="glass p-3 p-lg-4 rounded-4 shadow-sm">
-          <div class="d-flex align-items-center gap-3">
-            <div class="avatar bg-white rounded-circle d-flex align-items-center justify-content-center">
-              <i class="bi bi-graph-up"></i>
-            </div>
-            <div>
-              <div class="fw-semibold">+35% productividad</div>
-              <small class="opacity-75">Automatiza tareas repetitivas y enfócate en lo importante.</small>
-            </div>
+      <!-- Mini glass card -->
+      <div class="glass p-4 rounded-2xl shadow-sm">
+        <div class="flex items-center gap-3">
+          <div class="avatar bg-white rounded-full flex items-center justify-center"><i class="bi bi-graph-up"></i></div>
+          <div>
+            <div class="font-semibold">+35% productividad</div>
+            <small class="opacity-75">Automatiza tareas repetitivas y enfócate en lo importante.</small>
           </div>
         </div>
       </div>
-
     </div>
-
   </div>
 </div>

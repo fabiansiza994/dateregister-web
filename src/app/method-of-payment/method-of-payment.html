@@ -1,53 +1,40 @@
-<div class="container py-3">
-
+<div class="py-3">
   <!-- Header -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-      <h3 class="fw-semibold mb-0">Métodos de pago</h3>
-      <small class="text-secondary">Empresa: {{ empresaNombre() }} (ID {{ empresaId() }})</small>
+  <div class="flex items-center justify-between mb-4 gap-2">
+    <div class="space-y-1">
+      <h3 class="text-xl font-semibold m-0">Métodos de pago</h3>
+      <p class="text-xs text-slate-500 m-0">Empresa: {{ empresaNombre() }} (ID {{ empresaId() }})</p>
     </div>
-    <button class="btn btn-outline-secondary" (click)="loadList()" [disabled]="loading()">
-      <i class="bi bi-arrow-clockwise"></i> Recargar
-    </button>
+    <button class="btn btn-outline-secondary" (click)="loadList()" [disabled]="loading()"><i class="bi bi-arrow-clockwise"></i><span class="ml-1">Recargar</span></button>
   </div>
 
   <!-- Mensajes -->
   @if (error()) {
-    <div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
+    <div class="rounded-lg border border-red-300 bg-red-50 text-red-700 px-4 py-3 text-sm flex gap-3 items-start mb-4" role="alert">
       <i class="bi bi-exclamation-triangle mt-1"></i>
-      <div>{{ error() }}</div>
-      <button type="button" class="btn-close ms-auto" (click)="error.set(null)"></button>
+      <div class="font-medium flex-1">{{ error() }}</div>
+      <button type="button" class="btn btn-close" (click)="error.set(null)"></button>
     </div>
   }
   @if (success()) {
-    <div class="alert alert-success d-flex align-items-start gap-2" role="alert">
+    <div class="rounded-lg border border-green-300 bg-green-50 text-green-700 px-4 py-3 text-sm flex gap-3 items-start mb-4" role="alert">
       <i class="bi bi-check2-circle mt-1"></i>
-      <div>{{ success() }}</div>
-      <button type="button" class="btn-close ms-auto" (click)="success.set(null)"></button>
+      <div class="font-medium flex-1">{{ success() }}</div>
+      <button type="button" class="btn btn-close" (click)="success.set(null)"></button>
     </div>
   }
 
   <!-- Crear -->
-  <form class="card border-0 shadow-sm rounded-4 mb-3"
-        (submit)="$event.preventDefault(); create()">
-    <div class="card-body">
-      <div class="row g-2 align-items-end">
-        <div class="col-md-6">
-          <label class="form-label">Nuevo método de pago</label>
-          <input id="mop-new-name" class="form-control"
-                 placeholder="Ej: EFECTIVO, TRANSFERENCIA DAVIVIENDA…"
-                 [ngModel]="newName()"
-                 (ngModelChange)="newName.set($event)"
-                 name="newName"
-                 autocomplete="off"
-                 [disabled]="creating()">
+  <form class="bg-white rounded-2xl shadow-card border border-slate-200/60 mb-4" (submit)="$event.preventDefault(); create()">
+    <div class="p-5 pt-4">
+      <div class="grid gap-4 md:grid-cols-12 items-end">
+        <div class="md:col-span-8 space-y-1">
+          <label for="mop-new-name" class="text-sm font-medium text-slate-700">Nuevo método de pago</label>
+          <input id="mop-new-name" class="form-control" placeholder="Ej: EFECTIVO, TRANSFERENCIA DAVIVIENDA…" [ngModel]="newName()" (ngModelChange)="newName.set($event)" name="newName" autocomplete="off" [disabled]="creating()">
         </div>
-        <div class="col-md-3">
-          <button id="mop-add-btn" class="btn btn-success w-100"
-                  [disabled]="!canCreate()">
-            @if (creating()) {
-              <span class="spinner-border spinner-border-sm me-2"></span>
-            }
+        <div class="md:col-span-4">
+          <button id="mop-add-btn" class="btn btn-success w-full" [disabled]="!canCreate()">
+            @if (creating()) { <span class="spinner-border spinner-border-sm mr-2"></span> }
             Agregar
           </button>
         </div>
@@ -56,135 +43,76 @@
   </form>
 
   <!-- Listado -->
-  <div class="card border-0 shadow-sm rounded-4">
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table id="mop-table" class="table table-hover align-middle mb-0">
-          <thead class="table-light">
+  <div class="rounded-2xl shadow-card overflow-hidden border border-slate-200/70 bg-white">
+    <table id="mop-table" class="w-full text-sm align-middle">
+      <thead class="bg-slate-100 text-slate-700">
+        <tr>
+          <th class="px-3 py-2 w-[90px]">ID</th>
+          <th class="px-3 py-2">Forma de pago</th>
+          <th class="px-3 py-2 w-[140px]">Estado</th>
+          <th class="px-3 py-2 w-[260px]">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
           <tr>
-            <th style="width:90px;">ID</th>
-            <th>Forma de pago</th>
-            <th style="width:140px;">Estado</th>
-            <th style="width:260px;">Acciones</th>
+            <td colspan="4" class="text-center px-3 py-6"><span class="spinner-border spinner-border-sm mr-2"></span> Cargando…</td>
           </tr>
-          </thead>
-          <tbody>
-          @if (loading()) {
-            <tr>
-              <td colspan="4" class="text-center py-4">
-                <span class="spinner-border spinner-border-sm me-2"></span> Cargando…
-              </td>
-            </tr>
+        } @else {
+          @if ((mops() || []).length === 0) {
+            <tr id="mop-empty"><td colspan="4" class="text-center px-3 py-6 text-slate-500">Sin métodos registrados.</td></tr>
           } @else {
-            @if ((mops() || []).length === 0) {
-              <tr id="mop-empty">
-                <td colspan="4" class="text-center py-4 text-secondary">Sin métodos registrados.</td>
+            @for (m of mops(); track m.id) {
+              <tr class="odd:bg-white even:bg-slate-50">
+                <td class="px-3 py-2 text-xs text-slate-500">{{ m.id }}</td>
+                <td class="px-3 py-2">
+                  @if (editingId() === m.id) {
+                    <input class="form-control form-control-sm" [ngModel]="editName()" (ngModelChange)="editName.set($event)" name="editName-{{m.id}}" autocomplete="off">
+                  } @else { <span class="font-semibold">{{ m.formaPago }}</span> }
+                </td>
+                <td class="px-3 py-2">
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-medium" [class.bg-green-100]="m.estado===1" [class.text-green-700]="m.estado===1" [class.bg-slate-200]="m.estado!==1" [class.text-slate-600]="m.estado!==1">{{ m.estado === 1 ? 'Activo' : 'Inactivo' }}</span>
+                </td>
+                <td class="px-3 py-2">
+                  @if (editingId() === m.id) {
+                    <div class="flex flex-wrap gap-2">
+                      <button class="btn btn-success btn-sm" (click)="saveEdit(m)" [disabled]="savingRowId() === m.id || !editName().trim()">@if (savingRowId() === m.id) { <span class="spinner-border spinner-border-sm mr-1"></span> } Guardar</button>
+                      <button class="btn btn-light btn-sm" (click)="cancelEdit()" [disabled]="savingRowId() === m.id">Cancelar</button>
+                    </div>
+                  } @else {
+                    <div class="flex flex-wrap gap-2">
+                      <button class="btn btn-outline-primary btn-sm" (click)="startEdit(m)" [disabled]="deletingRowId() === m.id"><i class="bi bi-pencil"></i><span class="ml-1"></span></button>
+                      <button class="btn btn-outline-danger btn-sm" (click)="openConfirm(m)" [disabled]="deletingRowId() === m.id"><i class="bi bi-trash"></i><span class="ml-1"></span></button>
+                    </div>
+                  }
+                </td>
               </tr>
-            } @else {
-              @for (m of mops(); track m.id) {
-                <tr class="mop-row">
-                  <td class="text-secondary">{{ m.id }}</td>
-
-                  <!-- Nombre editable -->
-                  <td>
-                    @if (editingId() === m.id) {
-                      <input class="form-control form-control-sm"
-                             [ngModel]="editName()"
-                             (ngModelChange)="editName.set($event)"
-                             name="editName-{{m.id}}"
-                             autocomplete="off">
-                    } @else {
-                      <span class="fw-semibold">{{ m.formaPago }}</span>
-                    }
-                  </td>
-
-                  <!-- Estado -->
-                  <td>
-                    <span class="badge" [class]="badgeFor(m)">
-                      {{ m.estado === 1 ? 'Activo' : 'Inactivo' }}
-                    </span>
-                  </td>
-
-                  <!-- Acciones -->
-                  <td>
-                    @if (editingId() === m.id) {
-                      <div class="btn-group btn-group-sm">
-                        <button class="btn btn-success"
-                                (click)="saveEdit(m)"
-                                [disabled]="savingRowId() === m.id || !editName().trim()">
-                          @if (savingRowId() === m.id) {
-                            <span class="spinner-border spinner-border-sm me-1"></span>
-                          }
-                          Guardar
-                        </button>
-                        <button class="btn btn-light" (click)="cancelEdit()" [disabled]="savingRowId() === m.id">
-                          Cancelar
-                        </button>
-                      </div>
-                    } @else {
-                      <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary"
-                                (click)="startEdit(m)"
-                                [disabled]="deletingRowId() === m.id">
-                          <i class="bi bi-pencil"></i> Editar
-                        </button>
-                        <button class="btn btn-outline-danger"
-                                (click)="openConfirm(m)"
-                                [disabled]="deletingRowId() === m.id">
-                          <i class="bi bi-trash"></i> Eliminar
-                        </button>
-                      </div>
-                    }
-                  </td>
-                </tr>
-              }
             }
           }
-          </tbody>
-        </table>
-      </div>
-    </div>
+        }
+      </tbody>
+    </table>
   </div>
 
   <!-- Modal Confirmación -->
-  <div class="modal fade"
-       tabindex="-1"
-       [class.show]="confirmOpen()"
-       [style.display]="confirmOpen() ? 'block' : 'none'"
-       aria-modal="true" role="dialog">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content shadow-lg rounded-4 border-0">
-        <div class="modal-header border-0">
-          <h5 class="modal-title">
-            <i class="bi bi-trash me-2 text-danger"></i>
-            Confirmar eliminación
-          </h5>
-          <button type="button" class="btn-close" aria-label="Close" (click)="closeConfirm()"></button>
+  @if (confirmOpen()) {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center">
+    <div class="fixed inset-0 bg-black/40 z-[55]" (click)="closeConfirm()"></div>
+    <div class="relative w-full max-w-md mx-auto z-[65]">
+      <div class="bg-white rounded-2xl shadow-card p-5 border border-slate-200/70">
+        <div class="flex items-start justify-between mb-3">
+          <h5 class="font-semibold flex items-center gap-2 text-red-600 m-0"><i class="bi bi-trash"></i><span>Confirmar eliminación</span></h5>
+          <button type="button" class="btn btn-close" aria-label="Cerrar" (click)="closeConfirm()"></button>
         </div>
-
-        <div class="modal-body">
-          @if (mopToDelete()) {
-            <p class="mb-1">
-              ¿Eliminar el método de pago
-              <span class="fw-semibold">{{ mopToDelete()?.formaPago }}</span>
-              (ID {{ mopToDelete()?.id }})?
-            </p>
-            <p class="small text-secondary mb-0">Esta acción no se puede deshacer.</p>
-          } @else {
-            <p>¿Seguro que deseas eliminar este método de pago?</p>
-          }
+        <div class="space-y-2 text-sm">
+          @if (mopToDelete(); as mop) { <p class="m-0">¿Eliminar el método de pago <span class="font-semibold">{{ mop.formaPago }}</span> (ID {{ mop.id }})?</p><p class="m-0 text-slate-500 text-xs">Esta acción no se puede deshacer.</p> } @else { <p class="m-0">¿Seguro que deseas eliminar este método de pago?</p> }
         </div>
-
-        <div class="modal-footer border-0">
-          <button type="button" class="btn btn-light" (click)="closeConfirm()" [disabled]="deletingRowId() !== null">Cancelar</button>
-          <button type="button" class="btn btn-danger" (click)="confirmDelete()" [disabled]="deletingRowId() !== null">
-            @if (deletingRowId() !== null) { <span class="spinner-border spinner-border-sm me-2"></span> }
-            Eliminar
-          </button>
+        <div class="flex justify-end gap-2 mt-5">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeConfirm()" [disabled]="deletingRowId() !== null">Cancelar</button>
+          <button type="button" class="btn btn-danger" (click)="confirmDelete()" [disabled]="deletingRowId() !== null">@if (deletingRowId() !== null) { <span class="spinner-border spinner-border-sm mr-2"></span> } Eliminar</button>
         </div>
       </div>
     </div>
   </div>
-  <div class="modal-backdrop fade" [class.show]="confirmOpen()" *ngIf="confirmOpen()"></div>
-
+  }
 </div>

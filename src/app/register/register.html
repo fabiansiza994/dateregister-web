@@ -1,107 +1,109 @@
-<div class="container py-4">
+<div class="max-w-5xl mx-auto px-4 py-6">
   <!-- Encabezado -->
-  <div class="text-center mb-4"><br>
-    <h2 class="fw-bold">Crear cuenta</h2>
-    <p class="text-secondary mb-0">Completa los pasos y estarás listo para usar DataRegister</p>
+  <div class="text-center mb-6">
+    <h2 class="text-2xl font-bold text-gray-900">Crear cuenta</h2>
+    <p class="text-gray-600">Completa los pasos y estarás listo para usar DataRegister</p>
   </div>
 
   <!-- Progreso -->
-  <div class="mb-4">
-    <div class="d-flex justify-content-between small fw-semibold mb-1">
-      <span [class.text-primary]="step===1">1. Datos personales</span>
-      <span [class.text-primary]="step===2">2. Empresa</span>
-      <span [class.text-primary]="step===3">3. Grupo & Confirmación</span>
+  <div class="mb-6">
+    <div class="flex justify-between text-xs font-semibold text-gray-600 mb-2">
+      <span [class.text-primary-600]="step===1">1. Datos personales</span>
+      <span [class.text-primary-600]="step===2">2. Empresa</span>
+      <span [class.text-primary-600]="step===3">3. Grupo & Confirmación</span>
     </div>
-    <div class="progress" style="height: 8px;">
-      <div class="progress-bar" role="progressbar" [style.width.%]="step===1 ? 33 : step===2 ? 66 : 100"
-        aria-valuemin="0" aria-valuemax="100"></div>
+    <div class="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+      <div class="h-full bg-primary-600 transition-all" [style.width.%]="step===1 ? 33 : step===2 ? 66 : 100"></div>
     </div>
   </div>
 
   <!-- Mensajes globales -->
   @if (error()) {
-  <div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
-    <span class="fw-bold mt-1">⚠️</span>
+  <div class="mb-4 p-3 rounded-lg border-l-4 border-red-500 bg-red-50 text-red-700 flex gap-2" role="alert">
+    <span class="font-bold mt-0.5">⚠️</span>
     <div>{{ error() }}</div>
   </div>
   }
   @if (successMessage()) {
-  <div class="alert alert-success d-flex align-items-start gap-2" role="alert">
-    <span class="fw-bold mt-1">✅</span>
+  <div class="mb-4 p-3 rounded-lg border-l-4 border-green-500 bg-green-50 text-green-700 flex gap-2" role="alert">
+    <span class="font-bold mt-0.5">✅</span>
     <div>{{ successMessage() }}</div>
   </div>
   }
 
   <!-- CARD -->
-  <div class="card shadow-sm border-0 rounded-4">
-    <div class="card-body p-4">
+  <div class="bg-white shadow-sm rounded-xl border border-gray-200">
+    <div class="p-5">
 
       <!-- PASO 1: Datos personales -->
       @if (step === 1) {
       <div>
-        <h4 class="fw-semibold mb-3">1) Datos personales</h4>
-        <p class="text-secondary small mb-4">
+        <h4 class="text-lg font-semibold text-gray-900 mb-2">1) Datos personales</h4>
+        <p class="text-gray-600 text-sm mb-4">
           ¡Estás a un paso de comenzar! 💪 Completa tus datos para personalizar tu experiencia.
         </p>
 
-        <div class="row g-3">
-          <div class="col-md-6">
-            <label class="form-label">Usuario</label>
-            <input style="border-style: dashed;" type="text" class="form-control" placeholder="nick01"
-              [(ngModel)]="model.usuario" (ngModelChange)="onUsuarioInput()" readonly="true">
-            <div class="form-text">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Usuario</label>
+            <input type="text" class="mt-1 block w-full rounded-md border border-dashed border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-gray-50"
+              placeholder="nick01" [(ngModel)]="model.usuario" (ngModelChange)="onUsuarioInput()" readonly>
+            <div class="text-gray-500 text-xs mt-1">
               Sugerido automáticamente a partir de tu nombre y apellido.
             </div>
 
             @if(invalidUsername){
-            <div class="text-warning small mt-1">
+            <div class="text-amber-600 text-xs mt-1">
               El usuario solo debe contener letras, números y puntos.
             </div>
             }
           </div>
 
-          <div class="col-md-6">
-            <label class="form-label">Email</label>
-            <input type="email" class="form-control" placeholder="usuario@gmail.com" [(ngModel)]="model.email">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Email</label>
+            <input type="email" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              placeholder="usuario@gmail.com" [(ngModel)]="model.email">
           </div>
 
-          <div class="col-md-6">
-            <label class="form-label">Nombre</label>
-            <input type="text" class="form-control" placeholder="Usuario" [(ngModel)]="model.nombre"
-              (ngModelChange)="updateSuggestedUser()">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Nombre</label>
+            <input type="text" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              placeholder="Usuario" [(ngModel)]="model.nombre" (ngModelChange)="updateSuggestedUser()">
           </div>
 
-          <div class="col-md-6">
-            <label class="form-label">Apellido</label>
-            <input type="text" class="form-control" placeholder="Apellido" [(ngModel)]="model.apellido"
-              (ngModelChange)="updateSuggestedUser()">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Apellido</label>
+            <input type="text" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              placeholder="Apellido" [(ngModel)]="model.apellido" (ngModelChange)="updateSuggestedUser()">
           </div>
 
-          <div class="col-md-6">
-            <label class="form-label">Contraseña</label>
-            <input type="password" class="form-control" placeholder="••••••••" [(ngModel)]="model.password">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Contraseña</label>
+            <input type="password" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              placeholder="••••••••" [(ngModel)]="model.password">
           </div>
 
-          <div class="col-md-6">
-            <label class="form-label">Confirmar contraseña</label>
-            <input type="password" class="form-control" placeholder="••••••••" [(ngModel)]="confirmPassword">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Confirmar contraseña</label>
+            <input type="password" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              placeholder="••••••••" [(ngModel)]="confirmPassword">
             @if(model.password && confirmPassword && !passwordsMatch){
-            <div class="text-danger small mt-1">Las contraseñas no coinciden.</div>
+            <div class="text-red-600 text-xs mt-1">Las contraseñas no coinciden.</div>
             }
           </div>
         </div>
 
-        <div class="d-flex justify-content-end gap-2 mt-4">
-          <button class="btn btn-light" (click)="volver()">
+        <div class="flex justify-end gap-2 mt-5">
+          <button class="px-4 py-2 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50" (click)="volver()">
             Cancelar
           </button>
-          <button class="btn btn-primary" [disabled]="!isStep1Valid() || loading()" (click)="goToStep(2)">
+          <button class="px-4 py-2 rounded-md bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50" [disabled]="!isStep1Valid() || loading()" (click)="goToStep(2)">
             Siguiente
           </button>
         </div>
 
         @if(isStep1Valid()) {
-        <div class="alert alert-success mt-3 py-2 small" role="alert">
+        <div class="mt-3 p-2 text-sm rounded-md border-l-4 border-green-500 bg-green-50 text-green-700" role="alert">
           🎉 ¡Primer logro desbloqueado! Tus datos se ven geniales.
         </div>
         }
@@ -111,37 +113,39 @@
       <!-- PASO 2: Empresa -->
       @if (step === 2) {
       <div>
-        <h4 class="fw-semibold mb-3">2) Empresa</h4>
-        <p class="text-secondary small mb-4">
+        <h4 class="text-lg font-semibold text-gray-900 mb-2">2) Empresa</h4>
+        <p class="text-gray-600 text-sm mb-4">
           ¡Excelente ritmo! 🚀 Dinos sobre tu empresa para configurar tu espacio de trabajo.
         </p>
 
-        <div class="row g-3">
-          <div class="col-md-6">
-            <label class="form-label">Nombre de la empresa</label>
-            <input type="text" class="form-control" placeholder="LuthorCorp" [(ngModel)]="model.empresa.nombre">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Nombre de la empresa</label>
+            <input type="text" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              placeholder="LuthorCorp" [(ngModel)]="model.empresa.nombre">
           </div>
-          <div class="col-md-6">
-            <label class="form-label">NIT</label>
-            <input type="text" class="form-control" placeholder="000-1" [(ngModel)]="model.empresa.nit">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">NIT</label>
+            <input type="text" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              placeholder="000-1" [(ngModel)]="model.empresa.nit">
           </div>
 
           <!-- País -->
-          <div class="col-md-6">
-            <label class="form-label">País</label>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">País</label>
 
             @if (loadingPaises()) {
-            <div class="form-text">Cargando países…</div>
+            <div class="text-xs text-gray-500">Cargando países…</div>
             }
 
             @if (errorPaises()) {
-            <div class="alert alert-warning py-2 small mt-1" role="alert">
+            <div class="mt-1 p-2 text-xs rounded-md border-l-4 border-amber-500 bg-amber-50 text-amber-800" role="alert">
               {{ errorPaises() }}
             </div>
             }
 
-            <select class="form-select" [(ngModel)]="model.empresa.pais.id"
-              [disabled]="loadingPaises() || !!errorPaises()">
+            <select class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              [(ngModel)]="model.empresa.pais.id" [disabled]="loadingPaises() || !!errorPaises()">
               <option [ngValue]="null" disabled>Selecciona un país</option>
               <option *ngFor="let p of paises" [ngValue]="p.id">
                 {{ p.nombre }} ({{ p.codigoPais }})
@@ -150,21 +154,21 @@
           </div>
 
           <!-- Sector -->
-          <div class="col-md-6">
-            <label class="form-label">Sector</label>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Sector</label>
 
             @if (loadingSectores()) {
-            <div class="form-text">Cargando sectores…</div>
+            <div class="text-xs text-gray-500">Cargando sectores…</div>
             }
 
             @if (errorSectores()) {
-            <div class="alert alert-warning py-2 small mt-1" role="alert">
+            <div class="mt-1 p-2 text-xs rounded-md border-l-4 border-amber-500 bg-amber-50 text-amber-800" role="alert">
               {{ errorSectores() }}
             </div>
             }
 
-            <select class="form-select" [(ngModel)]="model.empresa.sector.id"
-              [disabled]="loadingSectores() || !!errorSectores()">
+            <select class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              [(ngModel)]="model.empresa.sector.id" [disabled]="loadingSectores() || !!errorSectores()">
               <option [ngValue]="null" disabled>Selecciona un sector</option>
               <option *ngFor="let s of sectores" [ngValue]="s.id">
                 {{ s.nombre }}
@@ -174,12 +178,12 @@
             <!-- Mensaje contextual según el sector -->
             <div class="mt-2">
               @if (sectorNombreSel === 'SALUD') {
-              <div class="alert alert-info py-2 small mb-0">
+              <div class="p-2 text-xs rounded-md border-l-4 border-blue-500 bg-blue-50 text-blue-800">
                 Elegiste <strong>SALUD</strong>: además del registro de trabajos y clientes, tendrás el módulo de
                 <strong>pacientes</strong> para gestionar historiales y atenciones.
               </div>
               } @else if (sectorNombreSel === 'GENERAL') {
-              <div class="alert alert-secondary py-2 small mb-0">
+              <div class="p-2 text-xs rounded-md border-l-4 border-gray-400 bg-gray-50 text-gray-700">
                 Elegiste <strong>GENERAL</strong>: gestiona tus trabajos de forma profesional, registra
                 <strong>trabajos, clientes y reportes</strong>.
               </div>
@@ -188,14 +192,13 @@
           </div>
         </div>
 
-        <div class="d-flex justify-content-between gap-2 mt-4">
-          <button class="btn btn-outline-secondary" (click)="goToStep(1)" [disabled]="loading()">Atrás</button>
-          <button class="btn btn-primary" (click)="goToStep(3)"
-            [disabled]="!isStep2Valid() || loading()">Siguiente</button>
+        <div class="flex justify-between gap-2 mt-5">
+          <button class="px-4 py-2 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50" (click)="goToStep(1)" [disabled]="loading()">Atrás</button>
+          <button class="px-4 py-2 rounded-md bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50" (click)="goToStep(3)" [disabled]="!isStep2Valid() || loading()">Siguiente</button>
         </div>
 
         @if(isStep2Valid()) {
-        <div class="alert alert-success mt-3 py-2 small" role="alert">
+        <div class="mt-3 p-2 text-sm rounded-md border-l-4 border-green-500 bg-green-50 text-green-700" role="alert">
           🏅 ¡Segundo logro conseguido! Tu empresa está lista para brillar.
         </div>
         }
@@ -205,61 +208,64 @@
       <!-- PASO 3: Grupo & Confirmación -->
       @if (step === 3) {
       <div>
-        <h4 class="fw-semibold mb-3">3) Grupo & Confirmación</h4>
-        <p class="text-secondary small mb-4">
+        <h4 class="text-lg font-semibold text-gray-900 mb-2">3) Grupo & Confirmación</h4>
+        <p class="text-gray-600 text-sm mb-4">
           ¡Último empujón! 🌟 Crea tu grupo y confirma que todo esté correcto.
         </p>
 
-        <div class="row g-3">
-          <div class="col-md-8">
-            <label class="form-label">Nombre del grupo</label>
-            <input type="text" class="form-control" placeholder="administradores del sistema"
-              [(ngModel)]="model.grupo.nombre">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="md:col-span-2 md:max-w-xl">
+            <label class="block text-sm font-medium text-gray-700">Nombre del grupo</label>
+            <input type="text" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              placeholder="administradores del sistema" [(ngModel)]="model.grupo.nombre">
           </div>
         </div>
 
         <!-- Resumen -->
-        <div class="mt-4">
-          <h6 class="fw-bold mb-2">Resumen</h6>
-          <ul class="list-group small">
-            <li class="list-group-item">
+        <div class="mt-5">
+          <h6 class="text-sm font-bold text-gray-900 mb-2">Resumen</h6>
+          <ul class="text-sm rounded-md border border-gray-200 divide-y divide-gray-200">
+            <li class="px-3 py-2">
               <strong>Usuario:</strong> {{ model.usuario }} — {{ model.nombre }} {{ model.apellido }}
             </li>
-            <li class="list-group-item">
+            <li class="px-3 py-2">
               <strong>Email:</strong> {{ model.email }}
             </li>
-            <li class="list-group-item">
-              <strong>Empresa:</strong> {{ model.empresa?.nombre }} (NIT: {{ model.empresa?.nit }})
+            <li class="px-3 py-2">
+              <strong>Empresa:</strong> {{ model.empresa.nombre }} (NIT: {{ model.empresa.nit }})
             </li>
-            <li class="list-group-item">
-              <strong>País:</strong> {{ viewPais(model.empresa.pais?.id ?? null) }} —
-              <strong>Sector:</strong> {{ viewSector(model.empresa.sector?.id ?? null) }}
+            <li class="px-3 py-2">
+              <strong>País:</strong> {{ viewPais(model.empresa.pais.id) }} —
+              <strong>Sector:</strong> {{ viewSector(model.empresa.sector.id) }}
             </li>
-            <li class="list-group-item">
+            <li class="px-3 py-2">
               <strong>Grupo:</strong> {{ model.grupo.nombre }}
             </li>
           </ul>
         </div>
 
-        <div class="form-check mt-3">
-          <input class="form-check-input" type="checkbox" id="terms" [(ngModel)]="acceptedTerms">
-          <label class="form-check-label small" for="terms">
+        <div class="mt-3 flex items-start gap-2">
+          <input id="terms" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" [(ngModel)]="acceptedTerms">
+          <label class="text-xs text-gray-700" for="terms">
             Acepto los términos y condiciones y la política de privacidad.
           </label>
         </div>
 
-        <div class="d-flex justify-content-between gap-2 mt-4">
-          <button class="btn btn-outline-secondary" (click)="goToStep(2)" [disabled]="loading()">Atrás</button>
-          <button class="btn btn-success" [disabled]="!isStep3Valid() || loading()" (click)="submit()">
+        <div class="flex justify-between gap-2 mt-5">
+          <button class="px-4 py-2 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50" (click)="goToStep(2)" [disabled]="loading()">Atrás</button>
+          <button class="px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 flex items-center gap-2" [disabled]="!isStep3Valid() || loading()" (click)="submit()">
             @if(loading()) {
-            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
             }
             Crear cuenta
           </button>
         </div>
 
         @if(isStep3Valid()) {
-        <div class="alert alert-success mt-3 py-2 small" role="alert">
+        <div class="mt-3 p-2 text-sm rounded-md border-l-4 border-green-500 bg-green-50 text-green-700" role="alert">
           🥳 ¡Lo lograste! Tu cuenta está lista para ser creada.
         </div>
         }

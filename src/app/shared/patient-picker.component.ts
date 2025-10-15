@@ -186,6 +186,8 @@ export class PatientPickerComponent {
   qCliente = '';
   loadingClientes = signal(false);
   clientes = signal<ClienteLite[]>([]);
+  clienteModalOpen = signal(false);
+  selectedCliente = signal<ClienteLite | null>(null);
 
   async buscarClientes() {
     if (!this.apiBase) return;
@@ -206,6 +208,22 @@ export class PatientPickerComponent {
     } finally {
       this.loadingClientes.set(false);
     }
+  }
+
+  openClientSelector() {
+    this.clienteModalOpen.set(true);
+    // Cargar clientes iniciales si hay un término, o vacía para listar por nombre
+    queueMicrotask(() => this.buscarClientes());
+  }
+
+  closeClientSelector() {
+    this.clienteModalOpen.set(false);
+  }
+
+  chooseCliente(c: ClienteLite) {
+    this.selectedCliente.set(c);
+    this.createForm.clienteId = c.id;
+    this.closeClientSelector();
   }
 
   async createPatient() {

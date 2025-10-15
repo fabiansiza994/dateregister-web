@@ -1,106 +1,20 @@
-/* Links navbar */
-.navbar .nav-link {
-  opacity: .9;
-  transition: opacity .2s ease;
-}
-.navbar .nav-link.active,
-.navbar .nav-link:hover,
-.navbar .dropdown-item:hover {
-  opacity: 1;
-}
+/* Navbar (menu) minimal custom styles (evitando @apply en CSS componente) */
+.nav-btn { display:inline-flex;align-items:center;gap:.25rem;padding:.5rem .75rem;border-radius:.5rem;font-size:.875rem;font-weight:500;color:rgba(255,255,255,.9);transition:.15s background-color; }
+.nav-btn:hover,.nav-btn.active{background-color:rgba(255,255,255,.15);color:#fff;}
+.abs-dropdown { position:absolute;z-index:40;background:#fff;color:#334155;border:1px solid rgba(100,116,139,.4);border-radius:.75rem;box-shadow:0 10px 30px rgba(16,24,40,.25);padding:.5rem;animation:fade .15s ease-in-out; }
+.dd-item { display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;font-size:.875rem;font-weight:500;border-radius:.5rem;transition:.15s background-color,color; }
+.dd-item i { opacity:.7;transition:.15s opacity; }
+.dd-item:hover { background:#f1f5f9;color:#0f172a; }
+.dd-item:hover i { opacity:1; }
+.mob-link { display:inline-flex;align-items:center;justify-content:center;gap:.25rem;border-radius:.5rem;background:rgba(255,255,255,.10);font-size:.75rem;font-weight:500;color:rgba(255,255,255,.9);padding:.5rem .5rem;transition:.15s background-color,color; }
+.mob-link:hover { background:rgba(255,255,255,.20);color:#fff; }
+.mob-link.active { background:rgba(255,255,255,.25);color:#fff; }
+@keyframes fade { from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:translateY(0);} }
+.animate-fade { animation:fade .15s ease-in-out; }
 
-/* Avatar genérico (base) */
-.brand-avatar,
-.user-avatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  line-height: 1;
-  border-radius: 50%;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-}
-
-/* Avatar empresa */
-.brand-avatar {
-  width: 32px;
-  height: 32px;
-  background: rgba(255, 255, 255, .25);
-  color: #fff;
-}
-
-/* Manejo de nombres largos en marca */
-.navbar .navbar-brand.min-w-0 { min-width: 0; }
-.navbar .brand-text { min-width: 0; max-width: 58vw; }
-.navbar .brand-name { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-@media (min-width: 992px) { /* lg+ puede mostrar más ancho */
-  .navbar .brand-text { max-width: 40vw; }
-}
-
-/* Dos líneas en móvil */
-@media (max-width: 575.98px) {
-  .navbar .brand-text { max-width: 68vw; }
-  .navbar .brand-name-line1 { 
-    font-size: 1rem; 
-    line-height: 1.1;
-    display: -webkit-box;
-    line-clamp: 1;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .navbar .brand-name-line2 { 
-    font-size: .85rem; 
-    opacity: .9; 
-    line-height: 1.1;
-    display: -webkit-box;
-    line-clamp: 1;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-top: .1rem;
-  }
-}
-
-/* Avatar usuario */
-.user-avatar {
-  width: 28px;
-  height: 28px;
-  background: #fff;
-  color: #0d6efd; /* azul bootstrap */
-  border: 2px solid rgba(255, 255, 255, .4);
-}
-
-/* Botón dropdown usuario */
-.navbar .nav-link.dropdown-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-/* Botón tipo “subtle” */
-.btn.btn-primary-subtle {
-  background: rgba(255, 255, 255, .15);
-  backdrop-filter: saturate(140%) blur(2px);
-  color: #fff;
-}
-
-/* Menús desplegables */
-.navbar .dropdown-menu {
-  border-radius: 12px;
-  padding: .5rem;
-  animation: fadeIn .15s ease-in-out;
-}
-.dropdown-item {
-  border-radius: .5rem;
-}
-
-/* Animación sutil */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+/* Two-line clamp for long company names */
+.truncate-2-lines { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+/* Brand two-line tweaks */
+.brand-lines span:first-child { margin-bottom:1px; }
+.brand-lines { overflow:hidden; }
+.brand-lines:hover span { text-overflow:clip; }

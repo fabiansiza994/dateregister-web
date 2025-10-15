@@ -54,6 +54,7 @@ interface ChangePasswordRequest {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './perfil.html',
+  styleUrls: ['./perfil.css']
 })
 export class PerfilComponent implements OnInit {
   // ===== Claims
@@ -91,6 +92,11 @@ export class PerfilComponent implements OnInit {
   // ===== Derivados
   initials = computed(() =>
     this.mkInitials(this.me()?.nombre, this.me()?.apellido, this.usernameClaim())
+  );
+
+  // Fondo del avatar (gradiente determinístico basado en el nombre)
+  avatarBg = computed(() =>
+    this.mkAvatarGradient(this.me()?.nombre, this.me()?.apellido, this.usernameClaim())
   );
 
   private apiBase = '';
@@ -240,5 +246,22 @@ export class PerfilComponent implements OnInit {
     const f = (fallback || '').trim();
     if (f) return f.slice(0, 2).toUpperCase();
     return 'U';
+  }
+
+  private mkAvatarGradient(nombre?: string, apellido?: string, fallback?: string) {
+    const base = `${(nombre || '').trim()}|${(apellido || '').trim()}|${(fallback || '').trim()}`.trim() || 'user';
+    const h = this.hashString(base) % 360;
+    const h2 = (h + 34) % 360;
+    // Saturaciones/luces pensadas para buen contraste con texto blanco
+    return `linear-gradient(135deg, hsl(${h}, 82%, 45%) 0%, hsl(${h2}, 82%, 58%) 100%)`;
+  }
+
+  private hashString(s: string) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) {
+      h = (h << 5) - h + s.charCodeAt(i);
+      h |= 0; // 32-bit
+    }
+    return Math.abs(h);
   }
 }

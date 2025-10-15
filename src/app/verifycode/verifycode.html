@@ -1,52 +1,53 @@
-<div class="container py-4">
-
-  <div class="d-flex justify-content-between align-items-center mb-3">
+<div class="mx-auto max-w-3xl px-4 py-6">
+  <div class="flex items-start justify-between mb-6">
     <div>
-      <h3 class="fw-semibold mb-0">Activar cuenta</h3>
-      <small class="text-secondary">Valida el código enviado a tu correo</small>
+      <h3 class="text-xl font-semibold leading-tight m-0">Activar cuenta</h3>
+      <small class="block text-slate-500 mt-1">Valida el código enviado a tu correo</small>
     </div>
-    <a routerLink="/login" class="btn btn-link text-decoration-none">&larr; Volver al login</a>
+    <a routerLink="/login" class="inline-flex items-center text-sm font-medium text-primary hover:underline">&larr; Volver al login</a>
   </div>
 
   @if (error()) {
-    <div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
-      <i class="bi bi-exclamation-triangle mt-1"></i>
-      <div class="flex-grow-1">{{ error() }}</div>
-      <button type="button" class="btn-close ms-auto" (click)="error.set(null)"></button>
+    <div class="rounded-lg border border-red-300 bg-red-50 text-red-700 px-4 py-3 text-sm flex items-start gap-3 mb-4" role="alert">
+      <span class="mt-0.5 text-red-600">⚠️</span>
+      <div class="flex-1">{{ error() }}</div>
+      <button type="button" class="inline-flex items-center justify-center w-6 h-6 rounded-full text-red-600 hover:bg-red-200/50 transition" (click)="error.set(null)" aria-label="Cerrar">✕</button>
     </div>
   }
 
   @if (info()) {
-    <div class="alert alert-success d-flex align-items-start gap-2" role="alert">
-      <i class="bi bi-check2-circle mt-1"></i>
-      <div class="flex-grow-1">{{ info() }}</div>
-      <button type="button" class="btn-close ms-auto" (click)="info.set(null)"></button>
+    <div class="rounded-lg border border-green-300 bg-green-50 text-green-700 px-4 py-3 text-sm flex items-start gap-3 mb-4" role="alert">
+      <span class="mt-0.5 text-green-600">✅</span>
+      <div class="flex-1">{{ info() }}</div>
+      <button type="button" class="inline-flex items-center justify-center w-6 h-6 rounded-full text-green-600 hover:bg-green-200/50 transition" (click)="info.set(null)" aria-label="Cerrar">✕</button>
     </div>
   }
 
-  <form class="card border-0 shadow-sm rounded-4" (submit)="$event.preventDefault(); verify()">
-    <div class="card-body">
-      <div class="mb-2 small text-secondary">
-        Usuario ID: <span class="text-monospace">{{ userId || '—' }}</span>
+  <form (submit)="$event.preventDefault(); verify()" class="bg-white rounded-2xl shadow-card border border-slate-200/70">
+    <div class="p-6">
+      <div class="mb-3 text-xs text-slate-500">
+        <span class="font-medium">Usuario ID:</span>
+        <span class="font-mono text-slate-700">{{ userId || '—' }}</span>
       </div>
 
-      <div class="row g-3 align-items-end">
-        <div class="col-md-6">
-          <label class="form-label">Código de verificación</label>
+      <div class="grid grid-cols-12 gap-5 items-end">
+        <div class="col-span-12 md:col-span-7">
+          <label class="block text-sm font-medium mb-1">Código de verificación</label>
           <input
-            class="form-control"
+            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
             placeholder="Ingresa el código (ej. 123456)"
             [(ngModel)]="code"
             name="code"
             autocomplete="one-time-code"
             [disabled]="loading()"
           >
-          <div class="form-text">Revisa tu correo y copia el código.</div>
+          <div class="mt-1 text-xs text-slate-500">Revisa tu correo y copia el código.</div>
         </div>
-
-        <div class="col-md-3">
-          <button type="submit" class="btn btn-primary w-100" [disabled]="!canSubmit()">
-            @if (loading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+        <div class="col-span-12 md:col-span-4">
+          <button type="submit"
+            class="inline-flex w-full justify-center items-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
+            [disabled]="!canSubmit()">
+            @if (loading()) { <span class="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"></span> }
             Validar
           </button>
         </div>

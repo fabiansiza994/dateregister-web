@@ -1,22 +1,17 @@
-<div class="container py-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-semibold mb-0">Crear paciente</h3>
-    <a routerLink="/pacientes" class="btn btn-link text-decoration-none px-0">&larr; Volver al listado</a>
+<div class="py-4">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-xl font-semibold m-0">Crear paciente</h3>
+    <a routerLink="/pacientes" class="btn btn-link px-0">&larr; Volver al listado</a>
   </div>
 
-  @if (errorGlobal()) {
-    <div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
-      <i class="bi bi-exclamation-triangle mt-1"></i>
-      <div>{{ errorGlobal() }}</div>
-    </div>
-  }
+  @if (errorGlobal()) { <div class="rounded-lg border border-red-300 bg-red-50 text-red-700 px-4 py-3 text-sm flex gap-3 items-start mb-4" role="alert"><i class="bi bi-exclamation-triangle mt-1"></i><div class="font-medium flex-1">{{ errorGlobal() }}</div></div> }
 
-  <form class="card border-0 shadow-sm rounded-4" (submit)="$event.preventDefault(); create()">
-    <div class="card-body">
-      <div class="row g-3">
+  <form class="bg-white rounded-2xl shadow-card border border-slate-200/70" (submit)="$event.preventDefault(); create()">
+    <div class="p-5">
+      <div class="grid gap-4 md:grid-cols-12">
         <!-- Documento -->
-        <div class="col-md-6">
-          <label class="form-label">Documento <span class="text-danger">*</span></label>
+        <div class="md:col-span-6">
+          <label class="text-sm font-medium text-slate-700">Documento <span class="text-red-600">*</span></label>
           <input type="text" class="form-control"
                  [class.is-invalid]="fieldErrors()['documento']"
                  [ngModel]="model().documento"
@@ -28,8 +23,8 @@
         </div>
 
         <!-- Nombre -->
-        <div class="col-md-6">
-          <label class="form-label">Nombre <span class="text-danger">*</span></label>
+        <div class="md:col-span-6">
+          <label class="text-sm font-medium text-slate-700">Nombre <span class="text-red-600">*</span></label>
           <input type="text" class="form-control"
                  [class.is-invalid]="fieldErrors()['nombre']"
                  [ngModel]="model().nombre"
@@ -41,8 +36,8 @@
         </div>
 
         <!-- Apellido -->
-        <div class="col-md-6">
-          <label class="form-label">Apellido</label>
+        <div class="md:col-span-6">
+          <label class="text-sm font-medium text-slate-700">Apellido</label>
           <input type="text" class="form-control"
                  [class.is-invalid]="fieldErrors()['apellido']"
                  [ngModel]="model().apellido"
@@ -54,8 +49,8 @@
         </div>
 
         <!-- Teléfono -->
-        <div class="col-md-6">
-          <label class="form-label">Teléfono</label>
+        <div class="md:col-span-6">
+          <label class="text-sm font-medium text-slate-700">Teléfono</label>
           <input type="text" class="form-control"
                  [class.is-invalid]="fieldErrors()['telefono']"
                  [ngModel]="model().telefono"
@@ -67,8 +62,8 @@
         </div>
 
         <!-- Email -->
-        <div class="col-md-6">
-          <label class="form-label">Email</label>
+        <div class="md:col-span-6">
+          <label class="text-sm font-medium text-slate-700">Email</label>
           <input type="email" class="form-control"
                  [class.is-invalid]="fieldErrors()['email']"
                  [ngModel]="model().email"
@@ -80,8 +75,8 @@
         </div>
 
         <!-- Dirección -->
-        <div class="col-md-6">
-          <label class="form-label">Dirección</label>
+        <div class="md:col-span-6">
+          <label class="text-sm font-medium text-slate-700">Dirección</label>
           <input type="text" class="form-control"
                  [class.is-invalid]="fieldErrors()['direccion']"
                  [ngModel]="model().direccion"
@@ -93,8 +88,8 @@
         </div>
 
         <!-- Buscar cliente -->
-        <div class="col-md-4">
-          <label class="form-label">Buscar cliente</label>
+        <div class="md:col-span-4">
+          <label class="text-sm font-medium text-slate-700">Buscar cliente</label>
           <div class="input-group">
             <input type="text" class="form-control"
                    [(ngModel)]="qCliente" name="qCliente"
@@ -110,8 +105,8 @@
         </div> 
 
         <!-- Seleccionar cliente -->
-        <div class="col-md-4">
-          <label class="form-label">Cliente asociado <span class="text-danger">*</span></label>
+        <div class="md:col-span-4">
+          <label class="text-sm font-medium text-slate-700">Cliente asociado <span class="text-red-600">*</span></label>
           <select class="form-select"
                   name="clienteId"
                   [class.is-invalid]="fieldErrors()['clienteId']"
@@ -127,15 +122,9 @@
           }
         </div>
       </div>
-
-      <div class="d-flex justify-content-end gap-2 mt-4">
+      <div class="flex justify-end gap-2 mt-4">
         <a routerLink="/pacientes" class="btn btn-outline-secondary">Cancelar</a>
-        <button type="submit" class="btn btn-success" [disabled]="loading() || !isValid()">
-          @if (loading()) {
-            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-          }
-          Crear paciente
-        </button>
+        <button type="submit" class="btn btn-success" [disabled]="loading() || !isValid()">@if (loading()) { <span class="spinner-border spinner-border-sm mr-2" role="status"></span> } Crear paciente</button>
       </div>
     </div>
   </form>

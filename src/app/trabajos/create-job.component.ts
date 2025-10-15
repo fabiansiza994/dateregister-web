@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpEventType, HttpHeaders } from '@angular/common/http';
@@ -151,6 +151,11 @@ export class CreateJobComponent implements OnInit {
   previews: Partial<Record<FotoKey, string>> = {};
   existingPhotos: Partial<Record<FotoKey, string>> = {};
   markedForDelete = new Set<FotoKey>();
+  dragging: Partial<Record<FotoKey, boolean>> = {};
+  readingProgress: Partial<Record<FotoKey, number>> = {};
+  private progressIntervals: Partial<Record<FotoKey, number>> = {};
+  private readonly slotOrder: FotoKey[] = ['foto1', 'foto2', 'foto3', 'foto4'];
+  draggingSlot: FotoKey | null = null;
 
   loading = signal(false);
   error = signal<string | null>(null);
@@ -169,6 +174,12 @@ export class CreateJobComponent implements OnInit {
 
   /** Reutiliza la fuente única */
   readonly estadoOptions = ESTADO_OPTIONS;
+
+  // Confirmación de eliminación de evidencia
+  confirmOpen = signal(false);
+  confirmTarget = signal<FotoKey | null>(null);
+  // Confirmación visual para reemplazar (primer click oscurece y muestra botón)
+  replaceTarget = signal<FotoKey | null>(null);
 
   constructor(
     private http: HttpClient,
@@ -246,15 +257,267 @@ export class CreateJobComponent implements OnInit {
   onFileChange(ev: Event, key: FotoKey) {
     const input = ev.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-      this.files[key] = file;
-      const reader = new FileReader();
-      reader.onload = () => (this.previews[key] = reader.result as string);
-      reader.readAsDataURL(file);
+      // Si estamos reemplazando una existente en edición, NO marcar eliminar; el nuevo archivo la sustituirá
+      if (this.isEdit() && this.existingPhotos[key] && this.markedForDelete.has(key)) {
+        this.markedForDelete.delete(key);
+      }
+      this.processFile(input.files[0], key);
+      // Cerrar overlay de reemplazo si estaba activo
+      if (this.replaceTarget() === key) this.replaceTarget.set(null);
     } else {
       delete this.files[key];
       delete this.previews[key];
+      this.clearProgress(key);
     }
+  }
+
+  clearPhoto(key: FotoKey) {
+    delete this.files[key];
+    delete this.previews[key];
+    this.clearProgress(key);
+  }
+
+  private processFile(file: File, key: FotoKey) {
+    // Validaciones básicas
+    const isImage = file.type?.startsWith('image/');
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (!isImage) { this.error.set('El archivo debe ser una imagen.'); return; }
+    if (file.size > maxSize) { this.error.set('La imagen excede 10MB.'); return; }
+
+    // Leer siempre para generar preview y, si aplica, comprimir
+    const reader = new FileReader();
+    // Arrancar barra enseguida para feedback inmediato
+    this.readingProgress[key] = 3;
+    reader.onloadstart = () => { this.readingProgress[key] = 5; };
+    reader.onprogress = (e: ProgressEvent<FileReader>) => {
+      if (e.lengthComputable && e.total > 0) this.readingProgress[key] = Math.min(85, Math.max(10, Math.round((e.loaded / e.total) * 80)));
+      else this.readingProgress[key] = 25;
+    };
+    reader.onerror = () => {
+      this.error.set('No se pudo leer la imagen.');
+      delete this.files[key]; delete this.previews[key];
+      this.clearProgress(key);
+    };
+    reader.onload = async () => {
+      try {
+        const dataUrl = reader.result as string;
+        // Preparar fase de compresión
+        this.readingProgress[key] = Math.max(this.readingProgress[key] || 0, 88);
+        this.startCompressionTicker(key);
+        // Intentar comprimir si es JPEG grande
+        const { outFile, outDataUrl } = await this.compressIfNeeded(file, dataUrl);
+        this.files[key] = outFile;
+        this.previews[key] = outDataUrl;
+      } catch (e) {
+        // Fallback a lo leído
+        this.files[key] = file;
+        this.previews[key] = reader.result as string;
+      } finally {
+        this.stopCompressionTicker(key);
+        this.readingProgress[key] = 100;
+        setTimeout(() => { this.clearProgress(key); }, 400);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  private loadImageFromDataUrl(dataUrl: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = (e) => reject(e);
+      img.src = dataUrl;
+    });
+  }
+
+  private async compressIfNeeded(file: File, dataUrl: string): Promise<{ outFile: File; outDataUrl: string }> {
+    // Solo comprimir JPEG grandes; mantener PNG y otros como están
+    const mime = (file.type || '').toLowerCase();
+    const isJpeg = mime.includes('jpeg') || mime.includes('jpg');
+    if (!isJpeg) return { outFile: file, outDataUrl: dataUrl };
+
+    const img = await this.loadImageFromDataUrl(dataUrl);
+    const maxW = 1920, maxH = 1080;
+    let { width, height } = img;
+    const scale = Math.min(1, Math.min(maxW / width, maxH / height));
+    if (scale >= 1 && file.size <= 1.5 * 1024 * 1024) {
+      // No hace falta comprimir ni redimensionar
+      return { outFile: file, outDataUrl: dataUrl };
+    }
+
+    width = Math.round(width * scale);
+    height = Math.round(height * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = width; canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return { outFile: file, outDataUrl: dataUrl };
+    ctx.drawImage(img, 0, 0, width, height);
+
+    // Indicar progreso de procesado (aprox.)
+    // No es medible exactamente, pero subimos a ~95% antes de convertir
+    // el resto lo completará onloadend
+    // (esto usa la llave de lectura actual, pero como no la conocemos aquí, lo dejamos al caller)
+
+    const quality = 0.82;
+    const outDataUrl = canvas.toDataURL('image/jpeg', quality);
+    const outBlob: Blob = await new Promise(resolve => canvas.toBlob(b => resolve(b || new Blob()), 'image/jpeg', quality));
+    const outFile = new File([outBlob], file.name.replace(/\.(jpe?g|heic|heif)$/i, '') + '-compressed.jpg', { type: 'image/jpeg' });
+    return { outFile, outDataUrl };
+  }
+
+  private startCompressionTicker(key: FotoKey) {
+    this.stopCompressionTicker(key);
+    const id = window.setInterval(() => {
+      const curr = this.readingProgress[key] || 90;
+      // Subimos lentamente hasta 97 para indicar actividad mientras el CPU trabaja
+      this.readingProgress[key] = Math.min(97, curr + 1);
+    }, 120);
+    this.progressIntervals[key] = id as unknown as number;
+  }
+  private stopCompressionTicker(key: FotoKey) {
+    const id = this.progressIntervals[key];
+    if (id !== undefined) {
+      clearInterval(id);
+      delete this.progressIntervals[key];
+    }
+  }
+  private clearProgress(key: FotoKey) {
+    this.stopCompressionTicker(key);
+    delete this.readingProgress[key];
+  }
+
+  onDrop(ev: DragEvent, key: FotoKey) {
+    ev.preventDefault();
+    this.dragging[key] = false;
+    const dt = ev.dataTransfer;
+    if (!dt) return;
+    // Reordenar entre slots si viene del drag interno
+    if (dt.types && Array.from(dt.types).includes('text/x-slot')) {
+      const src = dt.getData('text/x-slot');
+      if (this.isFotoKey(src) && src !== key) {
+        this.swapSlots(src as FotoKey, key);
+        if (dt) dt.dropEffect = 'move';
+      }
+      this.draggingSlot = null;
+      return;
+    }
+    if (dt.files && dt.files.length > 0) {
+      this.assignFiles(dt.files, key);
+    }
+  }
+
+  onDragOver(ev: DragEvent, key: FotoKey) {
+    ev.preventDefault();
+    this.dragging[key] = true;
+  }
+
+  onDragLeave(ev: DragEvent, key: FotoKey) {
+    ev.preventDefault();
+    this.dragging[key] = false;
+  }
+
+  startReorder(ev: DragEvent, key: FotoKey) {
+    if (ev.dataTransfer) {
+      ev.dataTransfer.setData('text/x-slot', key);
+      ev.dataTransfer.effectAllowed = 'move';
+    }
+    this.draggingSlot = key;
+  }
+
+  endReorder() { this.draggingSlot = null; }
+
+  private isFotoKey(x: any): x is FotoKey {
+    return x === 'foto1' || x === 'foto2' || x === 'foto3' || x === 'foto4';
+  }
+
+  private swapSlots(a: FotoKey, b: FotoKey) {
+    const fA = this.files[a];
+    const fB = this.files[b];
+    const pA = this.previews[a];
+    const pB = this.previews[b];
+
+    if (fA) this.files[b] = fA; else delete this.files[b];
+    if (fB) this.files[a] = fB; else delete this.files[a];
+
+    if (pA) this.previews[b] = pA; else delete this.previews[b];
+    if (pB) this.previews[a] = pB; else delete this.previews[a];
+
+    delete this.readingProgress[a];
+    delete this.readingProgress[b];
+  }
+
+  private assignFiles(fileList: FileList | File[], primary: FotoKey) {
+    const arr: File[] = Array.from(fileList as any as File[]);
+    const files: File[] = arr.filter((f: File): f is File => !!f && typeof f.type === 'string' && f.type.startsWith('image/'));
+    if (files.length === 0) return;
+
+    // 1) el primer archivo va al slot primario (reemplaza si había)
+    this.processFile(files[0], primary);
+
+    // 2) los demás van a los slots vacíos en orden
+    const empties = this.slotOrder.filter(k => this.isSlotFree(k) && !this.files[k] && !this.previews[k] && k !== primary);
+    let i = 1;
+    for (const slot of empties) {
+      if (i >= files.length) break;
+      this.processFile(files[i], slot);
+      i++;
+    }
+  }
+
+  // Determina si un slot está disponible para nuevas cargas
+  isSlotFree(key: FotoKey): boolean {
+    if (!this.isEdit()) return true;
+    return !this.existingPhotos[key] || this.markedForDelete.has(key);
+  }
+
+  // Cantidad de slots disponibles actualmente (considera edición y reemplazos)
+  getFreeSlotsCount(): number {
+    return this.slotOrder.filter(k => this.isSlotFree(k) && !this.files[k] && !this.previews[k]).length;
+  }
+
+  // UI acciones existentes
+  openConfirm(key: FotoKey) {
+    this.confirmTarget.set(key);
+    this.confirmOpen.set(true);
+  }
+  cancelConfirm() { this.confirmOpen.set(false); this.confirmTarget.set(null); }
+  confirmDelete() {
+    const k = this.confirmTarget();
+    if (!k) return;
+    this.markedForDelete.add(k);
+    // Liberar visualmente el slot y ocultar la miniatura actual
+    delete this.existingPhotos[k];
+    this.confirmOpen.set(false);
+    this.confirmTarget.set(null);
+  }
+
+  openReplace(key: FotoKey) {
+    // Si hay dropzone visible, usa ese input; si no, usa el input oculto de reemplazo
+    const primaryId = `file-${key}`; // p. ej. file-foto1
+    const replaceId = `replace-${key}`;
+    const el = (document.getElementById(primaryId) || document.getElementById(replaceId)) as HTMLInputElement | null;
+    if (el) el.click();
+    // Oculta la capa armada
+    if (this.replaceTarget() === key) this.replaceTarget.set(null);
+  }
+
+  armReplace(key: FotoKey) { this.replaceTarget.set(key); }
+  cancelReplace() { this.replaceTarget.set(null); }
+
+  // Cerrar overlay con tecla Escape
+  @HostListener('document:keydown.escape', [])
+  onEscClose() { if (this.replaceTarget()) this.cancelReplace(); }
+
+  // Cerrar overlay al hacer click fuera de la tarjeta activa
+  @HostListener('document:click', ['$event'])
+  onDocClick(ev: MouseEvent) {
+    const key = this.replaceTarget();
+    if (!key) return;
+    const el = document.getElementById(`card-${key}`);
+    if (!el) return;
+    const target = ev.target as Node | null;
+    if (target && el.contains(target)) return; // click dentro, no cerrar
+    this.cancelReplace();
   }
 
   toggleDelete(foto: FotoKey) {
@@ -441,7 +704,13 @@ export class CreateJobComponent implements OnInit {
       if (!this.form.id) { this.error.set('ID de trabajo inválido.'); return; }
 
       const fd = new FormData();
-      const payload = { ...this.form, id: this.form.id, deleteFotos: Array.from(this.markedForDelete) };
+      // Flags de eliminación esperadas por el backend (solo si no hay reemplazo en ese slot)
+      const eliminarFoto1 = this.markedForDelete.has('foto1') && !this.files['foto1'];
+      const eliminarFoto2 = this.markedForDelete.has('foto2') && !this.files['foto2'];
+      const eliminarFoto3 = this.markedForDelete.has('foto3') && !this.files['foto3'];
+      const eliminarFoto4 = this.markedForDelete.has('foto4') && !this.files['foto4'];
+
+      const payload = { ...this.form, id: this.form.id, eliminarFoto1, eliminarFoto2, eliminarFoto3, eliminarFoto4 };
       fd.append('payload', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
       (['foto1', 'foto2', 'foto3', 'foto4'] as FotoKey[]).forEach(k => { if (this.files[k]) fd.append(k, this.files[k]!); });
 

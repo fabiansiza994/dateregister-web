@@ -262,9 +262,11 @@ export class MethodOfPaymentComponent implements OnInit, AfterViewInit {
 
   // ===== Helpers de vista
   badgeFor(m: Mop) {
+    // Deprecated: Bootstrap badge classes
+    // New: Tailwind utilities for pill badges
     return m.estado === 1
-      ? 'bg-success-subtle text-success-emphasis'
-      : 'bg-secondary-subtle text-secondary-emphasis';
+      ? 'px-2 py-0.5 rounded-full text-[11px] font-medium bg-green-100 text-green-700'
+      : 'px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-200 text-slate-600';
   }
 
   ngAfterViewInit(): void {
