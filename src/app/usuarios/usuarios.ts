@@ -226,7 +226,7 @@ export class UsuariosComponent implements OnInit {
 
   // Acciones
   verUsuario(u: UsuarioLite) { this.router.navigate(['/usuarios', u.id]) }
-  editarUsuario(u: UsuarioLite) { /* this.router.navigate(['/usuarios', u.id, 'editar']) */ }
+  editarUsuario(u: UsuarioLite) { this.router.navigate(['/usuarios', u.id, 'editar']); }
 
   // Modal
   openConfirm(u: UsuarioLite) {

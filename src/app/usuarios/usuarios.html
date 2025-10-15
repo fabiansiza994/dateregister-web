@@ -115,7 +115,7 @@
         <td class="px-3 py-2">
           <div class="flex flex-wrap gap-2">
             <button class="btn btn-outline-info btn-sm" (click)="verUsuario(u)"><i class="bi bi-eye"></i><span class="ml-1"></span></button>
-            <!-- <button class="btn btn-outline-primary btn-sm" (click)="editarUsuario(u)" [disabled]="isSelf(u)" *ngIf="!isSelf(u)"><i class="bi bi-pencil"></i><span class="ml-1"></span></button> -->
+             <button class="btn btn-outline-primary btn-sm" (click)="editarUsuario(u)" [disabled]="isSelf(u)" *ngIf="!isSelf(u)"><i class="bi bi-pencil"></i><span class="ml-1"></span></button>
             <button class="btn btn-outline-danger btn-sm" (click)="openConfirm(u)" [disabled]="loading()" *ngIf="!isSelf(u)"><i class="bi bi-trash"></i><span class="ml-1"></span></button>
           </div>
         </td>

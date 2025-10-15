@@ -33,6 +33,12 @@ export class Menu {
   mobileOpen = signal(false);
   adminOpen  = signal(false);
   userOpen   = signal(false);
+  canInstall = signal(false);
+  private deferredPrompt: any = null;
+  // iOS A2HS tip (Safari no soporta beforeinstallprompt)
+  isIOS = signal(false);
+  isStandalone = signal(false);
+  showIOSTip = signal(false);
 
   toggleMobile() { this.mobileOpen.update(v => !v); }
   toggleAdmin()  {
@@ -57,12 +63,56 @@ export class Menu {
   constructor(private router: Router, private auth: AuthService) {
     this.auth.refreshFromStorage();
     this._claims.set(this.auth.claims());
+
+    // Captura del evento para ofrecer instalación (PWA Add to Home Screen)
+    window.addEventListener('beforeinstallprompt', (e: any) => {
+      e.preventDefault();
+      this.deferredPrompt = e;
+      this.canInstall.set(true);
+    });
+
+    window.addEventListener('appinstalled', () => {
+      this.canInstall.set(false);
+      this.deferredPrompt = null;
+      this.showIOSTip.set(false);
+    });
+
+    // Detectar iOS (incluye iPadOS) y modo standalone
+    try {
+      const ua = navigator.userAgent || (navigator as any).vendor || '';
+      const isIOSDevice = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && (navigator as any).maxTouchPoints > 1);
+      const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (navigator as any).standalone === true;
+      this.isIOS.set(!!isIOSDevice);
+      this.isStandalone.set(!!isStandalone);
+
+      // Mostrar tip en iOS Safari si no está instalada y no fue ocultado recientemente
+      const dismissedAt = Number(localStorage.getItem('iosInstallTipDismissed') || '0');
+      const recentlyDismissed = Date.now() - dismissedAt < 14 * 24 * 60 * 60 * 1000; // 14 días
+      if (isIOSDevice && !isStandalone && !recentlyDismissed) {
+        this.showIOSTip.set(true);
+      }
+    } catch {}
   }
 
   logout() {
     localStorage.removeItem('token');
     this.router.navigate(['/login']);
     this.closeAll();
+  }
+
+  async installPWA() {
+    if (!this.deferredPrompt) return;
+    this.deferredPrompt.prompt();
+    const { outcome } = await this.deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      this.canInstall.set(false);
+      this.deferredPrompt = null;
+    }
+  }
+
+  dismissIOSTip() {
+    this.showIOSTip.set(false);
+    try { localStorage.setItem('iosInstallTipDismissed', String(Date.now())); } catch {}
   }
 
   // Cerrar dropdowns al hacer clic fuera

@@ -43,6 +43,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./usuarios/usuario-detalle.component').then(m => m.UsuarioDetalleComponent),
       },
+      {
+        path: 'usuarios/:id/editar',
+        loadComponent: () =>
+          import('./usuarios/usuario-editar.component').then(m => m.UsuarioEditarComponent),
+      },
       { path: 'formas-pago', loadComponent: () => import('./method-of-payment/method-of-payment').then(m => m.MethodOfPaymentComponent) },
       { path: 'grupos', loadComponent: () => import('./grupos/grupos').then(m => m.GruposComponent) },
       { path: 'reportes', loadComponent: () => import('./reportes-component/reportes-component').then(m => m.ReportesComponent) },

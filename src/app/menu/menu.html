@@ -1,5 +1,14 @@
 <nav class="sticky-top bg-primary text-white shadow-sm">
   <div class="mx-auto max-w-7xl px-4">
+    @if (showIOSTip()) {
+      <div class="text-[12px] bg-white/15 backdrop-blur rounded-b-xl px-3 py-2 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="bi bi-info-circle"></i>
+          <span>Añade esta app a tu pantalla de inicio: comparte <i class="bi bi-share"></i> → “Añadir a pantalla de inicio”.</span>
+        </div>
+        <button type="button" class="btn btn-close btn-close-white" (click)="dismissIOSTip()"></button>
+      </div>
+    }
     <div class="flex items-center gap-4 h-14">
       <!-- Marca -->
       <a routerLink="/modules" (click)="closeAll()" class="flex items-center gap-2 font-semibold min-w-0">
@@ -58,6 +67,13 @@
 
       <!-- Usuario (desktop) -->
       <div class="hidden sm:flex items-center ml-auto relative" #userDropdown>
+        @if (canInstall()) {
+          <button type="button" class="mr-2 inline-flex items-center gap-2 px-2 py-1.5 rounded-md bg-white/15 hover:bg-white/25 transition text-sm font-medium"
+                  (click)="installPWA()" title="Instalar aplicación">
+            <i class="bi bi-download"></i>
+            <span class="hidden md:inline">Instalar app</span>
+          </button>
+        }
         <button type="button" data-dd-toggle (click)="toggleUser()" [attr.aria-expanded]="userOpen()" class="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-white/15 transition text-sm font-medium">
           <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white text-primary font-bold text-[10px] uppercase border border-white/30">{{ initials(userName()) }}</span>
           <span class="hidden md:inline truncate max-w-[140px]" [attr.title]="userName()">{{ userName() }}</span>
@@ -78,6 +94,7 @@
     @if (mobileOpen()) {
       <div id="mainMenu" class="sm:hidden border-t border-white/25 pt-3 pb-4 space-y-2">
         <div class="grid grid-cols-2 gap-2 text-sm">
+          @if (canInstall()) {<button type="button" (click)="installPWA()" class="mob-link col-span-2"><i class="bi bi-download mr-1"></i>Instalar app</button>}
           <a routerLink="/clientes" routerLinkActive="active" class="mob-link" (click)="closeAll()">Clientes</a>
           <a routerLink="/trabajos" routerLinkActive="active" class="mob-link" (click)="closeAll()">Trabajos</a>
           <a routerLink="/reportes" routerLinkActive="active" class="mob-link" (click)="closeAll()">Reportes</a>
