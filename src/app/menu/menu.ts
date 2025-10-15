@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, signal, ElementRef, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../core/auth.service';
@@ -11,6 +11,9 @@ import { AuthService } from '../core/auth.service';
   styleUrls: ['./menu.css']
 })
 export class Menu {
+  // Template refs para detectar clic fuera
+  @ViewChild('adminDropdown', { static: false }) adminRef?: ElementRef<HTMLElement>;
+  @ViewChild('userDropdown', { static: false }) userRef?: ElementRef<HTMLElement>;
   private readonly _claims = signal<any | null>(null);
 
   empresa = computed(() => this._claims()?.empresa ?? 'DataRegister');
@@ -32,8 +35,18 @@ export class Menu {
   userOpen   = signal(false);
 
   toggleMobile() { this.mobileOpen.update(v => !v); }
-  toggleAdmin()  { this.adminOpen.update(v => !v); }
-  toggleUser()   { this.userOpen.update(v => !v); }
+  toggleAdmin()  {
+    const next = !this.adminOpen();
+    // Exclusividad: cerrar el otro dropdown
+    this.userOpen.set(false);
+    this.adminOpen.set(next);
+  }
+  toggleUser()   {
+    const next = !this.userOpen();
+    // Exclusividad: cerrar el otro dropdown
+    this.adminOpen.set(false);
+    this.userOpen.set(next);
+  }
 
   closeAll() {
     this.mobileOpen.set(false);
@@ -50,6 +63,34 @@ export class Menu {
     localStorage.removeItem('token');
     this.router.navigate(['/login']);
     this.closeAll();
+  }
+
+  // Cerrar dropdowns al hacer clic fuera
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as Node | null;
+    if (!target) return;
+
+    // Si el clic fue en el propio botón de toggle, no cerrar aquí (lo maneja toggleX)
+    if (target instanceof Element && target.closest('[data-dd-toggle]')) {
+      return;
+    }
+
+    if (this.adminOpen() && this.adminRef && !this.adminRef.nativeElement.contains(target)) {
+      this.adminOpen.set(false);
+    }
+    if (this.userOpen() && this.userRef && !this.userRef.nativeElement.contains(target)) {
+      this.userOpen.set(false);
+    }
+  }
+
+  // Cerrar con Escape
+  @HostListener('document:keydown.escape')
+  onEsc() {
+    if (this.adminOpen() || this.userOpen()) {
+      this.adminOpen.set(false);
+      this.userOpen.set(false);
+    }
   }
 
   initials(text?: string): string {

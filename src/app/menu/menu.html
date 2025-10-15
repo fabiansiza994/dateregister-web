@@ -39,8 +39,8 @@
           <a routerLink="/reportes" routerLinkActive="active" class="nav-btn" (click)="closeAll()"><i class="bi bi-bar-chart"></i><span>Reportes</span></a>
         </li>
         @if (role() === 'ADMIN') {
-        <li class="relative">
-          <button type="button" (click)="toggleAdmin()" [attr.aria-expanded]="adminOpen()" class="nav-btn"><i class="bi bi-shield-lock"></i><span>Admin</span>
+        <li class="relative" #adminDropdown>
+          <button type="button" data-dd-toggle (click)="toggleAdmin()" [attr.aria-expanded]="adminOpen()" class="nav-btn"><i class="bi bi-shield-lock"></i><span>Admin</span>
             <svg viewBox="0 0 24 24" class="w-4 h-4 ml-1 transition-transform" [class.rotate-180]="adminOpen()"><path fill="currentColor" d="M7 10l5 5 5-5H7z"/></svg>
           </button>
           @if (adminOpen()) {
@@ -57,8 +57,8 @@
       </ul>
 
       <!-- Usuario (desktop) -->
-      <div class="hidden sm:flex items-center ml-auto relative">
-        <button type="button" (click)="toggleUser()" [attr.aria-expanded]="userOpen()" class="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-white/15 transition text-sm font-medium">
+      <div class="hidden sm:flex items-center ml-auto relative" #userDropdown>
+        <button type="button" data-dd-toggle (click)="toggleUser()" [attr.aria-expanded]="userOpen()" class="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-white/15 transition text-sm font-medium">
           <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white text-primary font-bold text-[10px] uppercase border border-white/30">{{ initials(userName()) }}</span>
           <span class="hidden md:inline truncate max-w-[140px]" [attr.title]="userName()">{{ userName() }}</span>
           <svg viewBox="0 0 24 24" class="w-4 h-4 transition-transform" [class.rotate-180]="userOpen()"><path fill="currentColor" d="M7 10l5 5 5-5H7z"/></svg>
