@@ -2,6 +2,7 @@ import { Component, computed, signal, ElementRef, ViewChild, HostListener } from
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../core/auth.service';
+import { PlanesService } from '../suscripcion/planes.service';
 
 @Component({
   selector: 'app-menu',
@@ -60,9 +61,20 @@ export class Menu {
     this.userOpen.set(false);
   }
 
-  constructor(private router: Router, private auth: AuthService) {
+  // Plan actual (suscripción)
+  planName = computed(() => {
+    const plan = this.planes.current();
+    return plan?.name || 'Free';
+  });
+
+  constructor(private router: Router, private auth: AuthService, private planes: PlanesService) {
     this.auth.refreshFromStorage();
     this._claims.set(this.auth.claims());
+
+    // Cargar planes al inicializar
+    this.planes.loadPlans().catch(() => {
+      // Error silencioso, se usarán planes fallback
+    });
 
     // Captura del evento para ofrecer instalación (PWA Add to Home Screen)
     window.addEventListener('beforeinstallprompt', (e: any) => {

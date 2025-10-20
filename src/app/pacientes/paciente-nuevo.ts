@@ -61,11 +61,11 @@ export class PacienteNuevoComponent {
   model = signal<PacienteCreateRequest>({
     nombre: '',
     apellido: '',
-    documento: '',
-    telefono: '',
-    email: '',
+    documento: '00000',
+    telefono: '3130000000',
+    email: 'nn@mail.com',
     clienteId: null,
-    direccion: ''
+    direccion: 'colombia'
   });
 
   // ===== UI state =====
@@ -73,6 +73,7 @@ export class PacienteNuevoComponent {
   errorGlobal = signal<string | null>(null);
   fieldErrors = signal<Record<string, string>>({});
   success = signal<string | null>(null);
+  showAdditionalFields = signal(false);
 
   // Validación mínima
   isValid = computed(() =>
@@ -122,6 +123,10 @@ export class PacienteNuevoComponent {
   onField<K extends keyof PacienteCreateRequest>(key: K, value: PacienteCreateRequest[K]) {
     this.model.update(m => ({ ...m, [key]: value }));
     this.clearFieldError(key as string);
+  }
+
+  toggleAdditionalFields() {
+    this.showAdditionalFields.update(show => !show);
   }
 
   clearFieldError(field: string) {

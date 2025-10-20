@@ -76,35 +76,25 @@
 
         <!-- CREAR -->
         @if (tab()==='crear') {
-  <div class="mt-3">
-          <div class="row g-3">
-            <div class="col-12 col-md-6">
-              <label class="form-label">Nombre</label>
-              <input class="form-control" [(ngModel)]="createForm.nombre" name="p_nombre" autocomplete="off">
-            </div>
-            <div class="col-12 col-md-6">
-              <label class="form-label">Apellido</label>
-              <input class="form-control" [(ngModel)]="createForm.apellido" name="p_apellido" autocomplete="off">
-            </div>
-            <div class="col-12 col-md-6">
-              <label class="form-label">Documento</label>
-              <input class="form-control" [(ngModel)]="createForm.documento" name="p_documento" autocomplete="off">
-            </div>
-            <div class="col-12 col-md-6">
-              <label class="form-label">Teléfono</label>
-              <input class="form-control" [(ngModel)]="createForm.telefono" name="p_telefono" autocomplete="off">
-            </div>
-            <div class="col-12 col-md-6">
-              <label class="form-label">Email</label>
-              <input class="form-control" [(ngModel)]="createForm.email" name="p_email" autocomplete="off">
-            </div>
-            <div class="col-12 col-md-6">
-              <label class="form-label">Dirección</label>
-              <input class="form-control" [(ngModel)]="createForm.direccion" name="p_direccion" autocomplete="off">
+          <div class="mt-3">
+            <!-- Campos principales (siempre visibles) -->
+            <div class="row g-3">
+              <div class="col-12 col-md-4">
+                <label class="form-label">Nombre</label>
+                <input class="form-control" [(ngModel)]="createForm.nombre" name="p_nombre" autocomplete="off">
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label">Apellido</label>
+                <input class="form-control" [(ngModel)]="createForm.apellido" name="p_apellido" autocomplete="off">
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label">Documento</label>
+                <input class="form-control" [(ngModel)]="createForm.documento" name="p_documento" autocomplete="off">
+              </div>
             </div>
 
-            <!-- selector de cliente (modal pequeño) -->
-            <div class="col-12">
+            <!-- Selector de cliente (siempre visible) -->
+            <div class="mt-3">
               <label class="form-label">Asociar cliente</label>
               <div class="d-flex align-items-center gap-2 flex-wrap">
                 <button type="button" class="btn btn-primary" (click)="openClientSelector()">
@@ -117,64 +107,91 @@
                   <div class="small text-secondary">Ninguno seleccionado</div>
                 </ng-template>
               </div>
+            </div>
 
-              <!-- mini modal para listar/seleccionar clientes -->
-              <div class="modal modal-light" tabindex="-1" [class.show]="clienteModalOpen()" [style.display]="clienteModalOpen() ? 'block' : 'none'">
-                <div class="modal-dialog" style="max-width: 520px;">
-                  <div class="modal-content rounded-4">
-                    <div class="modal-header">
-                      <h5 class="modal-title d-flex align-items-center gap-2">
-                        <i class="bi bi-people"></i> Seleccionar cliente
-                      </h5>
-                      <button type="button" class="btn-close" (click)="closeClientSelector()"></button>
+            <!-- Acordeón de campos adicionales -->
+            <div class="mt-3">
+              <button type="button" 
+                      class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center w-100" 
+                      (click)="toggleAdditionalFields()"
+                      style="padding: 8px 16px; border-color: #007bff; color: #007bff;">
+                <i class="bi me-2" [class.bi-chevron-right]="!showAdditionalFields()" [class.bi-chevron-down]="showAdditionalFields()"></i>
+                <span>{{ showAdditionalFields() ? 'Ocultar campos adicionales' : 'Mostrar campos adicionales' }}</span>
+              </button>
+              
+              @if (showAdditionalFields()) {
+                <div class="row g-3 mt-2" style="padding-top: 8px;">
+                  <div class="col-12 col-md-6">
+                    <label class="form-label">Teléfono</label>
+                    <input class="form-control" [(ngModel)]="createForm.telefono" name="p_telefono" autocomplete="off">
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label">Email</label>
+                    <input class="form-control" [(ngModel)]="createForm.email" name="p_email" autocomplete="off">
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label">Dirección</label>
+                    <input class="form-control" [(ngModel)]="createForm.direccion" name="p_direccion" autocomplete="off">
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- mini modal para listar/seleccionar clientes -->
+            <div class="modal modal-light" tabindex="-1" [class.show]="clienteModalOpen()" [style.display]="clienteModalOpen() ? 'block' : 'none'">
+              <div class="modal-dialog" style="max-width: 520px;">
+                <div class="modal-content rounded-4">
+                  <div class="modal-header">
+                    <h5 class="modal-title d-flex align-items-center gap-2">
+                      <i class="bi bi-people"></i> Seleccionar cliente
+                    </h5>
+                    <button type="button" class="btn-close" (click)="closeClientSelector()"></button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="flex flex-col sm:flex-row gap-2">
+                      <input class="form-control w-full" placeholder="Buscar por nombre o ID…" [(ngModel)]="qCliente" name="q_cliente_modal" (keyup.enter)="buscarClientes()">
+                      <button class="btn btn-soft-primary w-full sm:w-auto" (click)="buscarClientes()">
+                        <i class="bi bi-search"></i> Buscar
+                      </button>
                     </div>
-                    <div class="modal-body">
-                      <div class="flex flex-col sm:flex-row gap-2">
-                        <input class="form-control w-full" placeholder="Buscar por nombre o ID…" [(ngModel)]="qCliente" name="q_cliente_modal" (keyup.enter)="buscarClientes()">
-                        <button class="btn btn-soft-primary w-full sm:w-auto" (click)="buscarClientes()">
-                          <i class="bi bi-search"></i> Buscar
-                        </button>
-                      </div>
 
-                      <div class="dr-divider"></div>
+                    <div class="dr-divider"></div>
 
-                      <div *ngIf="loadingClientes()" class="text-secondary small mb-2">
-                        <i class="bi bi-arrow-repeat me-1"></i> Cargando…
-                      </div>
-
-                      <div class="dr-grid max-h-[50vh] overflow-y-auto pr-1" *ngIf="clientes().length > 0; else noClientesModal">
-                        <button type="button" class="dr-item text-start" *ngFor="let c of clientes()" (click)="chooseCliente(c)">
-                          <div class="d-flex justify-content-between align-items-center">
-                            <div class="fw-semibold">{{ c.nombre }} {{ c.apellido || '' }}</div>
-                            <span class="dr-badge"><i class="bi bi-person-badge"></i> {{ c.id }}</span>
-                          </div>
-                          <div class="text-secondary small mt-1">{{ c.identificacion || '' }}</div>
-                        </button>
-                      </div>
-                      <ng-template #noClientesModal>
-                        <div class="form-text">No hay clientes para mostrar.</div>
-                      </ng-template>
+                    <div *ngIf="loadingClientes()" class="text-secondary small mb-2">
+                      <i class="bi bi-arrow-repeat me-1"></i> Cargando…
                     </div>
-                    <div class="modal-footer">
-                      <button class="btn btn-ghost" (click)="closeClientSelector()">Cerrar</button>
+
+                    <div class="dr-grid max-h-[50vh] overflow-y-auto pr-1" *ngIf="clientes().length > 0; else noClientesModal">
+                      <button type="button" class="dr-item text-start" *ngFor="let c of clientes()" (click)="chooseCliente(c)">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div class="fw-semibold">{{ c.nombre }} {{ c.apellido || '' }}</div>
+                          <span class="dr-badge"><i class="bi bi-person-badge"></i> {{ c.id }}</span>
+                        </div>
+                        <div class="text-secondary small mt-1">{{ c.identificacion || '' }}</div>
+                      </button>
                     </div>
+                    <ng-template #noClientesModal>
+                      <div class="form-text">No hay clientes para mostrar.</div>
+                    </ng-template>
+                  </div>
+                  <div class="modal-footer">
+                    <button class="btn btn-ghost" (click)="closeClientSelector()">Cerrar</button>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          @if (error()) {
-            <div class="alert alert-danger mt-3 py-2">{{ error() }}</div>
-          }
+            @if (error()) {
+              <div class="alert alert-danger mt-3 py-2">{{ error() }}</div>
+            }
 
-          <div class="d-flex justify-content-end mt-3">
-            <button class="btn btn-soft-primary" (click)="createPatient()" [disabled]="creating()">
-              @if (creating()) { <span class="spinner-border spinner-border-sm me-2"></span> }
-              Crear paciente
-            </button>
+            <div class="d-flex justify-content-end mt-3">
+              <button class="btn btn-soft-primary" (click)="createPatient()" [disabled]="creating()">
+                @if (creating()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                Crear paciente
+              </button>
+            </div>
           </div>
-        </div>
         }
       </div>
 

@@ -1,0 +1,31 @@
+.plan-card {
+  display: block;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.plan-card:hover {
+  border-color: rgba(13, 110, 253, 0.5);
+}
+.plan-card.selected {
+  border-color: rgb(13, 110, 253);
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+}
+.plan-card .title { font-size: 1.125rem; font-weight: 600; }
+.plan-card .badge {
+  font-size: 10px;
+  text-transform: uppercase;
+  background: rgba(13, 110, 253, 0.1);
+  color: rgb(13, 110, 253);
+  padding: 2px 6px;
+  border-radius: 9999px;
+  font-weight: 600;
+}
+.plan-card .price { font-size: 1.5rem; font-weight: 700; margin-top: 0.25rem; }
+.plan-card .price .per { font-size: 0.875rem; font-weight: 500; color: #475569; }
+.plan-card .desc { color: #64748b; font-size: 0.875rem; margin-top: 0.25rem; }
+.plan-card .features { margin-top: 0.5rem; list-style: none; padding: 0; margin-bottom: 0; }
+.plan-card .features li { display: flex; align-items: center; gap: 0.5rem; color: #334155; font-size: 0.9375rem; }

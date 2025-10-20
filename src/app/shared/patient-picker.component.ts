@@ -175,12 +175,13 @@ export class PatientPickerComponent {
     nombre: '',
     apellido: '',
     documento: '',
-    telefono: '',
-    email: '',
-    direccion: '',
+    telefono: '300-000-0000',
+    email: 'paciente@ejemplo.com',
+    direccion: 'Calle 123 #45-67',
     clienteId: null
   };
   creating = signal(false);
+  showAdditionalFields = signal(false);
 
   // mini-buscador de clientes
   qCliente = '';
@@ -224,6 +225,10 @@ export class PatientPickerComponent {
     this.selectedCliente.set(c);
     this.createForm.clienteId = c.id;
     this.closeClientSelector();
+  }
+
+  toggleAdditionalFields() {
+    this.showAdditionalFields.set(!this.showAdditionalFields());
   }
 
   async createPatient() {

@@ -52,6 +52,7 @@ export const routes: Routes = [
       { path: 'grupos', loadComponent: () => import('./grupos/grupos').then(m => m.GruposComponent) },
       { path: 'reportes', loadComponent: () => import('./reportes-component/reportes-component').then(m => m.ReportesComponent) },
       { path: 'perfil', loadComponent: () => import('./perfil/perfil').then(m => m.PerfilComponent) },
+  { path: 'suscripcion', loadComponent: () => import('./suscripcion/suscripcion.component').then(m => m.SuscripcionComponent) },
       // Si luego creas estas páginas:
       // { path: 'clientes', loadComponent: () => import('./clientes/clientes').then(m => m.Clientes) },
       // { path: 'trabajos', loadComponent: () => import('./trabajos/trabajos').then(m => m.Trabajos) },
