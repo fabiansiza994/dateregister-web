@@ -47,18 +47,18 @@ export class Login {
     }
   }
 
-  // ===== Normalización & Validación de usuario (nombre.apellido)
+  // ===== Normalización & Validación de usuario (formato flexible)
   private normalizeUsername(raw: string): string {
     return raw
       .normalize('NFD').replace(/\p{Diacritic}/gu, '') // quita tildes
       .toLowerCase()
-      .replace(/[^a-z0-9.]/g, '')   // ✅ permite letras, números y punto
-      .replace(/\.+/g, '.')         // colapsa puntos repetidos
+      .replace(/[^a-z0-9._-]/g, '')   // ✅ permite letras, números, punto, guión bajo y guión
+      .replace(/\.{2,}/g, '.')        // colapsa múltiples puntos consecutivos
       .trim();
   }
 
-  // exactamente letras/números.punto.letras/números (un solo punto)
-  private usernameRegex = /^[a-z0-9]+\.[a-z0-9]+$/;
+  // permite cualquier combinación de letras, números, puntos, guiones bajos y guiones (mínimo 3 caracteres)
+  private usernameRegex = /^[a-z0-9._-]{3,}$/;
 
   onUserInput(v: string) {
     const n = this.normalizeUsername(v);

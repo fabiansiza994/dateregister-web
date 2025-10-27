@@ -2,6 +2,8 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { Plan, PlanId, PlansApiResponse } from '../interfaces/plan';
+import { SubscribeRequest, SubscribeResponse, SubscriptionPeriod } from '../interfaces/subscription';
+import { ConfigService } from '../core/config.service';
 
 const STORAGE_KEY = 'app.currentPlanId';
 
@@ -12,7 +14,7 @@ export class PlanesService {
   
   currentPlanId = signal<PlanId>(this.loadInitialPlan());
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private config: ConfigService) {}
 
   private loadInitialPlan(): PlanId {
     const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
@@ -34,7 +36,7 @@ export class PlanesService {
     }
 
     try {
-      const apiBase = 'http://localhost:8081';
+      const apiBase = this.config.get('apiBaseUrl', 'http://localhost:8081');
       const response = await firstValueFrom(
         this.http.get<PlansApiResponse>(`${apiBase}/pay/plans`)
       );
@@ -171,5 +173,22 @@ export class PlanesService {
   select(planId: PlanId) {
     this.currentPlanId.set(planId);
     this.persist(planId);
+  }
+
+  async subscribe(planId: string, period: SubscriptionPeriod, payerEmail: string, empresaId: number = 1): Promise<SubscribeResponse> {
+    const apiBase = this.config.get('apiBaseUrl', 'http://localhost:8081');
+    
+    const request: SubscribeRequest = {
+      planId,
+      period,
+      payerEmail,
+      empresaId
+    };
+
+    const response = await firstValueFrom(
+      this.http.post<SubscribeResponse>(`${apiBase}/pay/subscribe`, request)
+    );
+
+    return response;
   }
 }

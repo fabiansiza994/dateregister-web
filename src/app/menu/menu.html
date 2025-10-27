@@ -85,7 +85,9 @@
           <ul class="abs-dropdown right-0 top-full mt-2 w-56">
             <li class="px-3 py-2 text-[11px] font-medium text-slate-600 uppercase tracking-wide border-b border-slate-200/60">{{ empresa() }} — {{ role() }}</li>
             <li><a routerLink="/perfil" (click)="closeAll()" class="dd-item"><i class="bi bi-person"></i><span>Mi perfil</span></a></li>
+            @if (role() === 'ADMIN') {
              <li><a routerLink="/suscripcion" (click)="closeAll()" class="dd-item"><i class="bi bi-credit-card"></i><span>Mi suscripción</span></a></li>
+            }
             <li><button type="button" (click)="logout()" class="dd-item text-red-600 hover:text-red-700"><i class="bi bi-box-arrow-right"></i><span>Salir</span></button></li>
           </ul>
         }
@@ -106,7 +108,9 @@
           @if (role() === 'ADMIN') {<a routerLink="/grupos" class="mob-link" (click)="closeAll()">Grupos</a>}
           @if (role() === 'ADMIN') {<a routerLink="/configuracion" class="mob-link" (click)="closeAll()">Configuración</a>}
           <a routerLink="/perfil" class="mob-link col-span-2" (click)="closeAll()">Mi perfil</a>
+          @if (role() === 'ADMIN') {
            <a routerLink="/suscripcion" class="mob-link col-span-2" (click)="closeAll()">Mi suscripción</a>
+          }
           <button type="button" (click)="logout()" class="mob-link col-span-2 text-red-200 hover:text-white">Salir</button>
         </div>
       </div>

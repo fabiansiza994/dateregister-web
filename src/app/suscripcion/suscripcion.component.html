@@ -39,7 +39,13 @@
             <h3 class="title">{{ p.name }}</h3>
             @if (p.popular) {<span class="badge">Más popular</span>}
           </div>
-          <div class="price">$ {{ p.priceCop }} <span class="per">COP/mes</span></div>
+          <div class="price">
+            $ {{ getPriceForPeriod(p) }} 
+            <span class="per">COP{{ selectedPeriod() === 'ANNUAL' ? '/año' : '/mes' }}</span>
+            @if (selectedPeriod() === 'ANNUAL' && p.priceCop > 0) {
+              <div class="text-xs text-green-600 mt-1">¡20% descuento!</div>
+            }
+          </div>
           <p class="desc">{{ p.description }}</p>
           <ul class="features">
             <li><i class="bi bi-people"></i> Hasta {{ p.limits.maxUsers }} usuarios</li>
@@ -57,13 +63,110 @@
       }
     </div>
 
-    <div class="mt-4 flex items-center gap-3">
-      <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="actualizar()">
-        <i class="bi bi-arrow-repeat me-1" [class.animate-spin]="saving()"></i>
-        Actualizar suscripción
-      </button>
-      @if (success()) {<span class="text-green-700">{{ success() }}</span>}
-      @if (error()) {<span class="text-red-700">{{ error() }}</span>}
+    <!-- Controles de período y email -->
+    <div class="mt-6 card">
+      <div class="card-body">
+        <h3 class="text-lg font-semibold mb-4">Configurar suscripción</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Selector de período -->
+          <div>
+            <label class="form-label">Período de facturación</label>
+            <div class="flex gap-2">
+              <label class="flex-1">
+                <input type="radio" 
+                       name="period" 
+                       value="MONTHLY" 
+                       [checked]="selectedPeriod() === 'MONTHLY'"
+                       (change)="selectedPeriod.set('MONTHLY')"
+                       class="sr-only">
+                <div class="btn btn-outline w-full text-center" 
+                     [class.btn-primary]="selectedPeriod() === 'MONTHLY'"
+                     [class.btn-outline]="selectedPeriod() !== 'MONTHLY'">
+                  Mensual
+                </div>
+              </label>
+              <label class="flex-1">
+                <input type="radio" 
+                       name="period" 
+                       value="ANNUAL" 
+                       [checked]="selectedPeriod() === 'ANNUAL'"
+                       (change)="selectedPeriod.set('ANNUAL')"
+                       class="sr-only">
+                <div class="btn btn-outline w-full text-center" 
+                     [class.btn-primary]="selectedPeriod() === 'ANNUAL'"
+                     [class.btn-outline]="selectedPeriod() !== 'ANNUAL'">
+                  Anual <span class="text-xs">(20% desc.)</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Email del comprador -->
+          <div>
+            <label class="form-label">Email de facturación</label>
+            @if (userEmail()) {
+              <div class="form-control bg-light text-muted d-flex align-items-center">
+                <i class="bi bi-envelope me-2"></i>
+                <span>{{ userEmail() }}</span>
+              </div>
+              <div class="form-text">Se usará el email de tu cuenta para la facturación</div>
+            } @else {
+              <div class="form-control bg-light text-muted d-flex align-items-center">
+                <i class="bi bi-arrow-repeat animate-spin me-2"></i>
+                <span>Cargando email...</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        @if (success()) {
+          <div class="alert alert-success mt-3">
+            <i class="bi bi-check-circle me-2"></i>
+            {{ success() }}
+          </div>
+        }
+
+        @if (error()) {
+          <div class="alert alert-danger mt-3">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            {{ error() }}
+            @if (checkoutWindowClosed() && lastCheckoutUrl) {
+              <div class="mt-2">
+                <button type="button" 
+                        class="btn btn-sm btn-outline-primary" 
+                        (click)="reopenCheckoutWindow()">
+                  <i class="bi bi-arrow-clockwise me-1"></i>
+                  Reabrir ventana de pago
+                </button>
+              </div>
+            }
+          </div>
+        }
+
+        <div class="mt-4 flex items-center gap-3">
+          @if (getSelectedPlan()?.priceCop === 0) {
+            <button type="button" 
+                    class="btn btn-primary" 
+                    [disabled]="saving()" 
+                    (click)="suscribirse()">
+              <i class="bi bi-check me-1" [class.animate-spin]="saving()"></i>
+              Activar plan gratuito
+            </button>
+          } @else {
+            <button type="button" 
+                    class="btn btn-primary" 
+                    [disabled]="saving() || !userEmail().trim() || userProfileService.isLoading()" 
+                    (click)="suscribirse()">
+              <i class="bi bi-credit-card me-1" [class.animate-spin]="saving()"></i>
+              Proceder al pago
+              @if (getSelectedPlan()) {
+                <span class="ms-1">($ {{ getPriceForPeriod(getSelectedPlan()!) }} COP)</span>
+              }
+            </button>
+          }
+        </div>
+      </div>
     </div>
   }
 </div>

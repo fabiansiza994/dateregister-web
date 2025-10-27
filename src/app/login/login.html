@@ -56,7 +56,7 @@
               id="usuario"
               type="text"
               class="block w-full min-w-0 flex-1 rounded-r-lg border border-l-0 border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-              placeholder="p. ej. juan.perez"
+              placeholder="p. ej. usuario_93540 o admin"
               [value]="usuario()"
               (input)="onUserInput(txtUsuario.value)"
               (blur)="validateUser()"
@@ -71,7 +71,7 @@
               autofocus
             >
           </div>
-          @if (userInvalid()) { <small id="usuarioHelp" class="text-red-600">Formato inválido. Usa <strong>nombre.apellido</strong> (letras/números y un punto).</small> }
+          @if (userInvalid()) { <small id="usuarioHelp" class="text-red-600">El usuario debe tener al menos 3 caracteres y solo puede contener letras, números, puntos, guiones y guiones bajos.</small> }
         </div>
 
         <!-- Contraseña -->
