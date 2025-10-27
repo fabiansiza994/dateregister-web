@@ -2,7 +2,7 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { firstValueFrom, TimeoutError } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 import { ConfigService } from '../core/config.service';
@@ -46,8 +46,9 @@ interface UsuarioCreateError { dataResponse?: { response?: 'ERROR' | 'SUCCESS' }
 @Component({
   selector: 'app-usuario-nuevo',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './usuario-nuevo.html',
+  styleUrls: ['./usuario-nuevo.css'],
 })
 export class UsuarioNuevoComponent implements OnInit {
   // Paso
@@ -261,6 +262,9 @@ export class UsuarioNuevoComponent implements OnInit {
 
     // Cargar grupos (q obligatorio: enviar q='')
     await this.loadGrupos();
+
+    // Snapshot inicial para confirmar cancelación si hay cambios
+    this.initialSnapshot = JSON.stringify(this.model());
   }
 
   // ------- Catálogos -------
@@ -472,5 +476,23 @@ export class UsuarioNuevoComponent implements OnInit {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  // ------- Cancel/Confirm modal -------
+  private initialSnapshot = '';
+  cancelConfirmOpen = signal(false);
+
+  private isDirty(): boolean {
+    try { return JSON.stringify(this.model()) !== this.initialSnapshot; } catch { return false; }
+  }
+
+  cancel() {
+    if (this.isDirty()) { this.cancelConfirmOpen.set(true); return; }
+    this.proceedCancel();
+  }
+  closeCancelConfirm() { if (!this.loading()) this.cancelConfirmOpen.set(false); }
+  proceedCancel() {
+    this.cancelConfirmOpen.set(false);
+    this.router.navigate(['/usuarios']);
   }
 }

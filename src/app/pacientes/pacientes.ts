@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, AfterViewInit, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -12,8 +12,9 @@ import { ConfigService } from '../core/config.service';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './pacientes.html',
+  styleUrls: ['./pacientes.css']
 })
-export class Pacientes {
+export class Pacientes implements OnInit, AfterViewInit {
   // Filtro de búsqueda: backend usa siempre `q` (aunque esté vacío)
   q = '';
 
@@ -72,6 +73,9 @@ export class Pacientes {
   // Modal confirmación (eliminar)
   confirmOpen = signal(false);
   pacienteToDelete = signal<Paciente | null>(null);
+  // FAB crear paciente en móvil
+  showCreateFab = signal(false);
+  @ViewChild('createAnchor') createAnchor?: ElementRef<HTMLElement>;
 
   private apiBase = '';
 
@@ -84,6 +88,18 @@ export class Pacientes {
   ngOnInit(): void {
     this.apiBase = this.cfg.get<string>('apiBaseUrl', '');
     this.loadPage();
+  }
+  ngAfterViewInit(): void { setTimeout(() => this.updateCreateFab(), 0); }
+  @HostListener('window:scroll')
+  @HostListener('window:resize')
+  onViewportChange() { this.updateCreateFab(); }
+  private updateCreateFab() {
+    const isMobile = window.innerWidth < 768;
+    if (!isMobile) { this.showCreateFab.set(false); return; }
+    const el = this.createAnchor?.nativeElement;
+    if (!el) { this.showCreateFab.set(false); return; }
+    const r = el.getBoundingClientRect();
+    this.showCreateFab.set(r.bottom < 0);
   }
 
   // Buscar
@@ -247,6 +263,32 @@ export class Pacientes {
       }
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  // Chispas en clicks (crear/confirmar)
+  sparkClick(ev: MouseEvent, color: string = '#0d6efd') {
+    const target = ev.currentTarget as HTMLElement | null;
+    const container = document.querySelector('.dr-sparks-container') as HTMLElement | null;
+    if (!target || !container) return;
+    const rect = target.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    this.spawnSparks(x, y, color, container);
+  }
+  private spawnSparks(x: number, y: number, color: string, container: HTMLElement) {
+    const COUNT = 12;
+    for (let i = 0; i < COUNT; i++) {
+      const s = document.createElement('span');
+      s.className = 'dr-spark';
+      s.style.left = x + 'px';
+      s.style.top = y + 'px';
+      s.style.background = color;
+      s.style.setProperty('--dr-angle', (Math.random() * 360).toFixed(2) + 'deg');
+      s.style.setProperty('--dr-dist', (22 + Math.random() * 28).toFixed(0) + 'px');
+      s.style.setProperty('--dr-duration', (350 + Math.random() * 250).toFixed(0) + 'ms');
+      container.appendChild(s);
+      setTimeout(() => s.remove(), 650);
     }
   }
 }

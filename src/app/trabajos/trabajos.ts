@@ -38,6 +38,7 @@ interface JobSearchOk {
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './trabajos.html',
+  styleUrls: ['./trabajos.css']
 })
 export class JobsComponent implements OnInit {
 
@@ -101,6 +102,21 @@ export class JobsComponent implements OnInit {
 
   ngOnInit(): void {
     this.apiBase = this.cfg.get<string>('apiBaseUrl', '');
+    // Mostrar mensajes de éxito enviados por navegación (flash)
+    try {
+      const nav = this.router.getCurrentNavigation();
+      const flash = (nav?.extras?.state as any)?.flash ?? (history?.state as any)?.flash;
+      if (flash) {
+        this.success.set(String(flash));
+        // limpiar el flash del history para evitar que reaparezca al recargar
+        try {
+          const st = { ...(history?.state || {}) } as any;
+          if ('flash' in st) { delete st.flash; history.replaceState(st, document.title, location.href); }
+        } catch { /* noop */ }
+        // ocultar automáticamente
+        setTimeout(() => { if (this.success() === flash) this.success.set(null); }, 2200);
+      }
+    } catch { /* noop */ }
     this.loadPage();
   }
 
@@ -214,6 +230,15 @@ export class JobsComponent implements OnInit {
     this.deleting.set(true);
     this.error.set(null);
     try {
+      // Animación visual previa: hacer "volar" la tarjeta/fila
+      try {
+        const el = document.querySelector(`[data-job-id="${j.id}"]`) as HTMLElement | null;
+        if (el) {
+          el.classList.add('dr-fly-away');
+          await new Promise(r => setTimeout(r, 320));
+        }
+      } catch {}
+
       const url = `${this.apiBase}/job/delete/${j.id}`;
       await firstValueFrom(this.http.delete(url).pipe(timeout(12000)));
 
@@ -243,5 +268,49 @@ export class JobsComponent implements OnInit {
     try {
       return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n);
     } catch { return `$${n}`; }
+  }
+
+  // ===== Efecto de chispas (solo módulo trabajos) =====
+  sparkClick(ev: MouseEvent) {
+    try {
+      const x = ev.clientX;
+      const y = ev.clientY;
+      const target = ev.currentTarget as HTMLElement | null;
+      // Color por tipo de botón
+      const classes = (target?.className || '').toLowerCase();
+      let color = '#f59e0b'; // amber para crear
+      if (classes.includes('btn-danger')) color = '#ef4444';
+      else if (classes.includes('btn-primary')) color = '#3b82f6';
+      this.spawnSparks(x, y, color);
+    } catch { /* noop */ }
+  }
+
+  private spawnSparks(x: number, y: number, color: string) {
+    const container = document.createElement('div');
+    container.className = 'dr-sparks-container';
+    container.style.left = `${x}px`;
+    container.style.top = `${y}px`;
+    container.style.position = 'fixed';
+    container.style.pointerEvents = 'none';
+    container.style.zIndex = '9999';
+
+    const count = 12;
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('span');
+      p.className = 'dr-spark';
+      p.style.background = color;
+      const angle = (Math.PI * 2 * i) / count + (Math.random() * 0.4 - 0.2);
+      const dist = 28 + Math.random() * 16;
+      const tx = Math.cos(angle) * dist;
+      const ty = Math.sin(angle) * dist;
+      p.style.setProperty('--tx', `${tx}px`);
+      p.style.setProperty('--ty', `${ty}px`);
+      p.style.setProperty('--d', `${300 + Math.random() * 250}ms`);
+      container.appendChild(p);
+    }
+
+    document.body.appendChild(container);
+    // Limpieza tras animación
+    setTimeout(() => { try { container.remove(); } catch { /* noop */ } }, 700);
   }
 }

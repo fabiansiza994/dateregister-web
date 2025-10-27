@@ -1,8 +1,9 @@
-<div class="max-w-5xl mx-auto py-6 px-4">
+<div class="max-w-5xl mx-auto py-6 px-4 dr-form-pad-bottom">
   <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
     <h3 class="m-0 text-2xl font-semibold leading-tight">Crear usuario<br/><span class="mt-1 block text-xs font-medium text-slate-500">Estos usuarios son los colaboradores que gestionarán trabajos en tu empresa</span></h3>
-    <a routerLink="/modules" class="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium">&larr; Volver</a>
-  </div>
+    <div class="hidden md:block">
+      <button type="button" (click)="cancel()" class="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium">&larr; Volver</button>
+    </div>
 
   <!-- Progreso -->
   <div class="mb-6">
@@ -116,7 +117,7 @@
               }
             </div>
           </div>
-          <div class="flex justify-end gap-3 mt-6">
+          <div class="hidden md:flex justify-end gap-3 mt-6">
             <button class="btn btn-primary" type="submit" [disabled]="!isStep1Valid()">Siguiente</button>
           </div>
         </form>
@@ -139,7 +140,9 @@
               @if (errorGrupos()) {
                 <div class="text-red-600 text-xs mt-1">{{ errorGrupos() }}</div>
               } @else {
-                <div class="text-xs text-slate-500" *ngIf="totalGrupos() > 0">{{ totalGrupos() }} grupo(s) encontrados</div>
+                @if (totalGrupos() > 0) {
+                  <div class="text-xs text-slate-500">{{ totalGrupos() }} grupo(s) encontrados</div>
+                }
               }
             </div>
             <div class="md:col-span-4 space-y-1">
@@ -169,7 +172,7 @@
             </ul>
           </div>
 
-          <div class="flex justify-between gap-3 mt-6">
+          <div class="hidden md:flex justify-between gap-3 mt-6">
             <button class="btn btn-outline-secondary" type="button" (click)="goToStep(1)" [disabled]="loading()">Atrás</button>
             <button class="btn btn-primary" type="submit" [disabled]="!isStep2Valid() || loading()">
               @if (loading()) { <span class="spinner-border spinner-border-sm mr-2" role="status"></span> }
@@ -181,4 +184,44 @@
 
     </div>
   </div>
+
+    <!-- Mobile FAB actions -->
+    <div class="md:hidden dr-form-fab">
+      <div class="dr-fab-inner">
+        @if (step === 1) {
+          <button type="button" class="btn btn-outline-secondary" (click)="cancel()">Cancelar</button>
+          <button type="button" class="btn btn-primary" (click)="goToStep(2)" [disabled]="!isStep1Valid()">Siguiente</button>
+        }
+        @if (step === 2) {
+          <button type="button" class="btn btn-outline-secondary" (click)="goToStep(1)" [disabled]="loading()">Atrás</button>
+          <button type="button" class="btn btn-primary" (click)="submit()" [disabled]="!isStep2Valid() || loading()">
+            @if (loading()) { <span class="spinner-border spinner-border-sm mr-1"></span> }
+            Crear
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Cancel confirm modal -->
+  @if (cancelConfirmOpen()) {
+    <div class="fixed inset-0 z-[60] flex items-center justify-center">
+      <div class="fixed inset-0 bg-black/40 z-[55]" (click)="closeCancelConfirm()"></div>
+      <div class="relative w-full max-w-md mx-auto z-[65]">
+        <div class="bg-white rounded-2xl shadow-card p-5 border border-slate-200/70">
+          <div class="flex items-start justify-between mb-3">
+            <h5 class="font-semibold flex items-center gap-2 text-amber-600"><i class="bi bi-exclamation-triangle"></i><span>Descartar cambios</span></h5>
+            <button type="button" (click)="closeCancelConfirm()" class="btn btn-close"></button>
+          </div>
+          <div class="space-y-2 text-sm">
+            <p class="m-0">Tienes cambios sin guardar. ¿Deseas salir y descartarlos?</p>
+          </div>
+          <div class="flex justify-end gap-2 mt-5">
+            <button type="button" (click)="closeCancelConfirm()" [disabled]="loading()" class="btn btn-outline-secondary">Seguir editando</button>
+            <button type="button" (click)="proceedCancel()" [disabled]="loading()" class="btn btn-danger">Descartar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
 </div>

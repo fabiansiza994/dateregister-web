@@ -1,4 +1,5 @@
 import { ApplicationConfig, APP_INITIALIZER, importProvidersFrom, provideZonelessChangeDetection, provideBrowserGlobalErrorListeners, isDevMode } from '@angular/core';
+import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
@@ -25,6 +26,7 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes),
     provideClientHydration(withEventReplay()),
+  provideAnimations(),
   provideServiceWorker('ngsw-worker.js', { enabled: !isDevMode() }),
 
     // Necesario para poder hacer el GET del JSON

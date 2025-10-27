@@ -1,4 +1,4 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -53,10 +53,11 @@ interface ClientSearchOk {
 @Component({
   selector: 'app-paciente-nuevo',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './paciente-nuevo.html',
+  styleUrls: ['./paciente-nuevo.css']
 })
-export class PacienteNuevoComponent {
+export class PacienteNuevoComponent implements OnInit {
   // ===== Modelo =====
   model = signal<PacienteCreateRequest>({
     nombre: '',
@@ -89,6 +90,7 @@ export class PacienteNuevoComponent {
   totalClientes = signal(0);
 
   private apiBase = '';
+  private _initialSnapshot = '';
 
   // ===== Helpers de mapeo de errores =====
   private readonly knownFields = new Set([
@@ -117,6 +119,10 @@ export class PacienteNuevoComponent {
     this.apiBase = this.cfg.get<string>('apiBaseUrl', '');
     // carga inicial de clientes (q='')
     this.buscarClientes();
+  }
+
+  ngOnInit(): void {
+    this._initialSnapshot = JSON.stringify(this.model());
   }
 
   // Helpers para actualizar campos y limpiar error del campo
@@ -233,5 +239,18 @@ export class PacienteNuevoComponent {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  // Confirmación de cancelar si hay cambios
+  cancelConfirmOpen = signal(false);
+  cancel() {
+    if (this.hasChanges()) this.cancelConfirmOpen.set(true);
+    else this.router.navigate(['/pacientes']);
+  }
+  closeCancelConfirm() { if (!this.loading()) this.cancelConfirmOpen.set(false); }
+  proceedCancel() { this.router.navigate(['/pacientes']); }
+  private hasChanges(): boolean {
+    try { return this._initialSnapshot !== JSON.stringify(this.model()); }
+    catch { return true; }
   }
 }

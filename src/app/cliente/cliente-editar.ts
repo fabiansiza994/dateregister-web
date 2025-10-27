@@ -22,7 +22,8 @@ interface Cliente {
   selector: 'app-cliente-editar',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './cliente-editar.html'
+  templateUrl: './cliente-editar.html',
+  styleUrls: ['./cliente-editar.css']
 })
 export class ClienteEditarComponent implements OnInit {
 
@@ -33,6 +34,7 @@ export class ClienteEditarComponent implements OnInit {
   cliente = signal<Cliente | null>(null);
 
   private apiBase = '';
+  private _initialSnapshot: string | null = null;
 
   // validación mínima para habilitar guardar
   formOk = computed(() => {
@@ -64,6 +66,8 @@ export class ClienteEditarComponent implements OnInit {
       );
       this.cliente.set(res?.data ?? null);
       if (!res?.data) this.error.set('No se encontró el cliente.');
+      // snapshot para detección de cambios
+      if (res?.data) this._initialSnapshot = JSON.stringify(res.data);
     } catch (e: any) {
       if (e instanceof TimeoutError) this.error.set('La consulta tardó demasiado. Intenta de nuevo.');
       else this.error.set(e?.error?.message || e?.message || 'Error al cargar cliente');
@@ -152,4 +156,25 @@ export class ClienteEditarComponent implements OnInit {
   }
 
   volver() { this.router.navigate(['/clientes']); }
+
+  // Confirmación de cancelación si hay cambios
+  cancelConfirmOpen = signal(false);
+  cancel() {
+    if (this.hasChanges()) {
+      this.cancelConfirmOpen.set(true);
+    } else {
+      this.volver();
+    }
+  }
+  closeCancelConfirm() { if (!this.loading()) this.cancelConfirmOpen.set(false); }
+  proceedCancel() { this.volver(); }
+
+  private hasChanges(): boolean {
+    try {
+      if (!this._initialSnapshot) return false;
+      return this._initialSnapshot !== JSON.stringify(this.cliente());
+    } catch {
+      return true;
+    }
+  }
 }

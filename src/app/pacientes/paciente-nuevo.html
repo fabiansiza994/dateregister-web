@@ -1,13 +1,17 @@
-<div class="py-4">
-  <div class="flex items-center justify-between mb-4">
-    <h3 class="text-xl font-semibold m-0">Crear paciente</h3>
-    <a routerLink="/pacientes" class="btn btn-link px-0">&larr; Volver al listado</a>
-  </div>
-
-  @if (errorGlobal()) { <div class="rounded-lg border border-red-300 bg-red-50 text-red-700 px-4 py-3 text-sm flex gap-3 items-start mb-4" role="alert"><i class="bi bi-exclamation-triangle mt-1"></i><div class="font-medium flex-1">{{ errorGlobal() }}</div></div> }
-
+<div class="max-w-screen-lg mx-auto px-4 py-4">
   <form class="bg-white rounded-2xl shadow-card border border-slate-200/70" (submit)="$event.preventDefault(); create()">
-    <div class="p-5">
+    <div class="p-5 pb-20 md:pb-5">
+      <div class="flex flex-wrap items-center justify-between mb-3 gap-3">
+        <div class="space-y-0.5">
+          <h3 class="text-xl font-semibold m-0 flex items-center gap-2"><i class="bi bi-person-plus text-primary"></i><span>Crear paciente</span></h3>
+          <p class="text-xs text-slate-500 m-0">Completa la información básica y, si deseas, datos adicionales</p>
+        </div>
+        <div>
+          <button type="button" class="btn btn-outline-secondary" (click)="cancel()">&larr; Volver a pacientes</button>
+        </div>
+      </div>
+
+      @if (errorGlobal()) { <div class="rounded-lg border border-red-300 bg-red-50 text-red-700 px-4 py-3 text-sm flex gap-3 items-start mb-3" role="alert"><i class="bi bi-exclamation-triangle mt-1"></i><div class="font-medium flex-1">{{ errorGlobal() }}</div><button type="button" class="btn btn-close" (click)="errorGlobal.set(null)"></button></div> }
       <div class="grid gap-4 md:grid-cols-12">
         <!-- Nombre -->
         <div class="md:col-span-4">
@@ -142,10 +146,36 @@
         </div>
       </div>
       
-      <div class="flex justify-end gap-2 mt-4">
-        <a routerLink="/pacientes" class="btn btn-outline-secondary">Cancelar</a>
+      <div class="hidden md:flex justify-end gap-2 mt-4">
+        <button type="button" class="btn btn-light" (click)="cancel()">Cancelar</button>
         <button type="submit" class="btn btn-success" [disabled]="loading() || !isValid()">@if (loading()) { <span class="spinner-border spinner-border-sm mr-2" role="status"></span> } Crear paciente</button>
       </div>
     </div>
   </form>
+
+  <!-- FAB móvil -->
+  <div class="dr-fab-wrap md:hidden">
+    <button type="button" class="btn btn-light dr-fab" (click)="cancel()"><i class="bi bi-x-circle"></i><span>Cancelar</span></button>
+    <button type="button" class="btn btn-success dr-fab" (click)="create()" [disabled]="loading() || !isValid()">@if (loading()) { <span class="spinner-border spinner-border-sm me-1"></span> }<i class="bi bi-check2"></i><span>Crear</span></button>
+  </div>
 </div>
+
+<!-- Modal confirmar cancelar -->
+@if (cancelConfirmOpen()) {
+  <div class="fixed inset-0 z-[60] d-flex align-items-center justify-content-center">
+    <div class="fixed inset-0 bg-black/40 z-[55]" (click)="closeCancelConfirm()"></div>
+    <div class="position-relative w-100" style="max-width: 28rem; z-index:65;">
+      <div class="bg-white rounded-4 shadow p-4 border border-slate-200/70">
+        <div class="d-flex align-items-start justify-content-between mb-2">
+          <h5 class="fw-semibold m-0 d-flex align-items-center gap-2"><i class="bi bi-exclamation-octagon text-warning"></i><span>Descartar cambios</span></h5>
+          <button type="button" class="btn btn-close" (click)="closeCancelConfirm()" aria-label="Cerrar"></button>
+        </div>
+        <p class="mb-0 text-muted">Tienes cambios sin guardar. ¿Deseas descartarlos y volver al listado?</p>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeCancelConfirm()">Seguir editando</button>
+          <button type="button" class="btn btn-danger" (click)="proceedCancel()">Descartar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

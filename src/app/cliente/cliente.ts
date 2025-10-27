@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, HostListener, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -42,8 +42,9 @@ interface GenericOk {
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './cliente.html',
+  styleUrls: ['./cliente.css']
 })
-export class ClientesComponent implements OnInit {
+export class ClientesComponent implements OnInit, AfterViewInit {
 
   confirmOpen = signal(false);
   clientToDelete = signal<Cliente | null>(null);
@@ -59,6 +60,10 @@ export class ClientesComponent implements OnInit {
   // Datos
   clients = signal<Cliente[]>([]);
   total = signal(0);
+  // FAB crear
+  showCreateFab = signal(false);
+  @ViewChild('createAnchor') createAnchor?: ElementRef<HTMLElement>;
+
 
   // Paginación (UI 1-based)
   page = signal(1);
@@ -101,6 +106,28 @@ export class ClientesComponent implements OnInit {
   ngOnInit(): void {
     this.apiBase = this.cfg.get<string>('apiBaseUrl', '');
     this.loadPage();
+  }
+
+  ngAfterViewInit(): void {
+    // calcular visibilidad inicial del botón crear
+    setTimeout(() => this.updateCreateFab(), 0);
+  }
+
+  @HostListener('window:scroll')
+  @HostListener('window:resize')
+  onViewportChange() { this.updateCreateFab(); }
+
+  private updateCreateFab() {
+    const isMobile = window.innerWidth < 768; // md breakpoint
+    if (!isMobile) {
+      this.showCreateFab.set(false);
+      return;
+    }
+    const el = this.createAnchor?.nativeElement;
+    if (!el) { this.showCreateFab.set(false); return; }
+    const r = el.getBoundingClientRect();
+    // Mostrar FAB cuando el botón original sale por arriba del viewport
+    this.showCreateFab.set(r.bottom < 0);
   }
 
   openConfirm(c: Cliente) {
@@ -265,4 +292,33 @@ export class ClientesComponent implements OnInit {
   // Navegación (si usas vistas de detalle/edición)
   verCliente(c: Cliente) { this.router.navigate(['/clientes', c.id]); }
   editarCliente(c: Cliente) { this.router.navigate(['/clientes', c.id, 'editar']); }
+
+  // Efecto de chispas en clicks (crear/confirmar)
+  sparkClick(ev: MouseEvent, color: string = '#0d6efd') {
+    const target = ev.currentTarget as HTMLElement | null;
+    const container = document.querySelector('.dr-sparks-container') as HTMLElement | null;
+    if (!target || !container) return;
+
+    const rect = target.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    this.spawnSparks(x, y, color, container);
+  }
+
+  private spawnSparks(x: number, y: number, color: string, container: HTMLElement) {
+    const COUNT = 12;
+    for (let i = 0; i < COUNT; i++) {
+      const s = document.createElement('span');
+      s.className = 'dr-spark';
+      s.style.left = x + 'px';
+      s.style.top = y + 'px';
+      s.style.background = color;
+      s.style.setProperty('--dr-angle', (Math.random() * 360).toFixed(2) + 'deg');
+      s.style.setProperty('--dr-dist', (20 + Math.random() * 30).toFixed(0) + 'px');
+      s.style.setProperty('--dr-duration', (350 + Math.random() * 250).toFixed(0) + 'ms');
+      container.appendChild(s);
+      // limpiar
+      setTimeout(() => s.remove(), 600);
+    }
+  }
 }

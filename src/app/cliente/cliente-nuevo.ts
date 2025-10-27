@@ -1,4 +1,4 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgModel } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -13,10 +13,11 @@ import { ClientCreateRequest, ClientCreateOk, ClientCreateError } from '../inter
 @Component({
     selector: 'app-cliente-nuevo',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterLink],
+    imports: [CommonModule, FormsModule],
     templateUrl: './cliente-nuevo.html',
+    styleUrls: ['./cliente-nuevo.css']
 })
-export class ClienteNuevoComponent {
+export class ClienteNuevoComponent implements OnInit {
 
     onField<K extends keyof ClientCreateRequest>(key: K, value: ClientCreateRequest[K]) {
         this.model.update(m => ({ ...m, [key]: value }));
@@ -57,6 +58,7 @@ export class ClienteNuevoComponent {
     isValid = computed(() => !!this.model().nombre.trim());
 
     private apiBase = '';
+    private _initialSnapshot = '';
 
     constructor(
         private http: HttpClient,
@@ -73,6 +75,11 @@ export class ClienteNuevoComponent {
             empresa: { id: Number(claims?.empresaId ?? 0) },
             usuario: { id: Number(claims?.userId ?? 0) },
         });
+    }
+
+    ngOnInit(): void {
+        // snapshot inicial para confirmar al cancelar si hay cambios
+        this._initialSnapshot = JSON.stringify(this.model());
     }
 
     // Helpers de error
@@ -150,6 +157,26 @@ export class ClienteNuevoComponent {
 
         } finally {
             this.loading.set(false);
+        }
+    }
+
+    // Confirmación de cancelación si hay cambios
+    cancelConfirmOpen = signal(false);
+    cancel() {
+        if (this.hasChanges()) {
+            this.cancelConfirmOpen.set(true);
+        } else {
+            this.router.navigate(['/clientes']);
+        }
+    }
+    closeCancelConfirm() { if (!this.loading()) this.cancelConfirmOpen.set(false); }
+    proceedCancel() { this.router.navigate(['/clientes']); }
+
+    private hasChanges(): boolean {
+        try {
+            return this._initialSnapshot !== JSON.stringify(this.model());
+        } catch {
+            return true;
         }
     }
 }

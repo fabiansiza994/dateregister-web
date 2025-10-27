@@ -1,103 +1,116 @@
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="fw-semibold mb-0">Crear cliente</h3>
-        <a routerLink="/clientes" class="btn btn-link text-decoration-none px-0">&larr; Volver al listado</a>
-    </div>
-
-    @if (errorGlobal()) {
-    <div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
-        <i class="bi bi-exclamation-triangle mt-1"></i>
-        <div>{{ errorGlobal() }}</div>
-    </div>
-    }
-
-    <form class="card border-0 shadow-sm rounded-4" (submit)="$event.preventDefault(); create()">
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Identificación o Nit<span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" 
-                        [class.is-invalid]="fieldErrors()['identificacion']"
-                        [ngModel]="model().identificacion" 
-                        (ngModelChange)="onField('identificacion', $event)" name="identificacion"
-                        placeholder="108.." autocomplete="off" />
-                    @if (fieldErrors()['identificacion']) {
-                    <div class="invalid-feedback">{{ fieldErrors()['identificacion'] }}</div>
-                    }
+<div class="max-w-screen-lg mx-auto px-4 py-4">
+    <form class="bg-white rounded-2xl shadow-card border border-slate-200/70" (submit)="$event.preventDefault(); create()">
+        <div class="p-5 pb-20 md:pb-5">
+            <!-- Header dentro de la tarjeta -->
+            <div class="flex flex-wrap items-center justify-between mb-3 gap-3">
+                <div class="space-y-0.5">
+                    <h3 class="text-xl font-semibold m-0 flex items-center gap-2"><i class="bi bi-person-plus text-primary"></i><span>Crear cliente</span></h3>
+                    <p class="text-xs text-slate-500 m-0">Ingresa los datos básicos del cliente</p>
                 </div>
-                <!-- Nombre (requerido) -->
-                <div class="col-md-6">
-                    <label class="form-label">Nombre <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" 
-                    [class.is-invalid]="fieldErrors()['nombre']"
-                    [ngModel]="model().nombre" 
-                    (ngModelChange)="onField('nombre', $event)" name="nombre"
-                        placeholder="Juan" autocomplete="off" />
-                    @if (fieldErrors()['nombre']) {
-                    <div class="invalid-feedback">{{ fieldErrors()['nombre'] }}</div>
-                    }
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Apellido</label>
-                    <input type="text" class="form-control" [class.is-invalid]="fieldErrors()['apellido']"
-                        [(ngModel)]="model().apellido" (ngModelChange)="clearFieldError('apellido')" name="apellido"
-                        placeholder="Pérez" autocomplete="off" />
-                    @if (fieldErrors()['apellido']) {
-                    <div class="invalid-feedback">{{ fieldErrors()['apellido'] }}</div>
-                    }
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Email</label>
-                    <input type="email" class="form-control" [class.is-invalid]="fieldErrors()['email']"
-                        [(ngModel)]="model().email" (ngModelChange)="clearFieldError('email')" name="email"
-                        placeholder="cliente@correo.com" autocomplete="off" />
-                    @if (fieldErrors()['email']) {
-                    <div class="invalid-feedback">{{ fieldErrors()['email'] }}</div>
-                    }
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Teléfono</label>
-                    <input type="text" class="form-control" [class.is-invalid]="fieldErrors()['telefono']"
-                        [(ngModel)]="model().telefono" (ngModelChange)="clearFieldError('telefono')" name="telefono"
-                        placeholder="(+57) 300 000 0000" autocomplete="off" />
-                    @if (fieldErrors()['telefono']) {
-                    <div class="invalid-feedback">{{ fieldErrors()['telefono'] }}</div>
-                    }
-                </div>
-
-                <div class="col-12">
-                    <label class="form-label">Dirección</label>
-                    <input type="text" class="form-control" [class.is-invalid]="fieldErrors()['direccion']"
-                        [(ngModel)]="model().direccion" (ngModelChange)="clearFieldError('direccion')" name="direccion"
-                        placeholder="Calle 123 #45-67" autocomplete="off" />
-                    @if (fieldErrors()['direccion']) {
-                    <div class="invalid-feedback">{{ fieldErrors()['direccion'] }}</div>
-                    }
-                </div>
-
-                <!-- Empresa / Usuario (solo lectura, desde claims) -->
-                <div class="col-md-6">
-                    
-                    <input type="hidden" class="form-control" [value]="model().empresa.id" readonly>
-                </div>
-                <div class="col-md-6">
-                    
-                    <input type="hidden" class="form-control" [value]="model().usuario.id" readonly>
+                <div>
+                    <button type="button" class="btn btn-outline-secondary" (click)="cancel()">&larr; Volver a clientes</button>
                 </div>
             </div>
 
-            <div class="d-flex justify-content-end gap-2 mt-4">
-                <a routerLink="/clientes" class="btn btn-outline-secondary">Cancelar</a>
+            @if (errorGlobal()) {
+                <div class="rounded-lg border border-red-300 bg-red-50 text-red-700 px-4 py-3 text-sm flex gap-3 items-start mb-3" role="alert">
+                    <i class="bi bi-exclamation-triangle mt-1"></i>
+                    <div class="font-medium flex-1">{{ errorGlobal() }}</div>
+                    <button type="button" class="btn btn-close" aria-label="Cerrar" (click)="errorGlobal.set(null)"></button>
+                </div>
+            }
+
+            <div class="grid gap-4 md:grid-cols-12">
+                <div class="md:col-span-6">
+                    <label class="form-label">Identificación o Nit <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" [class.is-invalid]="fieldErrors()['identificacion']"
+                                 [ngModel]="model().identificacion" (ngModelChange)="onField('identificacion', $event)" name="identificacion"
+                                 placeholder="108.." autocomplete="off" />
+                    @if (fieldErrors()['identificacion']) { <div class="invalid-feedback">{{ fieldErrors()['identificacion'] }}</div> }
+                </div>
+
+                <div class="md:col-span-6">
+                    <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" [class.is-invalid]="fieldErrors()['nombre']"
+                                 [ngModel]="model().nombre" (ngModelChange)="onField('nombre', $event)" name="nombre"
+                                 placeholder="Juan" autocomplete="off" />
+                    @if (fieldErrors()['nombre']) { <div class="invalid-feedback">{{ fieldErrors()['nombre'] }}</div> }
+                </div>
+
+                <div class="md:col-span-6">
+                    <label class="form-label">Apellido</label>
+                    <input type="text" class="form-control" [class.is-invalid]="fieldErrors()['apellido']"
+                                 [(ngModel)]="model().apellido" (ngModelChange)="clearFieldError('apellido')" name="apellido"
+                                 placeholder="Pérez" autocomplete="off" />
+                    @if (fieldErrors()['apellido']) { <div class="invalid-feedback">{{ fieldErrors()['apellido'] }}</div> }
+                </div>
+
+                <div class="md:col-span-6">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" [class.is-invalid]="fieldErrors()['email']"
+                                 [(ngModel)]="model().email" (ngModelChange)="clearFieldError('email')" name="email"
+                                 placeholder="cliente@correo.com" autocomplete="off" />
+                    @if (fieldErrors()['email']) { <div class="invalid-feedback">{{ fieldErrors()['email'] }}</div> }
+                </div>
+
+                <div class="md:col-span-6">
+                    <label class="form-label">Teléfono</label>
+                    <input type="text" class="form-control" [class.is-invalid]="fieldErrors()['telefono']"
+                                 [(ngModel)]="model().telefono" (ngModelChange)="clearFieldError('telefono')" name="telefono"
+                                 placeholder="(+57) 300 000 0000" autocomplete="off" />
+                    @if (fieldErrors()['telefono']) { <div class="invalid-feedback">{{ fieldErrors()['telefono'] }}</div> }
+                </div>
+
+                <div class="md:col-span-12">
+                    <label class="form-label">Dirección</label>
+                    <input type="text" class="form-control" [class.is-invalid]="fieldErrors()['direccion']"
+                                 [(ngModel)]="model().direccion" (ngModelChange)="clearFieldError('direccion')" name="direccion"
+                                 placeholder="Calle 123 #45-67" autocomplete="off" />
+                    @if (fieldErrors()['direccion']) { <div class="invalid-feedback">{{ fieldErrors()['direccion'] }}</div> }
+                </div>
+
+                <!-- Empresa / Usuario (ocultos) -->
+                <input type="hidden" [value]="model().empresa.id" readonly>
+                <input type="hidden" [value]="model().usuario.id" readonly>
+            </div>
+
+            <!-- Botonera desktop -->
+            <div class="hidden md:flex justify-end gap-2 mt-5">
+                <button type="button" (click)="cancel()" class="btn btn-light">Cancelar</button>
                 <button type="submit" class="btn btn-success" [disabled]="loading() || !isValid()">
-                    @if (loading()) {
-                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    }
+                    @if (loading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
                     Crear cliente
                 </button>
             </div>
         </div>
     </form>
+
+    <!-- FAB móvil -->
+    <div class="dr-fab-wrap md:hidden">
+        <button type="button" class="btn btn-light dr-fab" (click)="cancel()"><i class="bi bi-x-circle"></i><span>Cancelar</span></button>
+        <button type="button" class="btn btn-success dr-fab" (click)="create()" [disabled]="loading() || !isValid()">
+            @if (loading()) { <span class="spinner-border spinner-border-sm me-1"></span> }
+            <i class="bi bi-check2"></i><span>Crear</span>
+        </button>
+    </div>
 </div>
+
+<!-- Modal confirmar cancelar -->
+@if (cancelConfirmOpen()) {
+    <div class="fixed inset-0 z-[60] d-flex align-items-center justify-content-center">
+        <div class="fixed inset-0 bg-black/40 z-[55]" (click)="closeCancelConfirm()"></div>
+        <div class="position-relative w-100" style="max-width: 28rem; z-index:65;">
+            <div class="bg-white rounded-4 shadow p-4 border border-slate-200/70">
+                <div class="d-flex align-items-start justify-content-between mb-2">
+                    <h5 class="fw-semibold m-0 d-flex align-items-center gap-2"><i class="bi bi-exclamation-octagon text-warning"></i><span>Descartar cambios</span></h5>
+                    <button type="button" class="btn btn-close" (click)="closeCancelConfirm()" aria-label="Cerrar"></button>
+                </div>
+                <p class="mb-0 text-muted">Tienes cambios sin guardar. ¿Deseas descartarlos y volver al listado?</p>
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="button" class="btn btn-outline-secondary" (click)="closeCancelConfirm()">Seguir editando</button>
+                    <button type="button" class="btn btn-danger" (click)="proceedCancel()">Descartar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}

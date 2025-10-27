@@ -44,6 +44,7 @@ interface Rol { id: number; nombre: string; }
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './usuario-editar.html',
+  styleUrls: ['./usuario-editar.css'],
 })
 export class UsuarioEditarComponent implements OnInit {
   loading = signal(false);
@@ -62,6 +63,8 @@ export class UsuarioEditarComponent implements OnInit {
 
   private apiBase = '';
   private id: number | null = null;
+  private initialSnapshot = '';
+  cancelConfirmOpen = signal(false);
 
   title = computed(() => {
     const u = this.usuario();
@@ -127,6 +130,8 @@ export class UsuarioEditarComponent implements OnInit {
         rolId: (u.rolId ?? null) as any,
         activo: !(u.bloqueado ?? false),
       });
+      // snapshot para detectar cambios del usuario al cancelar
+      this.initialSnapshot = JSON.stringify(this.model());
     } catch (e: any) {
       if (e instanceof TimeoutError) this.error.set('La carga tardó demasiado. Intenta de nuevo.');
       else this.error.set(e?.error?.message || e?.message || 'Error al cargar el usuario.');
@@ -197,8 +202,22 @@ export class UsuarioEditarComponent implements OnInit {
 
   // roles: fijos según especificación del sistema (USER id=2, ADMIN id=1)
 
+  private isDirty(): boolean {
+    try { return JSON.stringify(this.model()) !== this.initialSnapshot; } catch { return false; }
+  }
+
   cancel() {
+    if (this.isDirty()) {
+      this.cancelConfirmOpen.set(true);
+      return;
+    }
+    this.proceedCancel();
+  }
+
+  closeCancelConfirm() { if (!this.loading()) this.cancelConfirmOpen.set(false); }
+  proceedCancel() {
     const id = this.id;
+    this.cancelConfirmOpen.set(false);
     if (id) this.router.navigate(['/usuarios', id]);
     else this.router.navigate(['/usuarios']);
   }

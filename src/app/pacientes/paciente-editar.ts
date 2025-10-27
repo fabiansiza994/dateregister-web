@@ -36,7 +36,8 @@ interface UpdateOk {
     selector: 'app-paciente-editar',
     standalone: true,
     imports: [CommonModule, FormsModule],
-    templateUrl: './paciente-editar.html'
+    templateUrl: './paciente-editar.html',
+    styleUrls: ['./paciente-editar.css']
 })
 export class PacienteEditarComponent implements OnInit {
     loading = signal(false);
@@ -51,6 +52,7 @@ export class PacienteEditarComponent implements OnInit {
 
     private apiBase = '';
     private id = 0;
+    private _initialSnapshot: string | null = null;
 
     constructor(
         private http: HttpClient,
@@ -92,6 +94,7 @@ export class PacienteEditarComponent implements OnInit {
             } as Paciente;
 
             this.paciente.set(p);
+            this._initialSnapshot = JSON.stringify(p);
 
             this.paciente.set(p);
         } catch (e: any) {
@@ -173,4 +176,19 @@ export class PacienteEditarComponent implements OnInit {
     }
 
     volver() { this.router.navigate(['/pacientes']); }
+
+    // Confirmación de cancelación cuando hay cambios
+    cancelConfirmOpen = signal(false);
+    cancel() {
+        if (this.hasChanges()) this.cancelConfirmOpen.set(true);
+        else this.volver();
+    }
+    closeCancelConfirm() { if (!this.loading()) this.cancelConfirmOpen.set(false); }
+    proceedCancel() { this.volver(); }
+    private hasChanges(): boolean {
+        try {
+            if (!this._initialSnapshot) return false;
+            return this._initialSnapshot !== JSON.stringify(this.paciente());
+        } catch { return true; }
+    }
 }

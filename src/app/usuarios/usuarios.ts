@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, AfterViewInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -56,8 +56,9 @@ interface UserDeleteError {
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './usuarios.html',
+  styleUrls: ['./usuarios.css'],
 })
-export class UsuariosComponent implements OnInit {
+export class UsuariosComponent implements OnInit, AfterViewInit {
 
   private _claims = signal<any | null>(null);
   currentUsername = computed(() => (this._claims()?.sub ?? '').toString().toLowerCase().trim());
@@ -115,6 +116,11 @@ export class UsuariosComponent implements OnInit {
   confirmOpen = signal(false);
   userToDelete = signal<UsuarioLite | null>(null);
 
+  // Efectos y FAB
+  showCreateFab = signal(false);
+  @ViewChild('createAnchor') createAnchor?: ElementRef<HTMLElement>;
+  @ViewChild('sparksContainer') sparksContainer?: ElementRef<HTMLDivElement>;
+
   private apiBase = '';
 
   constructor(
@@ -129,6 +135,11 @@ export class UsuariosComponent implements OnInit {
     this.auth.refreshFromStorage?.();
     this._claims.set(this.auth.claims());
     this.loadPage();
+  }
+
+  ngAfterViewInit(): void {
+    // diferir para permitir render
+    setTimeout(() => this.updateFabVisibility(), 0);
   }
 
   // + NUEVO: ¿es el propio usuario?
@@ -221,6 +232,54 @@ export class UsuariosComponent implements OnInit {
       }
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  // ---------- FAB visibilidad en mobile ----------
+  @HostListener('window:scroll')
+  @HostListener('window:resize')
+  updateFabVisibility() {
+    try {
+      const anchor = this.createAnchor?.nativeElement;
+      if (!anchor) { this.showCreateFab.set(false); return; }
+      // Solo en mobile (<768px)
+      const isMobile = window.matchMedia('(max-width: 767px)').matches;
+      if (!isMobile) { this.showCreateFab.set(false); return; }
+      const rect = anchor.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const fullyVisible = rect.top >= 0 && rect.bottom <= vh;
+      this.showCreateFab.set(!fullyVisible);
+    } catch {
+      this.showCreateFab.set(false);
+    }
+  }
+
+  // ---------- Chispas en clic ----------
+  sparkClick(ev: MouseEvent) {
+    const container = this.sparksContainer?.nativeElement;
+    if (!container) return;
+    const x = ev.clientX;
+    const y = ev.clientY;
+    this.spawnSparks(x, y, 12);
+  }
+
+  private spawnSparks(x: number, y: number, count = 12) {
+    const container = this.sparksContainer?.nativeElement;
+    if (!container) return;
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('span');
+      p.className = 'dr-spark';
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 12 + Math.random() * 18;
+      const tx = Math.cos(angle) * distance;
+      const ty = Math.sin(angle) * distance;
+      p.style.left = x + 'px';
+      p.style.top = y + 'px';
+      p.style.setProperty('--tx', tx + 'px');
+      p.style.setProperty('--ty', ty + 'px');
+      p.style.background = `hsl(${Math.floor(Math.random() * 50 + 10)}, 90%, 55%)`;
+      container.appendChild(p);
+      setTimeout(() => p.remove(), 600);
     }
   }
 

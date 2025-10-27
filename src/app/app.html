@@ -1,1 +1,12 @@
-<router-outlet /><app-footer></app-footer>
+<div [@routeAnimations]="routeAnimParams()" [class.dr-bottom-nav-pad]="!isModules()">
+	<router-outlet />
+	</div>
+
+<!-- Barra inferior móvil: ocúltala en la vista de módulos -->
+@if (!isModules()) {
+	<div class="h-20 md:hidden"></div>
+	<app-mobile-bottom-nav class="md:hidden"></app-mobile-bottom-nav>
+}
+
+<!-- Footer sólo en md+: el propio host es flex-item, así margin-top:auto funciona para “pegarlo” abajo -->
+<app-footer class="hidden md:block"></app-footer>

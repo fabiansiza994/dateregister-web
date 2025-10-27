@@ -1,0 +1,30 @@
+/* Sticky under navbar */
+.dr-sticky-under-nav { position: sticky; top: calc(var(--menu-h, 56px) + 8px); z-index: 35; }
+
+/* Search input with icon inside (mobile) */
+.dr-search-wrap { position: relative; }
+.dr-search-wrap .dr-search-btn-inside { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); }
+.dr-search-wrap input.form-control { padding-right: 2.2rem; }
+
+/* Hover shake for trash icon */
+.dr-shake:hover { animation: dr-shake 360ms ease-in-out; transform-origin: 50% 60%; }
+.btn:hover .dr-shake { animation: dr-shake 360ms ease-in-out; transform-origin: 50% 60%; }
+@keyframes dr-shake { 10% { transform: rotate(-12deg) } 20% { transform: rotate(11deg) } 30% { transform: rotate(-9deg) } 40% { transform: rotate(7deg) } 50% { transform: rotate(-5deg) } 60% { transform: rotate(3deg) } 70% { transform: rotate(-2deg) } 100% { transform: rotate(0) } }
+
+/* Click sparks */
+.dr-sparks-container { position: fixed; inset: 0; pointer-events: none; z-index: 70; }
+.dr-spark { position: absolute; width: 6px; height: 6px; border-radius: 50%; opacity: 0.9; transform: translate(-50%, -50%); animation: dr-spark 600ms ease-out forwards; will-change: transform, opacity; }
+@keyframes dr-spark { to { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))); opacity: 0; } }
+
+/* Sticky pager above bottom nav */
+.dr-sticky-pager { position: sticky; bottom: calc(env(safe-area-inset-bottom) + 76px); z-index: 30; background: linear-gradient(to top, rgba(255,255,255,0.92), rgba(255,255,255,0.88)); backdrop-filter: saturate(120%) blur(4px); padding-top: 6px; margin-top: 6px; border-top: 1px solid rgba(15,23,42,0.08); }
+
+/* FAB */
+.dr-create-fab { position: fixed; right: calc(16px + env(safe-area-inset-right)); bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 65; }
+.dr-create-fab { box-shadow: 0 10px 18px -6px rgba(2,6,23,0.25), 0 6px 8px -6px rgba(2,6,23,0.18); border-radius: 9999px; }
+
+/* Desktop overrides */
+@media (min-width: 768px) {
+	.dr-sticky-pager { position: static !important; bottom: auto; backdrop-filter: none; }
+	.dr-create-fab { display: none !important; }
+}

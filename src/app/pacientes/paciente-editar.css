@@ -1,0 +1,3 @@
+/* FAB móvil para guardar/cancelar */
+.dr-fab-wrap { position: fixed; right: 1rem; bottom: calc(env(safe-area-inset-bottom, 0px) + 5rem + 1rem); display: flex; flex-direction: column; gap: .5rem; z-index: 60; }
+.dr-fab { display: inline-flex; align-items: center; gap: .5rem; border-radius: 9999px; box-shadow: 0 6px 20px rgba(0,0,0,.15); }

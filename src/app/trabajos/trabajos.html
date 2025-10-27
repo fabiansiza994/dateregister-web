@@ -7,17 +7,34 @@
 </div>
 
 <!-- Filtros -->
-<form (submit)="$event.preventDefault(); onSearch()" class="bg-white rounded-2xl shadow-card mb-6 border border-slate-200/60">
+<form (submit)="$event.preventDefault(); onSearch()" class="bg-white rounded-2xl shadow-card mb-6 border border-slate-200/60 dr-sticky-under-nav md:static">
   <div class="p-5 pt-4">
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-5 items-end">
-      <div class="col-span-12 md:col-span-8 space-y-1">
-        <label for="q" class="text-sm font-medium text-slate-700">Descripción o Cliente</label>
-        <input id="q" type="text" class="form-control" placeholder="Ej: garage, Juan..." [(ngModel)]="q" name="q" (keyup.enter)="onSearch()" autocomplete="off">
+    <div class="grid grid-cols-12 gap-3 md:gap-5 items-end">
+      <!-- Campo búsqueda -->
+      <div class="col-span-10 md:col-span-8 space-y-1">
+        <label for="q" class="text-sm font-medium text-slate-700 hidden md:block">Descripción o Cliente</label>
+        <!-- Móvil: botón de buscar dentro del input -->
+        <div class="dr-search-wrap md:hidden">
+          <button type="submit" class="dr-search-btn-inside" [disabled]="loading()" aria-label="Buscar"><i class="bi bi-search"></i></button>
+          <input id="q" type="text" class="form-control" placeholder="Descripción o Cliente" [(ngModel)]="q" name="q" (keyup.enter)="onSearch()" autocomplete="off">
+        </div>
+        <!-- Desktop: input simple -->
+        <div class="hidden md:block">
+          <input id="q" type="text" class="form-control" placeholder="Ej: garage, Juan..." [(ngModel)]="q" name="q" (keyup.enter)="onSearch()" autocomplete="off">
+        </div>
       </div>
-      <div class="col-span-12 md:col-span-4 flex flex-col md:flex-row gap-2 mt-2 md:mt-0">
-        <button type="submit" class="btn btn-outline-primary flex-1" [disabled]="loading()"><i class="bi bi-search"></i><span class="ml-1">Buscar</span></button>
-        <button type="button" class="btn btn-outline-secondary flex-1" (click)="clearFilters()" [disabled]="loading()"><i class="bi bi-eraser"></i><span class="ml-1">Limpiar</span></button>
+
+      <!-- Acciones -->
+      <div class="col-span-2 md:col-span-4 flex md:flex-row gap-2 md:mt-0">
+        <!-- Desktop: botones completos -->
+        <button type="submit" class="hidden md:inline-flex btn btn-outline-primary flex-1" [disabled]="loading()"><i class="bi bi-search"></i><span class="ml-1">Buscar</span></button>
+        <button type="button" class="hidden md:inline-flex btn btn-outline-secondary flex-1" (click)="clearFilters()" [disabled]="loading()"><i class="bi bi-eraser"></i><span class="ml-1">Limpiar</span></button>
+        <!-- Móvil: sólo botón limpiar al lado derecho -->
+        <button type="button" class="inline-flex md:hidden btn btn-outline-secondary btn-sm w-full justify-center self-end" (click)="clearFilters()" [disabled]="loading()" aria-label="Limpiar">
+          <i class="bi bi-eraser"></i>
+        </button>
       </div>
+
       <div class="col-span-12 md:col-span-4"></div>
     </div>
   </div>
@@ -25,7 +42,7 @@
 
 <!-- Botón crear: entre filtro y tabla -->
 <div class="mb-3">
-  <a routerLink="/trabajos/nuevo" class="btn btn-primary">
+  <a routerLink="/trabajos/nuevo" class="btn btn-primary" (click)="sparkClick($event)">
     <i class="bi bi-plus-circle"></i><span class="ml-1">Crear trabajo</span>
   </a>
 </div>
@@ -88,8 +105,8 @@
       @if (visibleWithRow().length===0) {
       <tr><td colspan="8" class="text-center px-3 py-6 text-slate-500">Sin resultados.</td></tr>
       } @else {
-      @for (j of visibleWithRow(); track j.id) {
-      <tr>
+  @for (j of visibleWithRow(); track j.id) {
+  <tr [attr.data-job-id]="j.id">
         <td class="px-3 py-2 text-xs text-slate-500">{{ j.rowNumber }}</td>
         <td class="px-3 py-2">{{ j.fecha }}</td>
         <td class="px-3 py-2"><i class="bi bi-person text-slate-400 mr-1"></i>{{ j.cliente?.nombre }} <span class="text-slate-500">{{ j.cliente?.apellido || '' }}</span></td>
@@ -123,53 +140,67 @@
   @if (visibleWithRow().length===0) {
   <div class="rounded-lg border border-slate-300 bg-slate-50 text-center text-slate-500 px-4 py-3 text-sm">Sin resultados.</div>
   } @else {
-  <div class="grid gap-4">
-    @for (j of visibleWithRow(); track j.id) {
-    <div class="bg-white rounded-2xl shadow-card border border-slate-200/60">
-      <div class="p-4">
-        <div class="mb-2 flex items-start justify-between">
-          <div>
-            <div class="text-[11px] text-slate-500">#{{ j.rowNumber }}</div>
-            <div class="text-xs text-slate-500">{{ j.fecha }}</div>
-          </div>
-          <span class="px-2 py-0.5 rounded-full text-[11px] font-medium" [class.bg-green-100]="(j.estado||'').toUpperCase()==='PAGO'" [class.text-green-700]="(j.estado||'').toUpperCase()==='PAGO'" [class.bg-yellow-100]="(j.estado||'').toUpperCase()==='PENDIENTE'" [class.text-yellow-800]="(j.estado||'').toUpperCase()==='PENDIENTE'" [class.bg-red-100]="(j.estado||'').toUpperCase()==='CANCELADO'" [class.text-red-700]="(j.estado||'').toUpperCase()==='CANCELADO'">{{ j.estado || '—' }}</span>
+  <!-- Lista estilo WhatsApp -->
+  <div class="bg-white rounded-2xl shadow-card border border-slate-200/60 overflow-hidden">
+    <div class="divide-y">
+      @for (j of visibleWithRow(); track j.id) {
+      <div class="dr-wa-item" (click)="verTrabajo(j)" tabindex="0" role="button" [attr.data-job-id]="j.id">
+        <div class="dr-wa-avatar" aria-hidden="true"
+             [class.is-paid]="(j.estado||'').toUpperCase()==='PAGO'"
+             [class.is-pending]="(j.estado||'').toUpperCase()==='PENDIENTE'"
+             [class.is-canceled]="(j.estado||'').toUpperCase()==='CANCELADO'">
+          <i class="bi bi-briefcase"></i>
         </div>
-        <ul class="space-y-1 mb-0 text-[11px]">
-          <li class="flex items-center"><span class="text-slate-500">Cliente:</span><span class="ml-1">{{ j.cliente?.nombre }} {{ j.cliente?.apellido || '' }}</span></li>
-          <li *ngIf="j.paciente" class="flex items-center"><span class="text-slate-500">Paciente:</span><span class="ml-1">{{ j.paciente.nombre }} {{ j.paciente.apellido || '' }}</span></li>
-          <li class="flex items-center"><span class="text-slate-500">Valor:</span><span class="ml-1">{{ formatMoney(j.valorTotal) }}</span></li>
-        </ul>
-        <div class="flex justify-end flex-wrap gap-2 mt-3">
-          <button class="btn btn-outline-info btn-sm" (click)="verTrabajo(j)"><i class="bi bi-eye"></i><span class="ml-1">Ver</span></button>
-          <button class="btn btn-outline-primary btn-sm" (click)="editarTrabajo(j)"><i class="bi bi-pencil"></i><span class="ml-1">Editar</span></button>
-          <button class="btn btn-outline-danger btn-sm" (click)="openConfirm(j)"><i class="bi bi-trash"></i><span class="ml-1">Eliminar</span></button>
+        <div class="dr-wa-main">
+          <div class="dr-wa-row1">
+            <div class="dr-wa-title truncate">{{ j.cliente?.nombre }} {{ j.cliente?.apellido || '' }}</div>
+            <div class="dr-wa-date">{{ j.fecha }}</div>
+          </div>
+          <div class="dr-wa-row2">
+            <div class="dr-wa-subtitle truncate">
+              @if (sector() === 'SALUD' && j.paciente) {
+                <span class="text-slate-500">Paciente:</span> {{ j.paciente.nombre }} {{ j.paciente.apellido || '' }}
+                <span class="mx-1 text-slate-400">•</span>
+              }
+              <span class="text-slate-500">Valor:</span> {{ formatMoney(j.valorTotal) }}
+            </div>
+            <div class="dr-wa-right">
+              <div class="dr-wa-actions">
+                <button type="button" class="dr-wa-action is-view" aria-label="Ver" (click)="$event.stopPropagation(); verTrabajo(j)"><i class="bi bi-eye"></i></button>
+                <button type="button" class="dr-wa-action is-edit" aria-label="Editar" (click)="$event.stopPropagation(); editarTrabajo(j)"><i class="bi bi-pencil"></i></button>
+                <button type="button" class="dr-wa-action is-delete" aria-label="Eliminar" (click)="$event.stopPropagation(); openConfirm(j)"><i class="bi bi-trash"></i></button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+      }
     </div>
-    }
   </div>
   }
   }
 </div>
 
 <!-- Paginación -->
-<nav class="mt-6" aria-label="Paginación">
-  <div class="flex flex-wrap items-center justify-between gap-3">
-    <div class="text-xs text-slate-600">Mostrando {{ firstItemIndex() }}–{{ lastItemIndex() }} de {{ total() }}</div>
-    <ul class="flex flex-wrap gap-2 items-center">
-      <li><button (click)="prevPage()" [disabled]="page()<=1 || loading()" class="px-3 py-1.5 rounded-md border text-xs font-medium bg-white disabled:opacity-50 hover:bg-slate-50">Anterior</button></li>
-      <li class="px-3 py-1.5 text-xs border rounded-md bg-slate-50">{{ page() }}/{{ totalPages() }}</li>
-      <li><button (click)="nextPage()" [disabled]="page()>=totalPages() || loading()" class="px-3 py-1.5 rounded-md border text-xs font-medium bg-white disabled:opacity-50 hover:bg-slate-50">Siguiente</button></li>
-    </ul>
-  </div>
-</nav>
+@if (total() > 10) {
+  <nav class="mt-6 mb-24 md:mb-0 dr-sticky-pager md:static" aria-label="Paginación">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="text-xs text-slate-600">Mostrando {{ firstItemIndex() }}–{{ lastItemIndex() }} de {{ total() }}</div>
+      <ul class="flex flex-wrap gap-2 items-center">
+        <li><button (click)="prevPage()" [disabled]="page()<=1 || loading()" class="px-3 py-1.5 rounded-md border text-xs font-medium bg-white disabled:opacity-50 hover:bg-slate-50">Anterior</button></li>
+        <li class="px-3 py-1.5 text-xs border rounded-md bg-slate-50">{{ page() }}/{{ totalPages() }}</li>
+        <li><button (click)="nextPage()" [disabled]="page()>=totalPages() || loading()" class="px-3 py-1.5 rounded-md border text-xs font-medium bg-white disabled:opacity-50 hover:bg-slate-50">Siguiente</button></li>
+      </ul>
+    </div>
+  </nav>
+}
 
 <!-- Modal Confirmación -->
 @if (confirmOpen()) {
 <div class="fixed inset-0 z-[60] flex items-center justify-center">
-  <div class="fixed inset-0 bg-black/40 z-[55]" (click)="closeConfirm()"></div>
+  <div class="fixed inset-0 bg-black/40 z-[55] dr-fade-in" (click)="closeConfirm()"></div>
   <div class="relative w-full max-w-md mx-auto z-[65]">
-    <div class="bg-white rounded-2xl shadow-card p-5 border border-slate-200/70">
+    <div class="bg-white rounded-2xl shadow-card p-5 border border-slate-200/70 dr-sheet-up">
       <div class="flex items-start justify-between mb-3">
         <h5 class="font-semibold flex items-center gap-2 text-red-600 m-0"><i class="bi bi-trash"></i><span>Confirmar eliminación</span></h5>
         <button type="button" (click)="closeConfirm()" class="btn btn-close" aria-label="Cerrar"></button>
@@ -179,7 +210,7 @@
       </div>
       <div class="flex justify-end gap-2 mt-5">
         <button type="button" (click)="closeConfirm()" [disabled]="deleting()" class="btn btn-outline-secondary">Cancelar</button>
-        <button type="button" (click)="confirmDelete()" [disabled]="deleting()" class="btn btn-danger">@if (deleting()) { <span class="spinner-border spinner-border-sm mr-2"></span> } Eliminar</button>
+        <button type="button" (click)="sparkClick($event); confirmDelete()" [disabled]="deleting()" class="btn btn-danger">@if (deleting()) { <span class="spinner-border spinner-border-sm mr-2"></span> } Eliminar</button>
       </div>
     </div>
   </div>

@@ -6,8 +6,8 @@
       <p class="text-xs text-slate-500 m-0">Información completa del registro</p>
     </div>
     <div class="flex gap-2">
-      <a routerLink="/trabajos" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i><span class="ml-1">Volver</span></a>
-      @if (id()) { <a [routerLink]="['/trabajos', id(), 'editar']" class="btn btn-primary"><i class="bi bi-pencil"></i><span class="ml-1">Editar</span></a> }
+      <a routerLink="/trabajos" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i><span class="ml-1"></span></a>
+      @if (id()) { <a [routerLink]="['/trabajos', id(), 'editar']" class="btn btn-primary"><i class="bi bi-pencil"></i><span class="ml-1"></span></a> }
       <button type="button" class="btn btn-outline-secondary" (click)="downloadPdf()" [disabled]="loading() || !job()"><i class="bi bi-file-earmark-pdf"></i><span class="ml-1">Descargar PDF</span></button>
     </div>
   </div>

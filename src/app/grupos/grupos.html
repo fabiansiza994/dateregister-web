@@ -1,31 +1,27 @@
-<div class="bg-white rounded-2xl shadow-card border border-slate-200/70 p-4">
-<div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-  <div>
-    <h3 class="fw-semibold mb-0">Grupos</h3>
-    <small class="text-secondary">Administra los grupos de trabajo</small>
+<!-- Sparks overlay -->
+<div #sparksContainer class="dr-sparks-container"></div>
+
+<!-- Page wrapper to push footer down on desktop -->
+<div class="md:min-h-[70vh] flex flex-col">
+
+<!-- Header -->
+<div class="flex flex-wrap items-center justify-between mb-4 gap-2">
+  <div class="space-y-1">
+    <h3 class="text-xl font-semibold m-0">Grupos</h3>
+    <p class="text-xs text-slate-500 m-0">Administra los grupos de trabajo</p>
   </div>
 </div>
 
-@if (error()) {
-  <div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
-    <i class="bi bi-exclamation-triangle mt-1"></i>
-    <div class="flex-grow-1">{{ error() }}</div>
-    <button class="btn-close ms-auto" (click)="error.set(null)"></button>
-  </div>
-}
-@if (success()) {
-  <div class="alert alert-success d-flex align-items-start gap-2" role="alert">
-    <i class="bi bi-check-circle mt-1"></i>
-    <div class="flex-grow-1">{{ success() }}</div>
-    <button class="btn-close ms-auto" (click)="success.set(null)"></button>
-  </div>
-}
+@if (error()) { <div class="rounded-lg border border-red-300 bg-red-50 text-red-700 px-4 py-3 text-sm flex gap-3 items-start mb-4" role="alert"><i class="bi bi-exclamation-triangle mt-1"></i><div class="font-medium flex-1">{{ error() }}</div><button type="button" class="btn btn-close" (click)="error.set(null)"></button></div> }
+@if (success()) { <div class="rounded-lg border border-green-300 bg-green-50 text-green-700 px-4 py-3 text-sm flex gap-3 items-start mb-4" role="alert"><i class="bi bi-check-circle mt-1"></i><div class="font-medium flex-1">{{ success() }}</div><button type="button" class="btn btn-close" (click)="success.set(null)"></button></div> }
+
+<!-- Filtros de búsqueda (removidos por solicitud) -->
 
 <!-- Crear -->
-<form class="card border-0 shadow-sm rounded-4 mb-3" (submit)="$event.preventDefault(); create()">
-  <div class="card-body">
-    <div class="row g-2 align-items-end">
-      <div class="col-md-8">
+<form class="bg-white rounded-2xl shadow-card border border-slate-200/60 mb-3" (submit)="$event.preventDefault(); create()">
+  <div class="p-5 pt-4">
+    <div class="grid grid-cols-12 gap-3 items-end">
+      <div class="col-span-12 md:col-span-8 space-y-1 min-w-0" #createAnchor>
         <label class="form-label">Nuevo grupo</label>
         <input class="form-control"
                placeholder="Ej: Administradores, Comercial..."
@@ -34,9 +30,9 @@
                name="newGroupName"
                [disabled]="creating() || loading()">
       </div>
-      <div class="col-md-4">
-        <button class="btn btn-success w-100" [disabled]="!canCreate() || loading()">
-          @if (creating()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+      <div class="col-span-12 md:col-span-4">
+        <button class="btn btn-success w-full" [disabled]="!canCreate() || loading()" (click)="sparkClick($event)">
+          @if (creating()) { <span class="spinner-border spinner-border-sm mr-2"></span> }
           Crear grupo
         </button>
       </div>
@@ -47,14 +43,14 @@
 
 
 <!-- Tabla -->
-<div class="table-responsive shadow-sm rounded-4">
-  <table class="table table-hover align-middle mb-0">
-    <thead class="table-light sticky-top">
+<div class="hidden md:block rounded-2xl shadow-card overflow-hidden border border-slate-200/70 bg-white">
+  <table class="table-modern align-middle">
+    <thead>
       <tr>
-        <th style="width:80px;">#</th>
-        <th (click)="changeSort('id')" role="button" class="text-nowrap">ID</th>
-        <th (click)="changeSort('nombre')" role="button">Nombre</th>
-        <th style="width: 220px;">Acciones</th>
+        <th class="px-3 py-2 w-[80px]">#</th>
+        <th class="px-3 py-2 cursor-pointer" (click)="changeSort('id')">ID</th>
+        <th class="px-3 py-2 cursor-pointer" (click)="changeSort('nombre')">Nombre</th>
+        <th class="px-3 py-2 w-[220px]">Acciones</th>
       </tr>
     </thead>
     <tbody>
@@ -76,9 +72,9 @@
         } @else {
           @for (g of visibleWithRow(); track g.id) {
             <tr>
-              <td class="text-secondary">{{ g.rowNumber }}</td>
-              <td class="text-monospace">{{ g.id }}</td>
-              <td>
+              <td class="px-3 py-2 text-xs text-slate-500">{{ g.rowNumber }}</td>
+              <td class="px-3 py-2 font-mono">{{ g.id }}</td>
+              <td class="px-3 py-2">
                 @if (editingId() === g.id) {
                   <input class="form-control form-control-sm"
                          [ngModel]="editName()"
@@ -86,33 +82,26 @@
                          name="editName-{{g.id}}"
                          autocomplete="off">
                 } @else {
-                  <span class="fw-semibold">{{ g.nombre }}</span>
+                  <span class="font-semibold">{{ g.nombre }}</span>
                 }
               </td>
-              <td>
+              <td class="px-3 py-2">
                 @if (editingId() === g.id) {
-                  <div class="btn-group btn-group-sm">
-                    <button class="btn btn-success"
+                  <div class="flex gap-2">
+                    <button class="btn btn-success btn-sm"
                             (click)="saveEdit(g)"
                             [disabled]="savingRowId() === g.id || !editName().trim()">
-                      @if (savingRowId() === g.id) {
-                        <span class="spinner-border spinner-border-sm me-1"></span>
-                      }
+                      @if (savingRowId() === g.id) { <span class="spinner-border spinner-border-sm mr-1"></span> }
                       Guardar
                     </button>
-                    <button class="btn btn-light" (click)="cancelEdit()" [disabled]="savingRowId() === g.id">
+                    <button class="btn btn-light btn-sm" (click)="cancelEdit()" [disabled]="savingRowId() === g.id">
                       Cancelar
                     </button>
                   </div>
                 } @else {
-                  <div class="btn-group btn-group-sm">
-                 
-                    <button class="btn btn-outline-primary" (click)="startEdit(g)">
-                      <i class="bi bi-pencil"></i> Editar
-                    </button>
-                    <button class="btn btn-outline-danger" (click)="openConfirm(g)" [disabled]="loading()">
-                      <i class="bi bi-trash"></i> Eliminar
-                    </button>
+                  <div class="flex flex-wrap gap-2">
+                    <button class="btn btn-outline-primary btn-sm" (click)="startEdit(g)"><i class="bi bi-pencil"></i> Editar</button>
+                    <button class="btn btn-outline-danger btn-sm" (click)="openConfirm(g); sparkClick($event)" [disabled]="loading()"><i class="bi bi-trash dr-shake"></i> Eliminar</button>
                   </div>
                 }
               </td>
@@ -122,18 +111,69 @@
       }
     </tbody>
   </table>
+ </div>
+
+<!-- MOBILE CARDS -->
+<div class="md:hidden">
+  @if (loading()) { <div class="text-center py-4 text-slate-500"><span class="spinner-border spinner-border-sm mr-2"></span> Cargando…</div> } @else {
+  @if (visibleWithRow().length === 0) { <div class="rounded-xl border border-slate-200/70 bg-white p-4 text-center text-slate-500">No hay grupos para mostrar.</div> } @else {
+  <div class="grid gap-3">
+    @for (g of visibleWithRow(); track g.id) {
+    <div class="bg-white rounded-2xl shadow-card border border-slate-200/70">
+      <div class="p-4">
+        <div class="flex items-start justify-between mb-2">
+          @if (editingId() === g.id) {
+            <div class="flex-1">
+              <input class="form-control form-control-sm" autofocus
+                     [ngModel]="editName()"
+                     (ngModelChange)="editName.set($event)"
+                     name="editNameMobile-{{g.id}}"
+                     autocomplete="off">
+            </div>
+            <span class="ml-3 text-[11px] text-slate-500">#{{ g.rowNumber }}</span>
+          } @else {
+            <h6 class="m-0 font-semibold text-sm"><i class="bi bi-people mr-1 text-slate-400"></i>{{ g.nombre }}</h6>
+            <span class="text-[11px] text-slate-500">#{{ g.rowNumber }}</span>
+          }
+        </div>
+        @if (editingId() === g.id) {
+          <div class="flex gap-2 justify-end mt-2">
+            <button class="btn btn-success btn-sm" (click)="saveEdit(g)" [disabled]="savingRowId() === g.id || !editName().trim()">
+              @if (savingRowId() === g.id) { <span class="spinner-border spinner-border-sm mr-1"></span> }
+              Guardar
+            </button>
+            <button class="btn btn-light btn-sm" (click)="cancelEdit()" [disabled]="savingRowId() === g.id">Cancelar</button>
+          </div>
+        } @else {
+          <div class="flex justify-end gap-2">
+            <button class="btn btn-outline-primary btn-sm" (click)="startEdit(g)"><i class="bi bi-pencil"></i><span class="ml-1">Editar</span></button>
+            <button class="btn btn-outline-danger btn-sm" (click)="openConfirm(g); sparkClick($event)" [disabled]="loading()"><i class="bi bi-trash dr-shake"></i><span class="ml-1">Eliminar</span></button>
+          </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+  }
+  }
 </div>
 
-<!-- Footer paginación -->
-<div class="d-flex justify-content-between align-items-center mt-3">
-  <div class="text-secondary small">
-    Mostrando {{ firstItemIndex() }}–{{ lastItemIndex() }} de {{ total() }}
-  </div>
-  <div class="btn-group">
-    <button class="btn btn-outline-secondary btn-sm" (click)="prevPage()" [disabled]="page()<=1 || loading()">«</button>
-    <button class="btn btn-outline-secondary btn-sm" disabled>{{ page() }}/{{ totalPages() }}</button>
-    <button class="btn btn-outline-secondary btn-sm" (click)="nextPage()" [disabled]="page()>=totalPages() || loading()">»</button>
-  </div>
+<!-- Paginación -->
+@if (total() > 10) {
+  <nav class="dr-sticky-pager md:static mt-4 md:mt-auto mb-24 md:mb-0 px-3 py-2 md:px-4 md:py-2 md:bg-white md:rounded-xl md:border md:border-slate-200/70 md:shadow-sm md:text-sm" aria-label="Paginación">
+    <div class="flex items-center justify-between gap-3">
+      <div class="flex gap-2">
+        <button class="btn btn-light btn-sm" (click)="prevPage()" [disabled]="page()===1 || loading()">Anterior</button>
+        <div class="flex gap-1">
+          <button class="btn btn-light btn-sm" *ngFor="let n of pagesToShow()" [class.active]="n===page()" (click)="goToPage(n)">{{ n }}</button>
+        </div>
+        <button class="btn btn-light btn-sm" (click)="nextPage()" [disabled]="page()===totalPages() || loading()">Siguiente</button>
+      </div>
+      <div class="text-xs text-slate-500">Página {{ page() }} de {{ totalPages() }} · Mostrando {{ firstItemIndex() }}–{{ lastItemIndex() }} de {{ total() }}</div>
+    </div>
+  </nav>
+}
+
 </div>
 
 <!-- Modal Confirmación -->
@@ -165,7 +205,7 @@
 
       <div class="modal-footer border-0">
         <button type="button" class="btn btn-light" (click)="closeConfirm()" [disabled]="loading()">Cancelar</button>
-        <button type="button" class="btn btn-danger" (click)="confirmDelete()" [disabled]="loading()">
+        <button type="button" class="btn btn-danger" (click)="sparkClick($event); confirmDelete()" [disabled]="loading()">
           @if (loading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
           Eliminar
         </button>
@@ -174,4 +214,13 @@
   </div>
 </div>
 <div class="modal-backdrop fade" [class.show]="confirmOpen()" *ngIf="confirmOpen()"></div>
+
+<!-- FAB crear (móvil): desplaza a la sección de creación -->
+<div class="md:hidden">
+  @if (showCreateFab()) {
+    <button type="button" class="btn btn-primary dr-create-fab" (click)="createAnchor?.scrollIntoView({behavior: 'smooth', block: 'start'}); sparkClick($event)" aria-label="Crear grupo">
+      <i class="bi bi-people"></i>
+    </button>
+  }
+  <div class="h-16"></div>
 </div>

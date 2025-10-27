@@ -1,4 +1,4 @@
-import { Component, computed, signal, ElementRef, ViewChild, HostListener } from '@angular/core';
+import { Component, computed, signal, ElementRef, ViewChild, HostListener, AfterViewInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../core/auth.service';
@@ -11,7 +11,7 @@ import { PlanesService } from '../suscripcion/planes.service';
   templateUrl: './menu.html',
   styleUrls: ['./menu.css']
 })
-export class Menu {
+export class Menu implements AfterViewInit {
   // Template refs para detectar clic fuera
   @ViewChild('adminDropdown', { static: false }) adminRef?: ElementRef<HTMLElement>;
   @ViewChild('userDropdown', { static: false }) userRef?: ElementRef<HTMLElement>;
@@ -67,7 +67,7 @@ export class Menu {
     return plan?.name || 'Free';
   });
 
-  constructor(private router: Router, private auth: AuthService, private planes: PlanesService) {
+  constructor(private router: Router, private auth: AuthService, private planes: PlanesService, private host: ElementRef<HTMLElement>) {
     this.auth.refreshFromStorage();
     this._claims.set(this.auth.claims());
 
@@ -191,4 +191,31 @@ export class Menu {
   }
 
   brandLines = computed(() => this.splitCompanyName(this.empresa() ?? ''));
+
+  // ===== Altura dinámica del menú para sticky de filtros =====
+  ngAfterViewInit(): void {
+    // Actualizar inmediatamente y al redimensionar
+    this.updateMenuHeight();
+    setTimeout(() => this.updateMenuHeight(), 0);
+    window.addEventListener('resize', this._onResize);
+
+    // Recalcular cuando cambien elementos que alteren la altura (tip iOS, menús, etc.)
+    effect(() => {
+      // Dependencias que pueden cambiar la altura
+      this.showIOSTip();
+      this.mobileOpen();
+      // Pequeño defer para permitir el reflow
+      setTimeout(() => this.updateMenuHeight(), 50);
+    });
+  }
+
+  private _onResize = () => this.updateMenuHeight();
+
+  private updateMenuHeight() {
+    try {
+      const nav: HTMLElement | null = this.host?.nativeElement?.querySelector('nav');
+      const h = (nav?.offsetHeight || 56);
+      document.documentElement.style.setProperty('--menu-h', `${h}px`);
+    } catch { /* noop */ }
+  }
 }

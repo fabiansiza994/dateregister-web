@@ -180,6 +180,8 @@ export class CreateJobComponent implements OnInit {
   confirmTarget = signal<FotoKey | null>(null);
   // Confirmación visual para reemplazar (primer click oscurece y muestra botón)
   replaceTarget = signal<FotoKey | null>(null);
+  // Confirmación de cancelar con cambios
+  cancelConfirmOpen = signal(false);
 
   constructor(
     private http: HttpClient,
@@ -210,6 +212,9 @@ export class CreateJobComponent implements OnInit {
     if (this.isEdit()) {
       this.loadDetail(this._jobId()!);
     }
+
+    // Tomar snapshot inicial después del primer ciclo para comparar cambios
+    this.setInitialSnapshotSoon();
   }
 
   private todayStr(): string {
@@ -554,6 +559,8 @@ export class CreateJobComponent implements OnInit {
     this.recalc();
   }
 
+  
+
   private validate(): string | null {
     if (!this.form.fecha) return 'La fecha es obligatoria.';
     if (!this.form.descripcionLabor?.trim()) return 'La descripción es obligatoria.';
@@ -689,8 +696,25 @@ export class CreateJobComponent implements OnInit {
       this.router.navigate(['/trabajos'], { state: { flash: '✅ Trabajo creado.' } });
 
     } catch (e: any) {
-      if (e instanceof TimeoutError) this.error.set('La carga tardó demasiado.');
-      else this.error.set(e?.error?.message || e?.message || 'No se pudo crear el trabajo.');
+      if (e instanceof TimeoutError) {
+        this.error.set('La carga tardó demasiado.');
+      } else {
+        // Intentar parsear estructura de error del backend
+        const be = (e?.error ?? e) as any;
+        const arr = Array.isArray(be?.error) ? be.error : null;
+        if (arr && arr.length > 0) {
+          const msgs = arr.map((it: any) => {
+            const field = String(it?.msgError || '').trim();
+            const msg = String(it?.descError || it?.codError || 'Error').trim();
+            return field ? `${field}: ${msg}` : msg;
+          }).filter(Boolean);
+          this.error.set(msgs.join(' | '));
+        } else {
+          this.error.set(be?.message || e?.error?.message || e?.message || 'No se pudo crear el trabajo.');
+        }
+      }
+      // Llevar al inicio para que el usuario vea el mensaje
+      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
     } finally {
       this.loading.set(false);
     }
@@ -741,10 +765,70 @@ export class CreateJobComponent implements OnInit {
       this.router.navigate(['/trabajos', this.form.id], { state: { flash: '✅ Cambios guardados.' } });
 
     } catch (e: any) {
-      if (e instanceof TimeoutError) this.error.set('La actualización tardó demasiado.');
-      else this.error.set(e?.error?.message || e?.message || 'No se pudo actualizar el trabajo.');
+      if (e instanceof TimeoutError) {
+        this.error.set('La actualización tardó demasiado.');
+      } else {
+        const be = (e?.error ?? e) as any;
+        const arr = Array.isArray(be?.error) ? be.error : null;
+        if (arr && arr.length > 0) {
+          const msgs = arr.map((it: any) => {
+            const field = String(it?.msgError || '').trim();
+            const msg = String(it?.descError || it?.codError || 'Error').trim();
+            return field ? `${field}: ${msg}` : msg;
+          }).filter(Boolean);
+          this.error.set(msgs.join(' | '));
+        } else {
+          this.error.set(be?.message || e?.error?.message || e?.message || 'No se pudo actualizar el trabajo.');
+        }
+      }
+      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
     } finally {
       this.loading.set(false);
     }
   }
+
+  // ===== Confirmación de salida si hay cambios =====
+  private _initialSnapshot = '';
+  private setInitialSnapshotSoon() { try { setTimeout(() => { this._initialSnapshot = this.snapshot(); }, 0); } catch { /* noop */ } }
+  private snapshot(): string {
+    try {
+      const snap = {
+        form: this.form,
+        selectedClientId: this.selectedClient?.id || 0,
+        selectedPatientId: this.selectedPatient?.id || 0,
+        files: Object.keys(this.files || {}),
+        previews: Object.keys(this.previews || {}),
+        marked: Array.from(this.markedForDelete.values()),
+        existing: Object.keys(this.existingPhotos || {}).filter(k => (this.existingPhotos as any)[k]),
+      };
+      return JSON.stringify(snap);
+    } catch { return ''; }
+  }
+  private hasChanges(): boolean {
+    try { return this.snapshot() !== this._initialSnapshot; } catch { return false; }
+  }
+
+  /** Cancelar/Volver desde crear/editar trabajo, con confirmación si hay cambios */
+  cancel() {
+    if (this.loading()) return;
+    const dirty = this.hasChanges();
+    if (dirty) { this.cancelConfirmOpen.set(true); return; }
+    try {
+      if (window.history.length > 1) {
+        window.history.back();
+        return;
+      }
+    } catch { /* noop */ }
+    this.router.navigate(['/trabajos']);
+  }
+
+  proceedCancel() {
+    if (this.loading()) return;
+    this.cancelConfirmOpen.set(false);
+    try {
+      if (window.history.length > 1) { window.history.back(); return; }
+    } catch { /* noop */ }
+    this.router.navigate(['/trabajos']);
+  }
+  closeCancelConfirm() { if (!this.loading()) this.cancelConfirmOpen.set(false); }
 }

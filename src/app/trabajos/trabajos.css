@@ -1,0 +1,156 @@
+/* Animación: sacudir icono de basura al pasar el mouse por el botón eliminar (sólo en Trabajos) */
+@keyframes dr-shake {
+	0% { transform: rotate(0) translateX(0); }
+	20% { transform: rotate(-12deg) translateX(-1px); }
+	40% { transform: rotate(10deg) translateX(1px); }
+	60% { transform: rotate(-8deg); }
+	80% { transform: rotate(6deg); }
+	100% { transform: rotate(0) translateX(0); }
+}
+
+/* icono dentro de botones de eliminar en listas (outline-danger) */
+.btn.btn-outline-danger:hover i.bi-trash,
+.btn.btn-outline-danger:focus-visible i.bi-trash {
+	animation: dr-shake 0.4s ease-in-out both;
+	transform-origin: 50% 60%;
+	display: inline-block;
+}
+
+/* Variante por si existe botón .btn-danger con icono de basura */
+.btn.btn-danger:hover i.bi-trash,
+.btn.btn-danger:focus-visible i.bi-trash {
+	animation: dr-shake 0.4s ease-in-out both;
+	transform-origin: 50% 60%;
+	display: inline-block;
+}
+
+/* Chispas al hacer click en botones de Crear/Confirmar (sólo en Trabajos) */
+.dr-sparks-container { pointer-events: none; }
+.dr-spark {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 4px;
+	height: 4px;
+	border-radius: 9999px;
+	opacity: 0.95;
+	box-shadow: 0 0 6px rgba(0,0,0,0.12);
+	transform: translate(0, 0) scale(1);
+	animation: dr-spark-flight var(--d, 480ms) cubic-bezier(.2,.7,.2,1) forwards;
+}
+
+@keyframes dr-spark-flight {
+	0% { opacity: 1; transform: translate(0, 0) scale(1); }
+	60% { opacity: 0.9; }
+	100% { opacity: 0; transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(0.6); }
+}
+
+/* Sticky debajo del menú (usa variable dinámica --menu-h) */
+.dr-sticky-under-nav {
+	position: sticky;
+	top: calc(var(--menu-h, 3.5rem) + .5rem); /* deja un pequeño espacio bajo el menú */
+	z-index: 20;
+}
+
+/* Input con botón Buscar adentro (vista móvil) */
+.dr-search-wrap { position: relative; }
+.dr-search-wrap .form-control { padding-left: 2.25rem; }
+.dr-search-btn-inside {
+	position: absolute;
+	left: .5rem;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 28px; height: 28px;
+	border-radius: 9999px;
+	display: inline-flex; align-items: center; justify-content: center;
+	color: #64748b; /* slate-500 */
+	background: transparent; border: 1px solid transparent;
+}
+.dr-search-btn-inside:hover { color: #0ea5e9; /* sky-500 */ }
+.dr-search-btn-inside:disabled { opacity: .5; }
+
+/* Paginación sticky sobre la barra inferior en móvil */
+.dr-sticky-pager {
+		position: sticky;
+		bottom: calc(5rem + .5rem); /* barra inferior (5rem) + espacio */
+		z-index: 25;
+		background: #ffffff;
+		border-radius: .75rem;
+		border: 1px solid rgba(100,116,139,.35); /* slate-500/35 */
+		box-shadow: 0 8px 30px rgba(2,6,23,.08);
+		padding: .25rem .5rem; /* pequeño acolchado alrededor del nav */
+}
+
+/* Desktop overrides */
+@media (min-width: 768px) {
+	.dr-sticky-pager { position: static !important; bottom: auto; background: transparent; box-shadow: none; border: 0; padding: 0; }
+}
+
+/* ========== Lista estilo WhatsApp (móvil) ========== */
+.dr-wa-item {
+	width: 100%;
+	display: flex;
+	align-items: stretch;
+	gap: .75rem;
+	padding: .75rem .875rem;
+	background: #ffffff;
+	-webkit-tap-highlight-color: transparent;
+	cursor: pointer;
+}
+.dr-wa-item:active { background: #f8fafc; }
+.dr-wa-item:focus-visible { outline: 2px solid rgba(14,165,233,.35); outline-offset: 2px; border-radius: .75rem; }
+.dr-wa-avatar {
+	flex: none;
+	width: 44px; height: 44px;
+	border-radius: 9999px;
+	background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+	color: #0ea5e9;
+	display: inline-flex; align-items: center; justify-content: center;
+	box-shadow: inset 0 0 0 1px rgba(14,165,233,.25);
+}
+.dr-wa-avatar i { font-size: 18px; }
+.dr-wa-avatar.is-paid {
+	color: #16a34a; /* green-600 */
+	background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%); /* green-100 to green-50 */
+	box-shadow: inset 0 0 0 1px rgba(22,163,74,.25);
+}
+.dr-wa-avatar.is-pending {
+	color: #ca8a04; /* amber-600 */
+	background: linear-gradient(135deg, #fef9c3 0%, #fffbeb 100%); /* yellow-100 to amber-50 */
+	box-shadow: inset 0 0 0 1px rgba(202,138,4,.25);
+}
+.dr-wa-avatar.is-canceled {
+	color: #dc2626; /* red-600 */
+	background: linear-gradient(135deg, #fee2e2 0%, #fff1f2 100%); /* red-200 to rose-50 */
+	box-shadow: inset 0 0 0 1px rgba(220,38,38,.25);
+}
+.dr-wa-main { flex: 1 1 auto; min-width: 0; }
+.dr-wa-row1 { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; }
+.dr-wa-title { font-weight: 600; font-size: 14px; color: #0f172a; }
+.dr-wa-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.dr-wa-date { font-size: 11px; color: #94a3b8; white-space: nowrap; }
+.dr-wa-row2 { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: 0; }
+.dr-wa-stack { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dr-wa-subtitle { font-size: 12px; color: #475569; line-height: 1.15; }
+.dr-wa-status { font-size: 11px; padding: 2px 8px; border-radius: 9999px; font-weight: 600; white-space: nowrap; }
+.dr-wa-right { display: flex; align-items: center; gap: .5rem; }
+
+/* Utilidades de truncado */
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Acciones circulares */
+.dr-wa-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: .5rem; }
+.dr-wa-action {
+	width: 36px; height: 36px;
+	border-radius: 9999px;
+	display: inline-flex; align-items: center; justify-content: center;
+	border: 1px solid rgba(100,116,139,.35);
+	background: #ffffff;
+	color: #475569;
+	box-shadow: 0 1px 2px rgba(2,6,23,.05);
+}
+.dr-wa-action i { font-size: 16px; }
+.dr-wa-action:active { background: #f8fafc; }
+.dr-wa-action.is-view { color: #0284c7; border-color: rgba(56,189,248,.35); }
+.dr-wa-action.is-edit { color: #4f46e5; border-color: rgba(129,140,248,.35); }
+.dr-wa-action.is-delete { color: #e11d48; border-color: rgba(248,113,113,.35); }

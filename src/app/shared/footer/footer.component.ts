@@ -6,9 +6,11 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   styles: [`
-    :host {
-      display: block;
-    }
+  :host { display: block; }
+  /* Ocultra en móvil cuando el host tiene la clase 'hidden' */
+  :host(.hidden) { display: none; }
+  /* En md+ re-mostramos aunque tenga 'hidden' (para respetar hidden md:block en app.html) */
+  @media (min-width: 768px) { :host(.hidden) { display: block; } }
 
     footer {
       background: var(--dr-surface, #0f1420);

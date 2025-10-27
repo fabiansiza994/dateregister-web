@@ -1,0 +1,19 @@
+/* Agrega un relleno inferior en móvil para que el contenido no quede tapado por la barra inferior.
+	 Se desactiva automáticamente en md+ */
+.dr-bottom-nav-pad {
+	padding-bottom: calc(5rem + 0.5rem);
+}
+
+/* Considera safe-area en dispositivos con notch/home indicator */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+	.dr-bottom-nav-pad {
+		padding-bottom: calc(5rem + env(safe-area-inset-bottom) + 0.5rem);
+	}
+}
+
+@media (min-width: 768px) {
+	.dr-bottom-nav-pad {
+		padding-bottom: 0 !important;
+	}
+}
+
