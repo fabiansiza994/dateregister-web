@@ -47,8 +47,8 @@
   </a>
 </div>
 
-<!-- Toolbar de ordenamiento y tamaño de página -->
-<div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+<!-- Toolbar de ordenamiento y tamaño de página solo en escritorio -->
+<div class="hidden md:flex flex-wrap items-center justify-between gap-3 mb-4">
   <div class="text-xs text-slate-600">Mostrando {{ firstItemIndex() }}–{{ lastItemIndex() }} de {{ total() }}</div>
   <div class="flex items-center gap-2">
     <label class="text-xs text-slate-600">Orden:</label>

@@ -47,8 +47,8 @@
  <div class="mb-3" #createAnchor>
    <a class="btn btn-primary" routerLink="/pacientes/nuevo" (click)="sparkClick($event)"><i class="bi bi-person-plus"></i><span class="ml-1">Crear paciente</span></a>
  </div>
-<!-- Controles paginación / orden -->
-<div class="flex flex-wrap items-center justify-between mb-3 gap-2">
+<!-- Controles paginación / orden solo en escritorio -->
+<div class="hidden md:flex flex-wrap items-center justify-between mb-3 gap-2">
   <div class="text-slate-500 text-xs">Mostrando {{ firstItemIndex() }}–{{ lastItemIndex() }} de {{ total() }} registros</div>
   <div class="flex items-center gap-2">
     <div class="flex gap-2">
