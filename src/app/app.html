@@ -1,12 +1,18 @@
-<div [@routeAnimations]="routeAnimParams()" [class.dr-bottom-nav-pad]="!isModules()">
+<div [@routeAnimations]="routeAnimParams()" [class.dr-bottom-nav-pad]="!isModules() && !isLogin()">
 	<router-outlet />
 	</div>
 
 <!-- Barra inferior móvil: ocúltala en la vista de módulos -->
-@if (!isModules()) {
+@if (!isModules() && !isLogin()) {
 	<div class="h-20 md:hidden"></div>
 	<app-mobile-bottom-nav class="md:hidden"></app-mobile-bottom-nav>
 }
 
-<!-- Footer sólo en md+: el propio host es flex-item, así margin-top:auto funciona para “pegarlo” abajo -->
-<app-footer class="hidden md:block"></app-footer>
+<!-- Footer: show normal footer on desktop, and also show it on login/register/verifycode even on mobile -->
+@if (isLogin()) {
+	<app-footer class="block"></app-footer>
+}
+@if (!isLogin()) {
+	<!-- Footer sólo en md+: el propio host es flex-item, así margin-top:auto funciona para “pegarlo” abajo -->
+	<app-footer class="hidden md:block"></app-footer>
+}

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -19,7 +19,8 @@ interface ApiResponseOk<T = any> {
   selector: 'app-verifycode',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
-  templateUrl: './verifycode.html'
+  templateUrl: './verifycode.html',
+  styleUrls: ['./verifycode.css']
 })
 export class VerifyCodeComponent implements OnInit {
   // params
@@ -32,6 +33,11 @@ export class VerifyCodeComponent implements OnInit {
   loading = signal(false);
   error   = signal<string | null>(null);
   info    = signal<string | null>(null);
+
+  // resend cooldown (seconds)
+  resendCooldown = signal(0);
+  resendLoading = signal(false);
+  private resendTimer: any = null;
 
   private apiBase = '';
 
@@ -49,6 +55,39 @@ export class VerifyCodeComponent implements OnInit {
     if (!this.userId) {
       this.error.set('Falta el parámetro "userId" en la URL.');
     }
+    // Start initial cooldown so user can't spam resend right away
+    this.startResendCooldown(60);
+  }
+
+  ngOnDestroy(): void {
+    this.clearResendTimer();
+  }
+
+  private clearResendTimer() {
+    if (this.resendTimer) {
+      clearInterval(this.resendTimer);
+      this.resendTimer = null;
+    }
+  }
+
+  private startResendCooldown(seconds = 60) {
+    this.clearResendTimer();
+    this.resendCooldown.set(seconds);
+    this.resendTimer = setInterval(() => {
+      const s = this.resendCooldown() - 1;
+      if (s <= 0) {
+        this.resendCooldown.set(0);
+        this.clearResendTimer();
+      } else {
+        this.resendCooldown.set(s);
+      }
+    }, 1000);
+  }
+
+  formatCountdown(sec: number) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
   canSubmit() {
@@ -103,6 +142,44 @@ export class VerifyCodeComponent implements OnInit {
       }
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  async resendCode() {
+    if (!this.userId) {
+      this.error.set('Falta el parámetro "userId" para reenviar el código.');
+      return;
+    }
+    if (this.resendLoading() || this.resendCooldown() > 0) return;
+
+    this.resendLoading.set(true);
+    this.error.set(null);
+    this.info.set(null);
+
+    try {
+      const url = this.apiBase
+        ? `${this.apiBase}/code/resend/${this.userId}`
+        : `http://localhost:8081/code/resend/${this.userId}`;
+      const res = await firstValueFrom(
+        this.http.get<ApiResponseOk>(url).pipe(timeout(10000))
+      );
+
+      if (res?.dataResponse?.response === 'ERROR') {
+        throw res;
+      }
+
+      this.info.set('Se ha reenviado el código. Revisa tu correo.');
+      // start cooldown again
+      this.startResendCooldown(60);
+
+    } catch (e: any) {
+      if (e instanceof TimeoutError) {
+        this.error.set('La petición para reenviar tardó demasiado. Intenta de nuevo.');
+      } else {
+        this.error.set(this.mapError(e));
+      }
+    } finally {
+      this.resendLoading.set(false);
     }
   }
 }

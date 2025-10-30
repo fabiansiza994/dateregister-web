@@ -1,11 +1,13 @@
-<div class="mx-auto max-w-3xl px-4 py-6">
-  <div class="flex items-start justify-between mb-6">
-    <div>
-      <h3 class="text-xl font-semibold leading-tight m-0">Activar cuenta</h3>
-      <small class="block text-slate-500 mt-1">Valida el código enviado a tu correo</small>
+<div class="verify-outer">
+  <div class="verify-card">
+    <div class="verify-header">
+      <div class="verify-icon">🔒</div>
+      <div>
+        <h3 class="verify-title">Activar cuenta</h3>
+        <small class="verify-sub">Valida el código enviado a tu correo</small>
+      </div>
     </div>
-    <a routerLink="/login" class="inline-flex items-center text-sm font-medium text-primary hover:underline">&larr; Volver al login</a>
-  </div>
+    <a routerLink="/login" class="verify-back">&larr; Volver al login</a>
 
   @if (error()) {
     <div class="rounded-lg border border-red-300 bg-red-50 text-red-700 px-4 py-3 text-sm flex items-start gap-3 mb-4" role="alert">
@@ -23,35 +25,46 @@
     </div>
   }
 
-  <form (submit)="$event.preventDefault(); verify()" class="bg-white rounded-2xl shadow-card border border-slate-200/70">
-    <div class="p-6">
-      <div class="mb-3 text-xs text-slate-500">
-        <span class="font-medium">Usuario ID:</span>
-        <span class="font-mono text-slate-700">{{ userId || '—' }}</span>
-      </div>
+    <form (submit)="$event.preventDefault(); verify()" class="verify-form">
+      <div class="verify-body">
+        <div class="mb-3 text-xs text-slate-500">
+          <span class="font-medium">Usuario ID:</span>
+          <span class="font-mono text-slate-700">{{ userId || '—' }}</span>
+        </div>
 
-      <div class="grid grid-cols-12 gap-5 items-end">
-        <div class="col-span-12 md:col-span-7">
-          <label class="block text-sm font-medium mb-1">Código de verificación</label>
-          <input
-            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
-            placeholder="Ingresa el código (ej. 123456)"
-            [(ngModel)]="code"
-            name="code"
-            autocomplete="one-time-code"
-            [disabled]="loading()"
-          >
-          <div class="mt-1 text-xs text-slate-500">Revisa tu correo y copia el código.</div>
-        </div>
-        <div class="col-span-12 md:col-span-4">
-          <button type="submit"
-            class="inline-flex w-full justify-center items-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
-            [disabled]="!canSubmit()">
-            @if (loading()) { <span class="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"></span> }
-            Validar
-          </button>
+        <div class="grid grid-cols-12 gap-5 items-center">
+          <div class="col-span-12 md:col-span-8">
+            <label class="block text-sm font-medium mb-2">Código de verificación</label>
+            <input
+              class="code-input"
+              placeholder="Ingresa el código (ej. 123456)"
+              [(ngModel)]="code"
+              name="code"
+              autocomplete="one-time-code"
+              [disabled]="loading()"
+            >
+            <div class="mt-2 text-xs text-slate-500">Revisa tu correo y copia el código. El código tiene formato numérico.</div>
+          </div>
+
+          <div class="col-span-12 md:col-span-4 actions-col">
+            <button type="submit"
+              class="btn-primary"
+              [disabled]="!canSubmit()">
+              @if (loading()) { <span class="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"></span> }
+              Validar
+            </button>
+
+            <button type="button" class="btn-secondary" (click)="resendCode()" [disabled]="resendCooldown() > 0 || resendLoading()">
+              @if (resendLoading()) { <span class="animate-spin inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full mr-2"></span> }
+              Reenviar código
+            </button>
+
+            @if (resendCooldown() > 0) {
+              <div class="mt-2 text-center text-xs text-slate-500">Puedes reenviar en {{ formatCountdown(resendCooldown()) }}</div>
+            }
+          </div>
         </div>
       </div>
-    </div>
-  </form>
+    </form>
+  </div>
 </div>

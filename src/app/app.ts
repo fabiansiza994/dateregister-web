@@ -30,6 +30,7 @@ export class App {
   title = 'dataregister-web';
   isTrabajos = signal(false);
   isModules = signal(false);
+  isLogin = signal(false);
   // 'forward' or 'backward' based on bottom tab order
   private dir = signal<'forward' | 'backward'>('forward');
 
@@ -37,6 +38,9 @@ export class App {
     // Estado inicial (por si arranca en /trabajos)
   const url0 = this.router.url || '';
   this.isTrabajos.set(url0.startsWith('/trabajos'));
+  this.isLogin.set(
+    url0.startsWith('/login') || url0.startsWith('/register') || url0.startsWith('/verifycode')
+  );
   this.isModules.set(url0.startsWith('/modules'));
     // Actualizar al navegar
     this.router.events
@@ -44,6 +48,9 @@ export class App {
       .subscribe((e: NavigationEnd) => {
         const u = e.urlAfterRedirects || e.url || '';
         this.isTrabajos.set(u.startsWith('/trabajos'));
+        this.isLogin.set(
+          u.startsWith('/login') || u.startsWith('/register') || u.startsWith('/verifycode')
+        );
         this.isModules.set(u.startsWith('/modules'));
         // Sync current tab and capture last direction
         this.routeAnim.setCurrentFromUrl(u);

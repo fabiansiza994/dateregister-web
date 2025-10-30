@@ -56,7 +56,6 @@
               id="usuario"
               type="text"
               class="block w-full min-w-0 flex-1 rounded-r-lg border border-l-0 border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-              placeholder="p. ej. usuario_93540 o admin"
               [value]="usuario()"
               (input)="onUserInput(txtUsuario.value)"
               (blur)="validateUser()"
@@ -71,7 +70,7 @@
               autofocus
             >
           </div>
-          @if (userInvalid()) { <small id="usuarioHelp" class="text-red-600">El usuario debe tener al menos 3 caracteres y solo puede contener letras, números, puntos, guiones y guiones bajos.</small> }
+          
         </div>
 
         <!-- Contraseña -->
@@ -103,7 +102,7 @@
           <div class="flex items-center gap-2">
             <input class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" type="checkbox" id="remember" name="remember" autocomplete="on" [checked]="remember()" (change)="onRememberChange($any($event.target).checked)" />
             <label class="text-sm text-slate-700" for="remember">Recordarme</label>
-          </div>
+          </div><br><br>
           <a class="text-xs" routerLink="/forgot">¿Olvidaste tu contraseña?</a>
         </div>
 
@@ -118,7 +117,6 @@
             }
             {{ loading() ? 'Ingresando…' : 'Ingresar' }}
           </button>
-          <button type="button" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50" (click)="reset()" [disabled]="loading()">Limpiar</button>
           <div class="text-center mt-2 text-xs">
             ¿No tienes cuenta?
             <a class="font-semibold" routerLink="/register">Regístrate aquí</a>

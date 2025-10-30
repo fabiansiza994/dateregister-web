@@ -21,40 +21,30 @@
 <form (submit)="$event.preventDefault(); onSearch()" class="bg-white rounded-2xl shadow-card mb-6 border border-slate-200/60 dr-sticky-under-nav md:static">
     <div class="p-5 pt-4">
         <div class="grid grid-cols-12 gap-3 md:gap-5 items-end">
-            <!-- Nombre -->
-            <div class="col-span-10 md:col-span-5 space-y-1 min-w-0">
-                <label for="searchName" class="text-sm font-medium text-slate-700 hidden md:block">Nombre</label>
-                <!-- móvil: botón dentro del input -->
-                <div class="dr-search-wrap md:hidden">
-                    <button type="submit" class="dr-search-btn-inside" [disabled]="loading()" aria-label="Buscar"><i class="bi bi-search"></i></button>
-                    <input id="searchName" type="text" class="form-control" placeholder="Ej: Juan Pérez" [(ngModel)]="searchName" name="searchName" (keyup.enter)="onSearch()" autocomplete="off">
+            <!-- Nombre + Documento + Acciones agrupados: móvil mantiene inputs individuales, en desktop se muestran en una sola fila -->
+            <div class="col-span-12 space-y-1 min-w-0">
+                <label class="text-sm font-medium text-slate-700 hidden md:block">Buscar</label>
+                <!-- móvil: inputs separados (mantener UX actual) -->
+                <div class="md:hidden space-y-2">
+                    <div class="dr-search-wrap">
+                        <button type="submit" class="dr-search-btn-inside" [disabled]="loading()" aria-label="Buscar"><i class="bi bi-search"></i></button>
+                        <input id="searchName" type="text" class="form-control" placeholder="Ej: Juan Pérez" [(ngModel)]="searchName" name="searchName" (keyup.enter)="onSearch()" autocomplete="off">
+                    </div>
+                    <div class="dr-search-wrap">
+                        <button type="submit" class="dr-search-btn-inside" [disabled]="loading()" aria-label="Buscar"><i class="bi bi-123"></i></button>
+                        <input id="searchDoc" type="text" class="form-control" placeholder="Ej: 123456789" [(ngModel)]="searchDoc" name="searchDoc" (keyup.enter)="onSearch()" autocomplete="off">
+                    </div>
+                    <div>
+                        <button type="button" class="inline-flex btn btn-outline-secondary btn-sm w-full justify-center" (click)="clearFilters()" [disabled]="loading()" aria-label="Limpiar"><i class="bi bi-eraser"></i></button>
+                    </div>
                 </div>
-                <!-- desktop: input simple -->
-                <div class="hidden md:block">
-                    <input id="searchName" type="text" class="form-control" placeholder="Ej: Juan Pérez" [(ngModel)]="searchName" name="searchName" (keyup.enter)="onSearch()" autocomplete="off">
-                </div>
-            </div>
 
-            <!-- Acciones (móvil: sólo limpiar) -->
-            <div class="col-span-2 md:col-span-3 flex gap-2 items-end md:justify-end">
-                <!-- Desktop: botones completos -->
-                <button type="submit" class="hidden md:inline-flex btn btn-outline-primary" [disabled]="loading()"><i class="bi bi-search"></i><span class="ml-1">Buscar</span></button>
-                <button type="button" class="hidden md:inline-flex btn btn-outline-secondary" (click)="clearFilters()" [disabled]="loading()"><i class="bi bi-eraser"></i><span class="ml-1">Limpiar</span></button>
-                <!-- Móvil: sólo borrar al lado derecho del primer input -->
-                <button type="button" class="inline-flex md:hidden btn btn-outline-secondary btn-sm w-full justify-center self-end" (click)="clearFilters()" [disabled]="loading()" aria-label="Limpiar"><i class="bi bi-eraser"></i></button>
-            </div>
-
-            <!-- Documento -->
-            <div class="col-span-12 md:col-span-4 space-y-1 min-w-0">
-                <label for="searchDoc" class="text-sm font-medium text-slate-700 hidden md:block">N.º de identificación</label>
-                <!-- móvil: botón dentro del input (opcional) -->
-                <div class="dr-search-wrap md:hidden">
-                    <button type="submit" class="dr-search-btn-inside" [disabled]="loading()" aria-label="Buscar"><i class="bi bi-123"></i></button>
-                    <input id="searchDoc" type="text" class="form-control" placeholder="Ej: 123456789" [(ngModel)]="searchDoc" name="searchDoc" (keyup.enter)="onSearch()" autocomplete="off">
-                </div>
-                <!-- desktop: input simple -->
-                <div class="hidden md:block">
-                    <input id="searchDoc" type="text" class="form-control" placeholder="Ej: 123456789" [(ngModel)]="searchDoc" name="searchDoc" (keyup.enter)="onSearch()" autocomplete="off">
+                <!-- desktop: inputs y botones juntos -->
+                <div class="hidden md:flex items-center gap-2 w-full">
+                    <input id="searchName" type="text" class="form-control" placeholder="Ej: Juan Pérez" [(ngModel)]="searchName" name="searchName" (keyup.enter)="onSearch()" autocomplete="off">
+                    <input id="searchDoc" type="text" class="form-control w-56" placeholder="Ej: 123456789" [(ngModel)]="searchDoc" name="searchDoc" (keyup.enter)="onSearch()" autocomplete="off">
+                    <button type="submit" class="btn btn-primary" [disabled]="loading()"><i class="bi bi-search"></i><span class="ml-1">Buscar</span></button>
+                    <button type="button" class="btn btn-outline-secondary" (click)="clearFilters()" [disabled]="loading()"><i class="bi bi-eraser"></i><span class="ml-1">Limpiar</span></button>
                 </div>
             </div>
         </div>
