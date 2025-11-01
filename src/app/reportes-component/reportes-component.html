@@ -142,7 +142,52 @@
     </div>
 
     <!-- Tooltip -->
-    @if (tip()) {
+    @if (reportItems().length && (hasClients() || hasPatients())) {
+    <div class="bg-white rounded-2xl shadow-card border border-slate-200/60 mt-4">
+        <div class="p-5">
+            <div class="flex items-center justify-between gap-2 mb-3">
+                <div>
+                    <h5 class="m-0 text-base font-semibold">
+                        @if (hasClients() && hasPatients()) { Clientes / Pacientes }
+                        @if (hasClients() && !hasPatients()) { Clientes }
+                        @if (!hasClients() && hasPatients()) { Pacientes }
+                    </h5>
+                    <div class="text-xs text-slate-500">Resumen de personas encontradas en el rango seleccionado</div>
+                </div>
+            </div>
+
+            @if (isHealthSector() && hasClients() && hasPatients()) {
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                @if (hasClients()) {
+                <div>
+                    <div class="text-sm font-semibold mb-2">Clientes</div>
+                    <div class="space-y-1 text-sm">
+                        <div *ngFor="let c of uniqueClients()">{{ c.nombre }} <span class="text-slate-500">{{ c.apellido || '' }}</span></div>
+                    </div>
+                </div>
+                }
+                @if (hasPatients()) {
+                <div>
+                    <div class="text-sm font-semibold mb-2">Pacientes</div>
+                    <div class="space-y-1 text-sm">
+                        <div *ngFor="let p of uniquePatients()">{{ p.nombre }} <span class="text-slate-500">{{ p.apellido || '' }}</span></div>
+                    </div>
+                </div>
+                }
+            </div>
+            } @else {
+            <div class="mt-3">
+                <div class="text-sm font-semibold mb-2">Personas</div>
+                <div class="space-y-1 text-sm">
+                    <div *ngFor="let p of mergedPeople()">{{ p.nombre }} <span class="text-slate-500">{{ p.apellido || '' }}</span></div>
+                </div>
+            </div>
+            }
+            </div>
+        </div>
+        }
+
+        @if (tip()) {
     <div class="fixed z-50 pointer-events-none px-2 py-1 rounded-md text-xs bg-slate-900 text-white shadow"
         [style.left.px]="tip()!.x" [style.top.px]="tip()!.y">
         <div class="font-semibold">{{ tip()!.title }}</div>

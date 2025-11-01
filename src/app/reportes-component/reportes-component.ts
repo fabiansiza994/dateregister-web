@@ -12,6 +12,7 @@ interface TrabajoMin {
   valorTotal?: number | null;
   estado?: string | null;
   cliente?: ClienteMin | null;
+  paciente?: { id: number; nombre: string; apellido?: string | null } | null;
 }
 interface JobSearchOk {
   dataResponse?: { response?: 'SUCCESS'|'ERROR' };
@@ -57,6 +58,31 @@ export class ReportesComponent {
   chartSubtitle = signal<string>('');
   metric = signal<'count'|'sum'>('count');
   tip = signal<{ x:number; y:number; title:string; sub?:string } | null>(null);
+  // últimos items consultados para el reporte (usados en plantilla para mostrar clientes/pacientes)
+  reportItems = signal<TrabajoMin[]>([]);
+  hasClients = computed(() => this.reportItems().some(i => !!i.cliente));
+  hasPatients = computed(() => this.reportItems().some(i => !!(i as any).paciente));
+  uniqueClients = computed(() => {
+    const map = new Map<number, ClienteMin>();
+    for (const it of this.reportItems()) if (it.cliente) map.set(it.cliente.id, it.cliente);
+    return Array.from(map.values());
+  });
+  uniquePatients = computed(() => {
+    const map = new Map<number, { id:number; nombre:string; apellido?:string|null }>();
+    for (const it of this.reportItems()) if ((it as any).paciente) map.set((it as any).paciente.id, (it as any).paciente);
+    return Array.from(map.values());
+  });
+  // ¿La empresa es del sector salud?
+  isHealthSector = computed(() => String(this._claims()?.sector ?? '').toLowerCase() === 'salud');
+
+  // Lista combinada simple para mostrar cuando no aplican columnas separadas
+  mergedPeople = computed(() => {
+    // Solo mantener los campos que mostramos en la plantilla (evitar 'type' para no crear columnas inesperadas)
+    const map = new Map<string, { id:number; nombre:string; apellido?:string|null }>();
+    for (const c of this.uniqueClients()) map.set(`c-${c.id}`, { id: c.id, nombre: c.nombre, apellido: c.apellido ?? null });
+    for (const p of this.uniquePatients()) map.set(`p-${p.id}`, { id: p.id, nombre: p.nombre, apellido: p.apellido ?? null });
+    return Array.from(map.values());
+  });
   yAxisLabel = computed(() => this.metric()==='count' ? 'Trabajos (cantidad)' : 'Valor total (COP)');
   formattedBarMax = computed(() => {
     const v = this.barMax();
@@ -151,7 +177,9 @@ export class ReportesComponent {
       if (days <= 31) { this.chartMode.set('bar'); this.barGranularity.set('daily'); }
       else if (days <= 90) { this.chartMode.set('bar'); this.barGranularity.set('weekly'); }
       else { this.chartMode.set('doughnut'); }
-      const items = await this.fetchAllJobsInRange();
+  const items = await this.fetchAllJobsInRange();
+  // guardar últimos items para mostrarlos en la plantilla (clientes/pacientes)
+  this.reportItems.set(items);
       if (!items.length) {
         this.barRects.set([]); this.donutArcs.set([]); this.donutLegend.set([]); this.donutTotal.set(0);
         this.chartNote.set('No hay datos para el rango seleccionado.');
