@@ -345,3 +345,21 @@ select:-webkit-autofill{
   opacity:.55;
   cursor:not-allowed;
 }
+
+/* ============================================= */
+/* === Ajuste visual para Trabajos en móvil === */
+/* Quita la sombra del navbar para que el topbar móvil se lea como parte del menú */
+@media (max-width: 767.98px){
+  body.page-trabajos nav.sticky-top{ box-shadow: none !important; }
+  /* Elimina el padding superior del main (py-4) para evitar separación con el topbar móvil */
+  body.page-trabajos main{ padding-top: 0 !important; }
+  /* Clientes: mismo ajuste para unir menú y topbar de búsqueda */
+  body.page-clientes nav.sticky-top{ box-shadow: none !important; }
+  body.page-clientes main{ padding-top: 0 !important; }
+  /* Pacientes: mismo ajuste */
+  body.page-pacientes nav.sticky-top{ box-shadow: none !important; }
+  body.page-pacientes main{ padding-top: 0 !important; }
+  /* Usuarios: mismo ajuste */
+  body.page-usuarios nav.sticky-top{ box-shadow: none !important; }
+  body.page-usuarios main{ padding-top: 0 !important; }
+}

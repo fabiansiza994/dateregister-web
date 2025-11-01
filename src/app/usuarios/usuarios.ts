@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, AfterViewInit, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, signal, computed, AfterViewInit, ViewChild, ElementRef, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -58,7 +58,7 @@ interface UserDeleteError {
   templateUrl: './usuarios.html',
   styleUrls: ['./usuarios.css'],
 })
-export class UsuariosComponent implements OnInit, AfterViewInit {
+export class UsuariosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private _claims = signal<any | null>(null);
   currentUsername = computed(() => (this._claims()?.sub ?? '').toString().toLowerCase().trim());
@@ -82,6 +82,9 @@ export class UsuariosComponent implements OnInit, AfterViewInit {
   // Orden
   sortBy = signal<'id' | 'usuario' | 'nombre'>('id');
   direction = signal<'ASC' | 'DESC'>('DESC');
+  // UI: menús de ordenamiento (desktop/móvil)
+  sortMenuOpenDesktop = signal(false);
+  sortMenuOpenMobile = signal(false);
 
   // Derivados
   totalPages = computed(() => {
@@ -131,6 +134,8 @@ export class UsuariosComponent implements OnInit, AfterViewInit {
   ) { }
 
   ngOnInit(): void {
+    // Ajustes globales en móvil: unir topbar con navbar
+    try { document?.body?.classList?.add('page-usuarios'); } catch {}
     this.apiBase = this.cfg.get<string>('apiBaseUrl', '');
     this.auth.refreshFromStorage?.();
     this._claims.set(this.auth.claims());
@@ -140,6 +145,10 @@ export class UsuariosComponent implements OnInit, AfterViewInit {
   ngAfterViewInit(): void {
     // diferir para permitir render
     setTimeout(() => this.updateFabVisibility(), 0);
+  }
+
+  ngOnDestroy(): void {
+    try { document?.body?.classList?.remove('page-usuarios'); } catch {}
   }
 
   // + NUEVO: ¿es el propio usuario?
@@ -183,6 +192,13 @@ export class UsuariosComponent implements OnInit, AfterViewInit {
     }
     this.page.set(1);
     await this.loadPage();
+  }
+
+  // Elegir campo desde menú y cerrar menús
+  async chooseSort(field: 'id' | 'usuario' | 'nombre') {
+    await this.changeSort(field);
+    this.sortMenuOpenDesktop.set(false);
+    this.sortMenuOpenMobile.set(false);
   }
 
   // Cargar página

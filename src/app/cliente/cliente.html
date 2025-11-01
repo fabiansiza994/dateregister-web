@@ -1,11 +1,39 @@
 <!-- Chispas container -->
 <div class="dr-sparks-container pointer-events-none fixed inset-0 z-[70]"></div>
 
-<!-- Header -->
-<div class="flex flex-wrap items-center justify-between mb-6 gap-4">
+<!-- Header (solo desktop) -->
+<div class="hidden md:flex flex-wrap items-center justify-between mb-6 gap-4">
     <div class="space-y-1">
         <h3 class="text-xl font-semibold m-0">Clientes</h3>
         <p class="text-xs text-slate-500 m-0">Busca por nombre o identificación y administra tus clientes</p>
+    </div>
+</div>
+
+<!-- Topbar móvil pegado al menú superior (azul) -->
+<div class="md:hidden dr-mobile-topbar dr-sticky-under-nav mb-2">
+    <div class="px-3 pt-3 pb-3">
+        <form (submit)="$event.preventDefault(); onSearch()">
+            <div class="dr-search-wrap">
+                <button type="submit" class="dr-search-btn-inside" [disabled]="loading()" aria-label="Buscar"><i class="bi bi-search"></i></button>
+                <input id="q-mobile-clientes" type="text" class="form-control" placeholder="Nombre o identificación" [(ngModel)]="searchName" name="searchName" (keyup.enter)="onSearch()" autocomplete="off">
+                @if (searchName.length>0 || searchDoc.length>0) { <button type="button" class="dr-search-btn-right" (click)="clearFilters()" [disabled]="loading()" aria-label="Limpiar"><i class="bi bi-x"></i></button> }
+            </div>
+        </form>
+    </div>
+    <div class="px-3 pb-3 flex items-center justify-between gap-2 text-xs">
+        <div class="text-white/80">Mostrando {{ firstItemIndex() }}–{{ lastItemIndex() }} de {{ total() }}</div>
+        <div class="flex items-center gap-2 relative">
+            <button type="button" class="btn btn-outline-light text-white btn-sm inline-flex items-center gap-1 dr-sort-btn" (click)="sortMenuOpenMobile.set(!sortMenuOpenMobile())" aria-haspopup="listbox" [attr.aria-expanded]="sortMenuOpenMobile()">
+                <i class="bi bi-arrow-down-up"></i>
+                <span>Sort by</span>
+            </button>
+            @if (sortMenuOpenMobile()) {
+                <div class="dr-sort-dropdown" role="listbox">
+                    <button type="button" class="dr-sort-item" [class.is-active]="sortBy()==='id'" (click)="chooseSort('id')">ID</button>
+                    <button type="button" class="dr-sort-item" [class.is-active]="sortBy()==='nombre'" (click)="chooseSort('nombre')">Nombre</button>
+                </div>
+            }
+        </div>
     </div>
 </div>
 
@@ -17,27 +45,15 @@
 </div>
 }
 
-<!-- Filtros -->
-<form (submit)="$event.preventDefault(); onSearch()" class="bg-white rounded-2xl shadow-card mb-6 border border-slate-200/60 dr-sticky-under-nav md:static">
+<!-- Filtros (solo desktop) -->
+<form (submit)="$event.preventDefault(); onSearch()" class="hidden md:block bg-white rounded-2xl shadow-card mb-6 border border-slate-200/60 md:static">
     <div class="p-5 pt-4">
         <div class="grid grid-cols-12 gap-3 md:gap-5 items-end">
             <!-- Nombre + Documento + Acciones agrupados: móvil mantiene inputs individuales, en desktop se muestran en una sola fila -->
             <div class="col-span-12 space-y-1 min-w-0">
                 <label class="text-sm font-medium text-slate-700 hidden md:block">Buscar</label>
-                <!-- móvil: inputs separados (mantener UX actual) -->
-                <div class="md:hidden space-y-2">
-                    <div class="dr-search-wrap">
-                        <button type="submit" class="dr-search-btn-inside" [disabled]="loading()" aria-label="Buscar"><i class="bi bi-search"></i></button>
-                        <input id="searchName" type="text" class="form-control" placeholder="Ej: Juan Pérez" [(ngModel)]="searchName" name="searchName" (keyup.enter)="onSearch()" autocomplete="off">
-                    </div>
-                    <div class="dr-search-wrap">
-                        <button type="submit" class="dr-search-btn-inside" [disabled]="loading()" aria-label="Buscar"><i class="bi bi-123"></i></button>
-                        <input id="searchDoc" type="text" class="form-control" placeholder="Ej: 123456789" [(ngModel)]="searchDoc" name="searchDoc" (keyup.enter)="onSearch()" autocomplete="off">
-                    </div>
-                    <div>
-                        <button type="button" class="inline-flex btn btn-outline-secondary btn-sm w-full justify-center" (click)="clearFilters()" [disabled]="loading()" aria-label="Limpiar"><i class="bi bi-eraser"></i></button>
-                    </div>
-                </div>
+                <!-- móvil: inputs separados ya no se muestran; se usa topbar azul -->
+                <div class="md:hidden"></div>
 
                 <!-- desktop: inputs y botones juntos -->
                 <div class="hidden md:flex items-center gap-2 w-full">
@@ -51,15 +67,41 @@
     </div>
 </form>
 
-<!-- Botón crear: entre filtro y tabla -->
-<div class="mb-3" #createAnchor>
-     <a class="btn btn-primary" routerLink="/clientes/nuevo" (click)="sparkClick($event)"><i class="bi bi-person-plus"></i><span class="ml-1">Crear cliente</span></a>
+<!-- Botón crear: entre filtro y tabla (solo desktop) -->
+<div class="hidden md:block mb-3" #createAnchor>
+    <a class="btn btn-primary" routerLink="/clientes/nuevo" (click)="sparkClick($event)"><i class="bi bi-person-plus"></i><span class="ml-1">Crear cliente</span></a>
  </div>
 
-<!-- DESKTOP -->
+<!-- DESKTOP: contenedor único con headbar + tabla (como Trabajos) -->
 <div class="hidden md:block rounded-2xl shadow-card overflow-hidden border border-slate-200/70 bg-white">
-    <table class="w-full text-sm align-middle">
-        <thead class="bg-slate-100 text-slate-700">
+    <div class="dr-table-headbar flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-200/70 bg-slate-50">
+        <div class="text-xs text-slate-600">Mostrando {{ firstItemIndex() }}–{{ lastItemIndex() }} de {{ total() }}</div>
+        <div class="flex items-center gap-2">
+            <div class="relative">
+                <button type="button" class="btn btn-outline-secondary btn-sm inline-flex items-center gap-1" (click)="sortMenuOpenDesktop.set(!sortMenuOpenDesktop())" aria-haspopup="listbox" [attr.aria-expanded]="sortMenuOpenDesktop()">
+                    <i class="bi bi-arrow-down-up"></i>
+                    <span>Sort by</span>
+                </button>
+                @if (sortMenuOpenDesktop()) {
+                    <div class="dr-sort-dropdown" role="listbox">
+                        <button type="button" class="dr-sort-item" [class.is-active]="sortBy()==='id'" (click)="chooseSort('id')">ID</button>
+                        <button type="button" class="dr-sort-item" [class.is-active]="sortBy()==='nombre'" (click)="chooseSort('nombre')">Nombre</button>
+                    </div>
+                }
+            </div>
+            <label class="text-xs text-slate-600">/ pág:</label>
+            <select class="form-control w-20 text-xs" [ngModel]="pageSize()" (ngModelChange)="setPageSize($event)" name="pageSize">
+                <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
+            </select>
+            <div class="ml-2 flex items-center gap-1">
+                <button type="button" class="btn btn-outline-secondary btn-sm" (click)="prevPage()" [disabled]="page()<=1 || loading()" aria-label="Anterior"><i class="bi bi-chevron-left"></i></button>
+                <span class="px-2 py-1 text-xs border rounded-md bg-slate-50">{{ page() }}/{{ totalPages() }}</span>
+                <button type="button" class="btn btn-outline-secondary btn-sm" (click)="nextPage()" [disabled]="page()>=totalPages() || loading()" aria-label="Siguiente"><i class="bi bi-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+    <table class="table-modern align-middle">
+        <thead>
             <tr>
                 <th class="px-3 py-2 w-[60px]">#</th>
                 <th class="px-3 py-2">Nombre</th>
@@ -84,7 +126,7 @@
                     </tr>
                 } @else {
                     @for (c of visibleWithRow(); track c.id) {
-                    <tr class="odd:bg-white even:bg-slate-50">
+                    <tr>
                         <td class="px-3 py-2 text-xs text-slate-500">{{ c.rowNumber }}</td>
                         <td class="px-3 py-2 font-semibold">
                             <i class="bi bi-person-circle text-slate-400 mr-1"></i>{{ c.nombre }} {{ c.apellido || '' }}

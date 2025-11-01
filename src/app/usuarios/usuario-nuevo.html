@@ -1,4 +1,4 @@
-<div class="max-w-5xl mx-auto py-6 px-4 dr-form-pad-bottom">
+<div class="max-w-5xl mx-auto py-6 px-4">
   <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
     <h3 class="m-0 text-2xl font-semibold leading-tight">Crear usuario<br/><span class="mt-1 block text-xs font-medium text-slate-500">Estos usuarios son los colaboradores que gestionarán trabajos en tu empresa</span></h3>
     <div class="hidden md:block">
@@ -31,7 +31,7 @@
   }
 
   <div class="bg-white shadow-card rounded-2xl border border-slate-200/70">
-    <div class="p-6">
+    <div class="p-6 pb-24 md:pb-6">
 
       <!-- STEP 1 -->
       @if (step === 1) {
@@ -185,21 +185,21 @@
     </div>
   </div>
 
-    <!-- Mobile FAB actions -->
-    <div class="md:hidden dr-form-fab">
-      <div class="dr-fab-inner">
-        @if (step === 1) {
-          <button type="button" class="btn btn-outline-secondary" (click)="cancel()">Cancelar</button>
-          <button type="button" class="btn btn-primary" (click)="goToStep(2)" [disabled]="!isStep1Valid()">Siguiente</button>
-        }
-        @if (step === 2) {
-          <button type="button" class="btn btn-outline-secondary" (click)="goToStep(1)" [disabled]="loading()">Atrás</button>
-          <button type="button" class="btn btn-primary" (click)="submit()" [disabled]="!isStep2Valid() || loading()">
-            @if (loading()) { <span class="spinner-border spinner-border-sm mr-1"></span> }
-            Crear
-          </button>
-        }
-      </div>
+    <!-- FAB móvil estilo Clientes: botones flotantes a la derecha -->
+    <div class="dr-fab-wrap md:hidden">
+      @if (step === 1) {
+        <button type="button" class="btn btn-light dr-fab" (click)="cancel()"><i class="bi bi-x-circle"></i><span>Cancelar</span></button>
+        <button type="button" class="btn btn-primary dr-fab" (click)="goToStep(2)" [disabled]="!isStep1Valid()">
+          <i class="bi bi-arrow-right"></i><span>Siguiente</span>
+        </button>
+      }
+      @if (step === 2) {
+        <button type="button" class="btn btn-light dr-fab" (click)="goToStep(1)" [disabled]="loading()"><i class="bi bi-arrow-left"></i><span>Atrás</span></button>
+        <button type="button" class="btn btn-success dr-fab" (click)="submit()" [disabled]="!isStep2Valid() || loading()">
+          @if (loading()) { <span class="spinner-border spinner-border-sm me-1"></span> }
+          <i class="bi bi-check2"></i><span>Crear</span>
+        </button>
+      }
     </div>
   </div>
 

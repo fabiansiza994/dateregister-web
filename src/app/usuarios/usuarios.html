@@ -1,7 +1,8 @@
 <!-- Click sparks container -->
 <div #sparksContainer class="dr-sparks-container"></div>
 
-<div class="flex flex-wrap items-center justify-between mb-6 gap-4">
+<!-- Header (solo desktop) -->
+<div class="hidden md:flex flex-wrap items-center justify-between mb-6 gap-4">
   <div class="space-y-1">
     <h3 class="text-xl font-semibold m-0">Usuarios</h3>
     <p class="text-xs text-slate-500">Busca por usuario, nombre, apellido o email</p>
@@ -21,17 +22,42 @@
 </div>
 }
 
-<form class="bg-white rounded-2xl shadow-card border border-slate-200/60 mb-4 dr-sticky-under-nav md:static" (submit)="$event.preventDefault(); onSearch()">
+<!-- Topbar móvil pegado al menú superior (azul) -->
+<div class="md:hidden dr-mobile-topbar dr-sticky-under-nav mb-2">
+  <div class="px-3 pt-3 pb-3">
+    <form (submit)="$event.preventDefault(); onSearch()">
+      <div class="dr-search-wrap">
+        <button type="submit" class="dr-search-btn-inside" [disabled]="loading()" aria-label="Buscar"><i class="bi bi-search"></i></button>
+        <input id="q-mobile-usuarios" type="text" class="form-control" placeholder="Usuario, nombre o email" [(ngModel)]="q" name="q" (keyup.enter)="onSearch()" autocomplete="off">
+        @if (q.length>0) { <button type="button" class="dr-search-btn-right" (click)="clearFilters()" [disabled]="loading()" aria-label="Limpiar"><i class="bi bi-x"></i></button> }
+      </div>
+    </form>
+  </div>
+  <div class="px-3 pb-3 flex items-center justify-between gap-2 text-xs">
+    <div class="text-white/80">Mostrando {{ firstItemIndex() }}–{{ lastItemIndex() }} de {{ total() }}</div>
+    <div class="flex items-center gap-2 relative">
+      <button type="button" class="btn btn-outline-light text-white btn-sm inline-flex items-center gap-1 dr-sort-btn" (click)="sortMenuOpenMobile.set(!sortMenuOpenMobile())" aria-haspopup="listbox" [attr.aria-expanded]="sortMenuOpenMobile()">
+        <i class="bi bi-arrow-down-up"></i>
+        <span>Sort by</span>
+      </button>
+      @if (sortMenuOpenMobile()) {
+        <div class="dr-sort-dropdown" role="listbox">
+          <button type="button" class="dr-sort-item" [class.is-active]="sortBy()==='id'" (click)="chooseSort('id')">ID</button>
+          <button type="button" class="dr-sort-item" [class.is-active]="sortBy()==='usuario'" (click)="chooseSort('usuario')">Usuario</button>
+          <button type="button" class="dr-sort-item" [class.is-active]="sortBy()==='nombre'" (click)="chooseSort('nombre')">Nombre</button>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Filtros (solo desktop) -->
+<form class="hidden md:block bg-white rounded-2xl shadow-card border border-slate-200/60 mb-4" (submit)="$event.preventDefault(); onSearch()">
   <div class="p-5 pt-4">
     <div class="grid grid-cols-12 gap-3 md:gap-5 items-end">
       <!-- Campo búsqueda -->
-  <div class="col-span-10 md:col-span-12 xl:col-span-10 space-y-1 min-w-0">
+  <div class="col-span-12 space-y-1 min-w-0">
         <label for="q" class="text-sm font-medium text-slate-700 hidden md:block">Usuario, nombre o email</label>
-        <!-- móvil: icono dentro del input -->
-        <div class="dr-search-wrap md:hidden">
-          <button type="submit" class="dr-search-btn-inside" [disabled]="loading()" aria-label="Buscar"><i class="bi bi-search"></i></button>
-          <input id="q" type="text" class="form-control" placeholder="Ej: nick | Ana | correo@mail" [(ngModel)]="q" name="q" (keyup.enter)="onSearch()" autocomplete="off">
-        </div>
         <!-- desktop: input + botones agrupados -->
         <div class="hidden md:flex items-center gap-2 w-full">
           <input id="q" type="text" class="form-control" placeholder="Ej: nick | Ana | correo@mail" [(ngModel)]="q" name="q" (keyup.enter)="onSearch()" autocomplete="off">
@@ -39,44 +65,46 @@
           <button type="button" class="btn btn-outline-secondary hidden md:inline-flex" (click)="clearFilters()" [disabled]="loading()"><i class="bi bi-eraser"></i><span class="ml-1">Limpiar</span></button>
         </div>
       </div>
-      <!-- Acciones -->
-      <div class="col-span-2 md:hidden flex items-end md:justify-end mt-2 md:mt-0">
-        <!-- Móvil: sólo limpiar (permanece aquí) -->
-        <button type="button" class="inline-flex btn btn-outline-secondary btn-sm w-full justify-center self-end" (click)="clearFilters()" [disabled]="loading()" aria-label="Limpiar"><i class="bi bi-eraser"></i></button>
-      </div>
     </div>
   </div>
 </form>
 
-<!-- Botón crear: entre filtro y tabla -->
-<div class="mb-3" #createAnchor>
+<!-- Botón crear: entre filtro y tabla (solo desktop) -->
+<div class="hidden md:block mb-3" #createAnchor>
   <a routerLink="/usuarios/nuevo" class="btn btn-primary" (click)="sparkClick($event)">
     <i class="bi bi-person-plus"></i><span class="ml-1">Crear usuario</span>
   </a>
 </div>
 
-<div class="hidden md:flex flex-wrap items-center justify-between mb-4 gap-4">
-  <div class="text-xs text-slate-600">Mostrando {{ firstItemIndex() }}–{{ lastItemIndex() }} de {{ total() }} registros</div>
-  <div class="flex items-center gap-3">
-    <div class="inline-flex rounded-lg shadow-sm overflow-hidden border border-slate-300 bg-white">
-      <button (click)="changeSort('id')" [class.bg-slate-100]="sortBy()==='id'" class="px-3 py-1.5 text-xs font-medium flex items-center gap-1 hover:bg-slate-50 transition">
-        ID <i class="bi" [ngClass]="sortBy()==='id' && direction()==='ASC' ? 'bi-sort-down' : 'bi-sort-up'"></i>
-      </button>
-      <button (click)="changeSort('usuario')" [class.bg-slate-100]="sortBy()==='usuario'" class="px-3 py-1.5 text-xs font-medium flex items-center gap-1 hover:bg-slate-50 transition border-l border-slate-300">
-        Usuario <i class="bi" [ngClass]="sortBy()==='usuario' && direction()==='ASC' ? 'bi-sort-down' : 'bi-sort-up'"></i>
-      </button>
-      <button (click)="changeSort('nombre')" [class.bg-slate-100]="sortBy()==='nombre'" class="px-3 py-1.5 text-xs font-medium flex items-center gap-1 hover:bg-slate-50 transition border-l border-slate-300">
-        Nombre <i class="bi" [ngClass]="sortBy()==='nombre' && direction()==='ASC' ? 'bi-sort-down' : 'bi-sort-up'"></i>
-      </button>
-    </div>
-    <select class="form-control w-24 text-xs" [ngModel]="pageSize()" (ngModelChange)="changePageSize($event)">
-      <option *ngFor="let s of pageSizes" [ngValue]="s">{{ s }} / pág.</option>
-    </select>
-  </div>
-</div>
-
-<!-- DESKTOP -->
+<!-- DESKTOP: contenedor único con headbar + tabla -->
 <div class="hidden md:block rounded-2xl shadow-card overflow-hidden border border-slate-200/70 bg-white">
+  <div class="dr-table-headbar flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-200/70 bg-slate-50">
+    <div class="text-xs text-slate-600">Mostrando {{ firstItemIndex() }}–{{ lastItemIndex() }} de {{ total() }} registros</div>
+    <div class="flex items-center gap-2">
+      <div class="relative">
+        <button type="button" class="btn btn-outline-secondary btn-sm inline-flex items-center gap-1" (click)="sortMenuOpenDesktop.set(!sortMenuOpenDesktop())" aria-haspopup="listbox" [attr.aria-expanded]="sortMenuOpenDesktop()">
+          <i class="bi bi-arrow-down-up"></i>
+          <span>Sort by</span>
+        </button>
+        @if (sortMenuOpenDesktop()) {
+          <div class="dr-sort-dropdown" role="listbox">
+            <button type="button" class="dr-sort-item" [class.is-active]="sortBy()==='id'" (click)="chooseSort('id')">ID</button>
+            <button type="button" class="dr-sort-item" [class.is-active]="sortBy()==='usuario'" (click)="chooseSort('usuario')">Usuario</button>
+            <button type="button" class="dr-sort-item" [class.is-active]="sortBy()==='nombre'" (click)="chooseSort('nombre')">Nombre</button>
+          </div>
+        }
+      </div>
+      <label class="text-xs text-slate-600">/ pág:</label>
+      <select class="form-control w-20 text-xs" [ngModel]="pageSize()" (ngModelChange)="changePageSize($event)" name="pageSize">
+        <option *ngFor="let s of pageSizes" [value]="s">{{ s }}</option>
+      </select>
+      <div class="ml-2 flex items-center gap-1">
+        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="prevPage()" [disabled]="page()<=1 || loading()" aria-label="Anterior"><i class="bi bi-chevron-left"></i></button>
+        <span class="px-2 py-1 text-xs border rounded-md bg-slate-50">{{ page() }}/{{ totalPages() }}</span>
+        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="nextPage()" [disabled]="page()>=totalPages() || loading()" aria-label="Siguiente"><i class="bi bi-chevron-right"></i></button>
+      </div>
+    </div>
+  </div>
   <table class="table-modern align-middle">
     <thead>
       <tr>

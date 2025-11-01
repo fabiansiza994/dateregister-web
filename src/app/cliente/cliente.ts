@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, HostListener, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, computed, HostListener, AfterViewInit, ElementRef, ViewChild, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -44,7 +44,7 @@ interface GenericOk {
   templateUrl: './cliente.html',
   styleUrls: ['./cliente.css']
 })
-export class ClientesComponent implements OnInit, AfterViewInit {
+export class ClientesComponent implements OnInit, AfterViewInit, OnDestroy {
 
   confirmOpen = signal(false);
   clientToDelete = signal<Cliente | null>(null);
@@ -73,6 +73,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   // Orden
   sortBy = signal<'id' | 'nombre'>('id');
   direction = signal<'ASC' | 'DESC'>('DESC');
+
+  // UI: menús de ordenamiento (desktop/móvil)
+  sortMenuOpenDesktop = signal(false);
+  sortMenuOpenMobile = signal(false);
 
   // Derivados
   totalPages = computed(() => {
@@ -104,6 +108,8 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   ) { }
 
   ngOnInit(): void {
+    // Marcar body para ajustes globales (quitar sombra navbar y padding top en móvil)
+    try { document?.body?.classList?.add('page-clientes'); } catch {}
     this.apiBase = this.cfg.get<string>('apiBaseUrl', '');
     this.loadPage();
   }
@@ -116,6 +122,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   @HostListener('window:scroll')
   @HostListener('window:resize')
   onViewportChange() { this.updateCreateFab(); }
+
+  ngOnDestroy(): void {
+    try { document?.body?.classList?.remove('page-clientes'); } catch {}
+  }
 
   private updateCreateFab() {
     const isMobile = window.innerWidth < 768; // md breakpoint
@@ -171,6 +181,12 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   async prevPage() { await this.goToPage(this.page() - 1); }
   async nextPage() { await this.goToPage(this.page() + 1); }
 
+  setPageSize(n: number) {
+    this.pageSize.set(Number(n) || 10);
+    this.page.set(1);
+    this.loadPage();
+  }
+
   async changeSort(field: 'id' | 'nombre') {
     if (this.sortBy() === field) {
       this.direction.set(this.direction() === 'ASC' ? 'DESC' : 'ASC');
@@ -180,6 +196,13 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     }
     this.page.set(1);
     await this.loadPage();
+  }
+
+  // Elegir campo desde el menú y cerrar
+  async chooseSort(field: 'id'|'nombre') {
+    await this.changeSort(field);
+    this.sortMenuOpenDesktop.set(false);
+    this.sortMenuOpenMobile.set(false);
   }
 
   private async loadPage() {

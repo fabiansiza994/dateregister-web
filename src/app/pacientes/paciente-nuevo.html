@@ -6,9 +6,7 @@
           <h3 class="text-xl font-semibold m-0 flex items-center gap-2"><i class="bi bi-person-plus text-primary"></i><span>Crear paciente</span></h3>
           <p class="text-xs text-slate-500 m-0">Completa la información básica y, si deseas, datos adicionales</p>
         </div>
-        <div>
-          <button type="button" class="btn btn-outline-secondary" (click)="cancel()">&larr; Volver a pacientes</button>
-        </div>
+        
       </div>
 
       @if (errorGlobal()) { <div class="rounded-lg border border-red-300 bg-red-50 text-red-700 px-4 py-3 text-sm flex gap-3 items-start mb-3" role="alert"><i class="bi bi-exclamation-triangle mt-1"></i><div class="font-medium flex-1">{{ errorGlobal() }}</div><button type="button" class="btn btn-close" (click)="errorGlobal.set(null)"></button></div> }

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, AfterViewInit, HostListener, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, computed, AfterViewInit, HostListener, ElementRef, ViewChild, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -14,7 +14,7 @@ import { ConfigService } from '../core/config.service';
   templateUrl: './pacientes.html',
   styleUrls: ['./pacientes.css']
 })
-export class Pacientes implements OnInit, AfterViewInit {
+export class Pacientes implements OnInit, AfterViewInit, OnDestroy {
   // Filtro de búsqueda: backend usa siempre `q` (aunque esté vacío)
   q = '';
 
@@ -29,12 +29,16 @@ export class Pacientes implements OnInit, AfterViewInit {
 
   // Paginación (UI 1-based)
   page = signal(1);
-  pageSize = signal(5);
-  pageSizes = [5, 10, 20];
+  pageSize = signal(10);
+  pageSizes = [10, 20, 50];
 
   // Orden
   sortBy = signal<'id' | 'nombre'>('nombre');
   direction = signal<'ASC' | 'DESC'>('ASC');
+
+  // UI: menús de ordenamiento (desktop/móvil)
+  sortMenuOpenDesktop = signal(false);
+  sortMenuOpenMobile = signal(false);
 
   // Derivados
   totalPages = computed(() => {
@@ -86,10 +90,13 @@ export class Pacientes implements OnInit, AfterViewInit {
   ) { }
 
   ngOnInit(): void {
+    // Body class para ajustar estilos globales en móvil (sin sombra ni padding superior)
+    try { document?.body?.classList?.add('page-pacientes'); } catch {}
     this.apiBase = this.cfg.get<string>('apiBaseUrl', '');
     this.loadPage();
   }
   ngAfterViewInit(): void { setTimeout(() => this.updateCreateFab(), 0); }
+  ngOnDestroy(): void { try { document?.body?.classList?.remove('page-pacientes'); } catch {} }
   @HostListener('window:scroll')
   @HostListener('window:resize')
   onViewportChange() { this.updateCreateFab(); }
@@ -137,6 +144,13 @@ export class Pacientes implements OnInit, AfterViewInit {
     }
     this.page.set(1);
     await this.loadPage();
+  }
+
+  // Elegir campo desde menú y cerrar menús de sort
+  async chooseSort(field: 'id' | 'nombre') {
+    await this.changeSort(field);
+    this.sortMenuOpenDesktop.set(false);
+    this.sortMenuOpenMobile.set(false);
   }
 
   // Cargar página desde API

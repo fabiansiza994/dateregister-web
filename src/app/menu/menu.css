@@ -21,3 +21,19 @@ nav.sticky-top { z-index: 50; }
 .brand-lines span:first-child { margin-bottom:1px; }
 .brand-lines { overflow:hidden; }
 .brand-lines:hover span { text-overflow:clip; }
+
+/* ===== Menú móvil superpuesto (overlay) ===== */
+.mobile-backdrop { position: fixed; inset: 0; background: rgba(2,6,23,.45); z-index: 65; animation: fade .18s ease-in-out; }
+.mobile-menu-overlay {
+	position: fixed;
+	left: 0; right: 0;
+	top: var(--menu-h, 3.5rem);
+	z-index: 70; /* por encima del navbar (50) y backdrop (65) */
+	background: var(--bs-primary, #0d6efd);
+	color: #ffffff;
+	border-bottom-left-radius: .75rem;
+	border-bottom-right-radius: .75rem;
+	box-shadow: 0 12px 30px rgba(2,6,23,.28);
+	animation: slideDown .2s cubic-bezier(.2,.7,.2,1);
+}
+@keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }

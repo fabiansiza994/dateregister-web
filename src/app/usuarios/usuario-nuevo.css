@@ -1,6 +1,17 @@
-/* Extra bottom padding so content isn't obscured by mobile bottom nav + FAB */
-.dr-form-pad-bottom { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
-
-/* Fixed bottom action bar for mobile */
-.dr-form-fab { position: fixed; left: 0; right: 0; bottom: calc(72px + env(safe-area-inset-bottom)); z-index: 65; display: flex; justify-content: center; }
-.dr-form-fab .dr-fab-inner { display: inline-flex; gap: 10px; background: rgba(255,255,255,0.92); border: 1px solid rgba(15,23,42,0.08); backdrop-filter: saturate(120%) blur(4px); border-radius: 9999px; padding: 8px; box-shadow: 0 10px 18px -6px rgba(2,6,23,0.25), 0 6px 8px -6px rgba(2,6,23,0.18); }
+/* Botones flotantes (móvil) - igual a Clientes */
+.dr-fab-wrap {
+	position: fixed;
+	right: 1rem;
+	bottom: calc(env(safe-area-inset-bottom, 0px) + 5rem + 1rem); /* sobre el bottom-nav (5rem) */
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	z-index: 60;
+}
+.dr-fab {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	border-radius: 9999px;
+	box-shadow: 0 6px 20px rgba(0,0,0,.15);
+}

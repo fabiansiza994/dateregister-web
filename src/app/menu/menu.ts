@@ -1,6 +1,6 @@
 import { Component, computed, signal, ElementRef, ViewChild, HostListener, AfterViewInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { AuthService } from '../core/auth.service';
 import { PlanesService } from '../suscripcion/planes.service';
 
@@ -104,6 +104,17 @@ export class Menu implements AfterViewInit {
         this.showIOSTip.set(true);
       }
     } catch {}
+
+    // Detectar módulo actual para mostrar acción Crear en móvil
+    const setModuleFromUrl = (url: string) => {
+      try {
+        const path = (url || '').split('?')[0].split('#')[0];
+        const seg = path.split('/').filter(Boolean)[0] || '';
+        this.currentModule.set(seg.toLowerCase());
+      } catch { this.currentModule.set(''); }
+    };
+    setModuleFromUrl(this.router.url || '');
+    this.router.events.subscribe(ev => { if (ev instanceof NavigationEnd) setModuleFromUrl((ev as NavigationEnd).urlAfterRedirects || (ev as any).url || ''); });
   }
 
   logout() {
@@ -192,6 +203,39 @@ export class Menu implements AfterViewInit {
 
   brandLines = computed(() => this.splitCompanyName(this.empresa() ?? ''));
 
+  // ===== Crear acción condicional (móvil): botón + según módulo =====
+  private currentModule = signal<string>('');
+  private readonly actionModules = new Set<string>(['trabajos', 'clientes', 'pacientes', 'usuarios']);
+  showCreateAction = computed(() => this.actionModules.has((this.currentModule() || '').toLowerCase()));
+  createLink = computed(() => {
+    const m = (this.currentModule() || '').toLowerCase();
+    if (m === 'trabajos') return '/trabajos/nuevo';
+    if (m === 'clientes') return '/clientes/nuevo';
+    if (m === 'pacientes') return '/pacientes/nuevo';
+    if (m === 'usuarios') return '/usuarios/nuevo';
+    return '/';
+  });
+
+  // Título centrado del módulo actual (móvil)
+  moduleTitle = computed(() => {
+    const m = (this.currentModule() || '').toLowerCase();
+    if (!m) return 'INICIO';
+    // Mapear algunos módulos a títulos legibles
+    const map: Record<string, string> = {
+      'clientes': 'CLIENTES',
+      'pacientes': 'PACIENTES',
+      'trabajos': 'TRABAJOS',
+      'reportes': 'REPORTES',
+      'usuarios': 'USUARIOS',
+      'formas-pago': 'FORMAS DE PAGO',
+      'grupos': 'GRUPOS',
+      'configuracion': 'CONFIGURACIÓN',
+      'perfil': 'MI PERFIL',
+      'suscripcion': 'SUSCRIPCIÓN'
+    };
+    return map[m] || m.toUpperCase();
+  });
+
   // ===== Altura dinámica del menú para sticky de filtros =====
   ngAfterViewInit(): void {
     // Actualizar inmediatamente y al redimensionar
@@ -203,9 +247,14 @@ export class Menu implements AfterViewInit {
     effect(() => {
       // Dependencias que pueden cambiar la altura
       this.showIOSTip();
-      this.mobileOpen();
+      const isOpen = this.mobileOpen();
       // Pequeño defer para permitir el reflow
       setTimeout(() => this.updateMenuHeight(), 50);
+
+      // Bloquear scroll del body cuando el menú móvil está abierto
+      try {
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      } catch { /* noop */ }
     });
   }
 

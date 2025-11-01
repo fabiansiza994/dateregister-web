@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -40,7 +40,7 @@ interface JobSearchOk {
   templateUrl: './trabajos.html',
   styleUrls: ['./trabajos.css']
 })
-export class JobsComponent implements OnInit {
+export class JobsComponent implements OnInit, OnDestroy {
 
   private readonly _claims = signal<any | null>(null);
   sector = computed(() => (this._claims()?.sector ?? '').toUpperCase());
@@ -79,6 +79,10 @@ export class JobsComponent implements OnInit {
   sortBy = signal<'id' | 'fecha' | 'valorTotal'>('id');
   direction = signal<'ASC' | 'DESC'>('DESC');
 
+  // UI: menús de ordenamiento (desktop/móvil)
+  sortMenuOpenDesktop = signal(false);
+  sortMenuOpenMobile = signal(false);
+
   // Derivados
   totalPages = computed(() => {
     const t = this.total(); const s = this.pageSize();
@@ -101,6 +105,8 @@ export class JobsComponent implements OnInit {
   ) { this._claims.set(this.auth.claims()); }
 
   ngOnInit(): void {
+    // Marcar el body para poder ajustar estilos globales del navbar en esta vista
+    try { document?.body?.classList?.add('page-trabajos'); } catch {}
     this.apiBase = this.cfg.get<string>('apiBaseUrl', '');
     // Mostrar mensajes de éxito enviados por navegación (flash)
     try {
@@ -118,6 +124,10 @@ export class JobsComponent implements OnInit {
       }
     } catch { /* noop */ }
     this.loadPage();
+  }
+
+  ngOnDestroy(): void {
+    try { document?.body?.classList?.remove('page-trabajos'); } catch {}
   }
 
   // Helpers UI
@@ -140,6 +150,13 @@ export class JobsComponent implements OnInit {
     }
     this.page.set(1);
     this.loadPage();
+  }
+
+  // Elegir campo desde el menú y cerrar
+  chooseSort(field: 'id'|'fecha'|'valorTotal') {
+    this.changeSort(field);
+    this.sortMenuOpenDesktop.set(false);
+    this.sortMenuOpenMobile.set(false);
   }
 
   async onSearch() {

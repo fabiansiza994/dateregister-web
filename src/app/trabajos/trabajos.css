@@ -60,13 +60,13 @@
 	left: .5rem;
 	top: 50%;
 	transform: translateY(-50%);
-	width: 28px; height: 28px;
+	width: 26px; height: 26px;
 	border-radius: 9999px;
 	display: inline-flex; align-items: center; justify-content: center;
-	color: #64748b; /* slate-500 */
+	color: #ffffff; /* icono blanco sobre azul */
 	background: transparent; border: 1px solid transparent;
 }
-.dr-search-btn-inside:hover { color: #0ea5e9; /* sky-500 */ }
+.dr-search-btn-inside:hover { color: #ffffff; opacity: .9; }
 .dr-search-btn-inside:disabled { opacity: .5; }
 
 /* Paginación sticky sobre la barra inferior en móvil */
@@ -154,3 +154,131 @@
 .dr-wa-action.is-view { color: #0284c7; border-color: rgba(56,189,248,.35); }
 .dr-wa-action.is-edit { color: #4f46e5; border-color: rgba(129,140,248,.35); }
 .dr-wa-action.is-delete { color: #e11d48; border-color: rgba(248,113,113,.35); }
+
+/* Avatar pequeño para celda Cliente (solo Trabajos) */
+.dr-avatar-sm {
+	flex: none;
+	width: 28px; height: 28px;
+	border-radius: 9999px;
+	background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+	color: #0ea5e9;
+	display: inline-flex; align-items: center; justify-content: center;
+	box-shadow: inset 0 0 0 1px rgba(14,165,233,.25);
+}
+.dr-avatar-sm i { font-size: 14px; }
+
+/* Header integrado de tabla (solo escritorio) */
+@media (min-width: 768px) {
+	.dr-table-headbar .form-control {
+		min-height: 30px;
+		padding-top: .25rem;
+		padding-bottom: .25rem;
+	}
+	.dr-table-headbar label { white-space: nowrap; }
+}
+
+/* ===== Topbar móvil (Trabajos) ===== */
+.dr-mobile-topbar {
+	background: var(--bs-primary, #0d6efd); /* igual tono que el navbar (bg-primary) */
+	border: 0;
+	border-radius: 0; /* pegado como parte del menú superior */
+	box-shadow: none;
+	/* Romper el contenedor para ocupar todo el ancho de la pantalla */
+	width: 100vw;
+	margin-left: calc(50% - 50vw);
+	margin-right: calc(50% - 50vw);
+	z-index: 49; /* debajo del navbar (50), encima del contenido */
+}
+.dr-icon-btn {
+	width: 32px; height: 32px;
+	border-radius: 9999px;
+	display: inline-flex; align-items: center; justify-content: center;
+	border: 1px solid rgba(255,255,255,.35);
+	background: rgba(255,255,255,.12); color: #ffffff;
+	box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+}
+.dr-icon-btn i { font-size: 16px; }
+.dr-icon-btn:active { background: rgba(255,255,255,.2); }
+.dr-icon-btn.is-primary {
+	/*background: #ffffff; color: #0369a1;  sky-700 */
+	border-color: rgba(2,8,23,.06);
+	box-shadow: 0 1px 2px rgba(2,6,23,.08);
+}
+.dr-brand { color: #0ea5e9; } /* sky-500 */
+
+/* Botón limpiar a la derecha del input móvil */
+.dr-search-btn-right {
+	position: absolute;
+	right: .5rem;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 26px; height: 26px;
+	border-radius: 9999px;
+	display: inline-flex; align-items: center; justify-content: center;
+	color: #ffffff; background: transparent; border: 1px solid transparent;
+}
+.dr-search-btn-right:hover { color: #ffffff; opacity: .9; }
+
+/* Inputs sobre header azul */
+.dr-mobile-topbar .form-control {
+	background: rgba(var(--bs-primary-rgb, 13,110,253), .18) !important; /* azul aún más claro para mayor contraste */
+	color: #ffffff !important;
+	-webkit-text-fill-color: #ffffff !important; /* fuerza texto blanco en WebKit */
+	caret-color: #ffffff;
+	padding-top: .35rem; padding-bottom: .35rem; min-height: 34px;
+	border-color: rgba(255,255,255,.35) !important;
+}
+.dr-mobile-topbar .form-control::placeholder { color: rgba(255,255,255,.95) !important; }
+.dr-mobile-topbar .form-control::placeholder { font-size: 12px; }
+.dr-mobile-topbar .form-control:focus{
+	box-shadow: 0 0 0 .18rem rgba(255,255,255,.12) !important;
+	border-color: rgba(255,255,255,.55) !important;
+}
+
+/* Sin separación: topbar justo debajo del menú superior */
+.dr-mobile-topbar.dr-sticky-under-nav{ top: var(--menu-h, 3.5rem) !important; margin-top: 0 !important; }
+
+/* Compensa el padding superior del <main> del layout en móvil para que el topbar se vea pegado al menú */
+@media (max-width: 767.98px){
+	/* Ya eliminamos el padding-top del main, no necesitamos compensar con margen negativo */
+	.dr-mobile-topbar{ margin-top: 0; }
+}
+
+/* ===== Dropdown para Sort by ===== */
+.dr-sort-dropdown {
+	position: absolute;
+	top: calc(100% + .375rem);
+	right: 0;
+	min-width: 160px;
+	background: #ffffff;
+	border: 1px solid rgba(100,116,139,.35);
+	border-radius: .5rem;
+	box-shadow: 0 12px 30px rgba(2,6,23,.12);
+	padding: .25rem;
+	z-index: 60;
+}
+.dr-sort-item {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: .5rem;
+	background: transparent;
+	border: 0;
+	color: #0f172a;
+	font-size: 12px;
+	padding: .5rem .625rem;
+	border-radius: .375rem;
+	text-align: left;
+}
+.dr-sort-item:hover, .dr-sort-item:focus-visible {
+	background: #f8fafc;
+	outline: none;
+}
+.dr-sort-item.is-active {
+	background: #eff6ff; /* blue-50 */
+	color: #1d4ed8;      /* blue-700 */
+	font-weight: 600;
+}
+
+/* Forzar blanco en botón Sort by (texto e ícono) */
+.dr-sort-btn, .dr-sort-btn i { color: #ffffff !important; }
