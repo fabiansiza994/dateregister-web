@@ -1,5 +1,26 @@
-<div class="max-w-screen-lg mx-auto px-4 py-4">
-    <div class="flex flex-wrap items-center justify-between mb-4 gap-2">
+<div class="max-w-screen-lg mx-auto px-4 pt-0 sm:pt-4 pb-4">
+        <!-- Topbar móvil: fechas (pegado bajo el menú) -->
+        <div class="sm:hidden dr-mobile-topbar-reportes bg-primary text-white" style="position:sticky; top: var(--menu-h,56px); margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); z-index: 10;">
+            <div class="px-4 py-2">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label for="rep-from-m" class="text-[11px] uppercase tracking-wide opacity-90">Inicio</label>
+                        <div class="relative mt-1">
+                            <i class="bi bi-calendar3 leading-icon"></i>
+                            <input id="rep-from-m" type="text" class="form-control with-leading-icon bg-white text-slate-700" [ngModel]="from()" (ngModelChange)="from.set($event)" name="from-m" appFlatpickr />
+                        </div>
+                    </div>
+                    <div>
+                        <label for="rep-to-m" class="text-[11px] uppercase tracking-wide opacity-90">Fin</label>
+                        <div class="relative mt-1">
+                            <i class="bi bi-calendar3 leading-icon"></i>
+                            <input id="rep-to-m" type="text" class="form-control with-leading-icon bg-white text-slate-700" [ngModel]="to()" (ngModelChange)="to.set($event)" name="to-m" appFlatpickr />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <div class="hidden sm:flex flex-wrap items-center justify-between mb-4 gap-2">
         <div class="space-y-0.5">
             <h3 class="text-xl font-semibold m-0">Reportes</h3>
             <p class="text-xs text-slate-500 m-0">Empresa: {{ empresa() }} (ID {{ empresaId() }})</p>
@@ -23,19 +44,25 @@
     </div>
     }
 
-    <form class="bg-white rounded-2xl shadow-card border border-slate-200/60"
+    <form class="bg-white rounded-2xl shadow-card border border-slate-200/60 hidden sm:block"
         (submit)="$event.preventDefault(); downloadExcel()">
         <div class="p-5 pt-4">
             <div class="grid md:grid-cols-12 gap-4 items-end">
                 <div class="md:col-span-4 space-y-1">
                     <label class="form-label" for="rep-from">Fecha inicio</label>
-                    <input id="rep-from" type="date" class="form-control" [ngModel]="from()"
-                        (ngModelChange)="from.set($event)" name="from" />
+                    <div class="relative">
+                        <i class="bi bi-calendar3 leading-icon"></i>
+                        <input id="rep-from" type="text" class="form-control with-leading-icon" [ngModel]="from()"
+                            (ngModelChange)="from.set($event)" name="from" appFlatpickr />
+                    </div>
                 </div>
                 <div class="md:col-span-4 space-y-1">
                     <label class="form-label" for="rep-to">Fecha fin</label>
-                    <input id="rep-to" type="date" class="form-control" [ngModel]="to()"
-                        (ngModelChange)="to.set($event)" name="to" />
+                    <div class="relative">
+                        <i class="bi bi-calendar3 leading-icon"></i>
+                        <input id="rep-to" type="text" class="form-control with-leading-icon" [ngModel]="to()"
+                            (ngModelChange)="to.set($event)" name="to" appFlatpickr />
+                    </div>
                 </div>
                 <div class="md:col-span-4">
                     <button type="submit"
@@ -49,7 +76,46 @@
         </div>
     </form>
 
-    <!-- Charts -->
+        <!-- Resumen mensual (dona: Mes actual vs Mes anterior) -->
+    <div class="bg-white rounded-2xl shadow-card border border-slate-200/60 mt-4">
+            <div class="p-5">
+                <div class="flex items-center justify-between gap-2 mb-3">
+                    <div>
+                        <h5 class="m-0 text-base font-semibold">Resumen mensual</h5>
+                        @if (summarySubtitle()) { <div class="text-xs text-slate-500">{{ summarySubtitle() }}</div> }
+                    </div>
+                    @if (summaryLoading()) { <div class="text-xs text-slate-500"><span class="spinner-border spinner-border-sm mr-1"></span>Cargando…</div> }
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 items-center">
+                    <svg width="240" height="240" role="img" aria-label="Resumen mensual">
+                        <!-- Anillo de fondo tenue cuando no hay datos -->
+                        @if (summaryIsEmpty()) {
+                          <circle cx="120" cy="120" [attr.r]="67" stroke="#e2e8f0" [attr.stroke-width]="34" fill="none" opacity="0.6"></circle>
+                        }
+                        <g>
+                            <ng-container *ngFor="let a of summaryArcs()">
+                                <path [attr.d]="a.d" [attr.fill]="a.color"></path>
+                            </ng-container>
+                        </g>
+                        <text x="120" y="130" text-anchor="middle" fill="#334155" font-size="16" font-weight="600">
+                            {{ (summaryLegend().length ? (summaryLegend()[0].percent) : 0) }}% / {{ (summaryLegend().length ? (summaryLegend()[1].percent) : 0) }}%
+                        </text>
+                    </svg>
+                    <div class="flex-1 w-full">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                            <div class="flex items-center gap-2" *ngFor="let l of summaryLegend()">
+                                <span class="inline-block w-3 h-3 rounded-sm" [style.background]="l.color"></span>
+                                <span class="text-sm">{{ l.label }}</span>
+                                <span class="ml-auto text-sm font-semibold">{{ l.percent }}% <span class="text-slate-400 font-normal">({{ l.value }})</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
     <div class="bg-white rounded-2xl shadow-card border border-slate-200/60 mt-4">
         <div class="p-5">
             <div class="flex items-center justify-between gap-2 mb-3">
@@ -66,7 +132,7 @@
                             [class.btn-light]="metric()!=='sum'" (click)="metric.set('sum'); loadChart()">Valor
                             $</button>
                     </div>
-                    <button class="btn btn-soft-primary" (click)="loadChart()" [disabled]="chartLoading()">
+                    <button class="btn btn-soft-primary" (click)="reloadData()" [disabled]="chartLoading() || summaryLoading()">
                         @if (chartLoading()) { <span class="spinner-border spinner-border-sm mr-2"></span> } Actualizar
                     </button>
                 </div>
@@ -142,50 +208,6 @@
     </div>
 
     <!-- Tooltip -->
-    @if (reportItems().length && (hasClients() || hasPatients())) {
-    <div class="bg-white rounded-2xl shadow-card border border-slate-200/60 mt-4">
-        <div class="p-5">
-            <div class="flex items-center justify-between gap-2 mb-3">
-                <div>
-                    <h5 class="m-0 text-base font-semibold">
-                        @if (hasClients() && hasPatients()) { Clientes / Pacientes }
-                        @if (hasClients() && !hasPatients()) { Clientes }
-                        @if (!hasClients() && hasPatients()) { Pacientes }
-                    </h5>
-                    <div class="text-xs text-slate-500">Resumen de personas encontradas en el rango seleccionado</div>
-                </div>
-            </div>
-
-            @if (isHealthSector() && hasClients() && hasPatients()) {
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
-                @if (hasClients()) {
-                <div>
-                    <div class="text-sm font-semibold mb-2">Clientes</div>
-                    <div class="space-y-1 text-sm">
-                        <div *ngFor="let c of uniqueClients()">{{ c.nombre }} <span class="text-slate-500">{{ c.apellido || '' }}</span></div>
-                    </div>
-                </div>
-                }
-                @if (hasPatients()) {
-                <div>
-                    <div class="text-sm font-semibold mb-2">Pacientes</div>
-                    <div class="space-y-1 text-sm">
-                        <div *ngFor="let p of uniquePatients()">{{ p.nombre }} <span class="text-slate-500">{{ p.apellido || '' }}</span></div>
-                    </div>
-                </div>
-                }
-            </div>
-            } @else {
-            <div class="mt-3">
-                <div class="text-sm font-semibold mb-2">Personas</div>
-                <div class="space-y-1 text-sm">
-                    <div *ngFor="let p of mergedPeople()">{{ p.nombre }} <span class="text-slate-500">{{ p.apellido || '' }}</span></div>
-                </div>
-            </div>
-            }
-            </div>
-        </div>
-        }
 
         @if (tip()) {
     <div class="fixed z-50 pointer-events-none px-2 py-1 rounded-md text-xs bg-slate-900 text-white shadow"

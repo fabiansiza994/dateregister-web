@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { AuthService } from '../core/auth.service';
 import { PlanesService } from '../suscripcion/planes.service';
+import { ReportesActionsService } from '../reportes-component/reportes-actions.service';
 
 @Component({
   selector: 'app-menu',
@@ -67,7 +68,7 @@ export class Menu implements AfterViewInit {
     return plan?.name || 'Free';
   });
 
-  constructor(private router: Router, private auth: AuthService, private planes: PlanesService, private host: ElementRef<HTMLElement>) {
+  constructor(private router: Router, private auth: AuthService, private planes: PlanesService, private host: ElementRef<HTMLElement>, private reportesActions: ReportesActionsService) {
     this.auth.refreshFromStorage();
     this._claims.set(this.auth.claims());
 
@@ -215,6 +216,14 @@ export class Menu implements AfterViewInit {
     if (m === 'usuarios') return '/usuarios/nuevo';
     return '/';
   });
+
+  // Acción Excel en Reportes (móvil)
+  showExcelAction = computed(() => (this.currentModule() || '').toLowerCase() === 'reportes');
+  triggerReportDownload() {
+    this.reportesActions.triggerDownload();
+    // cerrar menús si alguno abierto
+    this.closeAll();
+  }
 
   // Título centrado del módulo actual (móvil)
   moduleTitle = computed(() => {

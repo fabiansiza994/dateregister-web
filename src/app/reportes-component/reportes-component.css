@@ -1,0 +1,5 @@
+/* Iconos embebidos en inputs/selects para Reportes */
+.leading-icon{ position:absolute; left:.75rem; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none; }
+.trailing-icon{ position:absolute; right:.75rem; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none; }
+.with-leading-icon{ padding-left: 2.25rem !important; }
+.with-trailing-icon{ padding-right: 2rem !important; }

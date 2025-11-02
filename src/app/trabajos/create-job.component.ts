@@ -10,6 +10,7 @@ import { AuthService } from '../core/auth.service';
 import { AngularEditorModule, AngularEditorConfig } from '@kolkov/angular-editor';
 import { ClientPickerComponent } from '../shared/client-picker.component';
 import { PatientPickerComponent } from '../shared/patient-picker.component';
+import { FlatpickrDirective } from '../shared/flatpickr.directive';
 
 type FotoKey = 'foto1' | 'foto2' | 'foto3' | 'foto4';
 
@@ -95,7 +96,7 @@ interface JobDetailOk {
 @Component({
   selector: 'app-crear-trabajo',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ClientPickerComponent, PatientPickerComponent, AngularEditorModule],
+  imports: [CommonModule, FormsModule, RouterLink, ClientPickerComponent, PatientPickerComponent, AngularEditorModule, FlatpickrDirective],
   templateUrl: './create-job.html',
   styleUrls: ['./create-job.css'],
 })
@@ -169,6 +170,7 @@ export class CreateJobComponent implements OnInit {
 
   mopLoading = signal(false);
   formasPago: FormaPago[] = [];
+  mopOpen = signal(false);
 
   apiBase = '';
 
@@ -525,6 +527,18 @@ export class CreateJobComponent implements OnInit {
     this.cancelReplace();
   }
 
+  // Cerrar dropdown de Forma de pago al click fuera
+  @HostListener('document:click', ['$event'])
+  closeMopOnOutside(ev: MouseEvent) {
+    const target = ev.target as Node | null;
+    try {
+      const mopEl = document.getElementById('mop-select');
+      if (this.mopOpen() && mopEl && target && !mopEl.contains(target)) {
+        this.mopOpen.set(false);
+      }
+    } catch {}
+  }
+
   toggleDelete(foto: FotoKey) {
     if (this.markedForDelete.has(foto)) {
       this.markedForDelete.delete(foto);
@@ -596,6 +610,16 @@ export class CreateJobComponent implements OnInit {
   }
   onPatientClose() { this.patientModalOpen.set(false); }
   clearPatient() { this.selectedPatient = null; this.form.pacienteId = undefined; }
+
+  // ==== Forma de pago (custom dropdown) ====
+  getFormaPagoLabel(): string {
+    const f = this.formasPago.find(x => x.id === this.form.formaPagoId);
+    return f?.formaPago || 'Seleccione…';
+  }
+  pickMop(id: number) {
+    this.form.formaPagoId = id;
+    this.mopOpen.set(false);
+  }
 
   async loadFormasPago(id: number) {
     if (!this.apiBase) return;
@@ -734,8 +758,10 @@ export class CreateJobComponent implements OnInit {
       const eliminarFoto3 = this.markedForDelete.has('foto3') && !this.files['foto3'];
       const eliminarFoto4 = this.markedForDelete.has('foto4') && !this.files['foto4'];
 
-      const payload = { ...this.form, id: this.form.id, eliminarFoto1, eliminarFoto2, eliminarFoto3, eliminarFoto4 };
-      fd.append('payload', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+  const payload = { ...this.form, id: this.form.id, eliminarFoto1, eliminarFoto2, eliminarFoto3, eliminarFoto4 };
+  fd.append('payload', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+  // Enviar también 'fecha' como campo plano por compatibilidad con el backend (algunos endpoints leen directo del form-data)
+  if (this.form.fecha) fd.append('fecha', this.form.fecha);
       (['foto1', 'foto2', 'foto3', 'foto4'] as FotoKey[]).forEach(k => { if (this.files[k]) fd.append(k, this.files[k]!); });
 
       this.loading.set(true);

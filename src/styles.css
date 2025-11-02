@@ -1,4 +1,6 @@
 @import "leaflet/dist/leaflet.css";
+@import "flatpickr/dist/flatpickr.css";
+@import "flatpickr/dist/themes/material_blue.css";
 @import "./tailwind-bridge.css";
 @tailwind base;
 @tailwind components;
@@ -51,7 +53,7 @@
 /* ====================================================================== */
 /* ======================   BASE / TYPO GLOBAL   ======================== */
 /* ====================================================================== */
-html, body { height: 100%; }
+html, body { height: 100%; overflow-x: hidden; }
 html { font-size: 100%; }
 body{
   display:flex; flex-direction:column; min-height:100vh;
@@ -362,4 +364,7 @@ select:-webkit-autofill{
   /* Usuarios: mismo ajuste */
   body.page-usuarios nav.sticky-top{ box-shadow: none !important; }
   body.page-usuarios main{ padding-top: 0 !important; }
+  /* Reportes: mismo ajuste */
+  body.page-reportes nav.sticky-top{ box-shadow: none !important; }
+  body.page-reportes main{ padding-top: 0 !important; }
 }

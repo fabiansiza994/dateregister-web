@@ -234,7 +234,7 @@
       </div>
       <div class="flex items-center gap-2">
           <button class="btn btn-light btn-sm" (click)="prevPage()" [disabled]="page() <= 1">Anterior</button>
-          <div class="text-xs text-slate-500">Página {{ page() }} / {{ totalPages() }}</div>
+          <div class="text-xs text-slate-500"> {{ page() }} / {{ totalPages() }}</div>
           <button class="btn btn-light btn-sm" (click)="nextPage()" [disabled]="page() >= totalPages()">Siguiente</button>
       </div>
   </nav>

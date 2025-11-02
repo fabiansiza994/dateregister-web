@@ -19,7 +19,10 @@
       <div class="grid gap-4 md:grid-cols-12">
         <div class="md:col-span-3">
           <label class="text-sm font-medium text-slate-700">Fecha <span class="text-red-600">*</span></label>
-          <input type="date" class="form-control" [(ngModel)]="form.fecha" name="fecha" required>
+          <div class="relative">
+            <i class="bi bi-calendar3 leading-icon"></i>
+            <input type="text" placeholder="YYYY-MM-DD" class="form-control with-leading-icon" [(ngModel)]="form.fecha" name="fecha" required appFlatpickr>
+          </div>
         </div>
 
         @if (isEdit()) {
@@ -62,10 +65,19 @@
 
         <div class="md:col-span-4">
           <label class="text-sm font-medium text-slate-700">Forma de pago <span class="text-red-600">*</span></label>
-          <select class="form-control" [(ngModel)]="form.formaPagoId" name="formaPagoId" required>
-            <option [ngValue]="0" disabled>Seleccione…</option>
-            <option *ngFor="let f of formasPago" [ngValue]="f.id">{{ f.formaPago }}</option>
-          </select>
+          <div class="relative" id="mop-select">
+            <i class="bi bi-wallet2 leading-icon"></i>
+            <i class="bi bi-chevron-down trailing-icon"></i>
+            <input type="text" class="form-control pretty-select with-leading-icon with-trailing-icon cursor-pointer" [value]="getFormaPagoLabel()" readonly (click)="mopOpen.set(!mopOpen())">
+            @if (mopOpen()) {
+              <div class="absolute z-30 mt-1 w-full bg-white border border-slate-200/70 rounded-xl shadow-card max-h-56 overflow-auto py-1">
+                <button type="button" class="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 flex items-center gap-2" *ngFor="let f of formasPago" (click)="pickMop(f.id)" [ngClass]="{'bg-primary/5': f.id===form.formaPagoId}">
+                  <i class="bi bi-check2" [class.text-primary]="f.id===form.formaPagoId" [class.opacity-0]="f.id!==form.formaPagoId"></i>
+                  <span>{{ f.formaPago }}</span>
+                </button>
+              </div>
+            }
+          </div>
           @if (mopLoading()) { <div class="text-xs text-slate-500 mt-1">Cargando formas de pago…</div> }
         </div>
 

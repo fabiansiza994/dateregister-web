@@ -1,9 +1,13 @@
 import { Component, signal, computed, effect } from '@angular/core';
+import { OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ConfigService } from '../core/config.service';
 import { AuthService } from '../core/auth.service';
+import { ReportesActionsService } from './reportes-actions.service';
+import { FlatpickrDirective } from '../shared/flatpickr.directive';
+import { Subscription } from 'rxjs';
 
 interface ClienteMin { id: number; nombre: string; apellido?: string | null }
 interface TrabajoMin {
@@ -23,10 +27,11 @@ interface JobSearchOk {
 @Component({
   selector: 'app-reportes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './reportes-component.html'
+  imports: [CommonModule, FormsModule, FlatpickrDirective],
+  templateUrl: './reportes-component.html',
+  styleUrls: ['./reportes-component.css']
 })
-export class ReportesComponent {
+export class ReportesComponent implements OnInit, OnDestroy {
   // ===== Claims
   private readonly _claims = signal<any | null>(null);
   empresaId = computed<number>(() => Number(this._claims()?.empresaId ?? 0));
@@ -42,6 +47,7 @@ export class ReportesComponent {
 
   private apiBase = '';
   private _chartDebounce: any = 0;
+  private _sub?: Subscription;
 
   // ===== Chart state
   chartLoading = signal(false);
@@ -89,7 +95,20 @@ export class ReportesComponent {
     return this.metric()==='count' ? `${v} ${v===1?'trabajo':'trabajos'}` : this.formatCurrency(v);
   });
 
-  constructor(private http: HttpClient, private cfg: ConfigService, private auth: AuthService) {
+  // ===== Resumen mensual (dona: Mes actual vs Mes anterior)
+  summaryLoading = signal(false);
+  summaryArcs = signal<Array<{ d:string; color:string; label:string; value:number; percent:number }>>([]);
+  summaryLegend = signal<Array<{ color:string; label:string; value:number; percent:number }>>([]);
+  summarySubtitle = signal<string>('');
+  summaryIsEmpty = computed(() => {
+    const L = this.summaryLegend();
+    if (!L || L.length < 2) return true;
+    const a = Number(L[0]?.value || 0);
+    const b = Number(L[1]?.value || 0);
+    return (a + b) === 0;
+  });
+
+  constructor(private http: HttpClient, private cfg: ConfigService, private auth: AuthService, private actions: ReportesActionsService) {
     this.apiBase = this.cfg.get<string>('apiBaseUrl', '');
     this.auth.refreshFromStorage();
     this._claims.set(this.auth.claims());
@@ -109,6 +128,144 @@ export class ReportesComponent {
       clearTimeout(this._chartDebounce);
       this._chartDebounce = setTimeout(() => this.loadChart(), 300);
     });
+
+    // Cargar resumen mensual cuando haya empresaId disponible
+    effect(() => {
+      const id = this.empresaId();
+      if (id > 0) {
+        this.loadMonthlySummary().catch(() => {});
+      }
+    });
+  }
+
+  ngOnInit(): void {
+    try { document.body.classList.add('page-reportes'); } catch {}
+    // Suscribirse a la acción desde el menú para descargar Excel
+    this._sub = this.actions.onDownload().subscribe(() => this.downloadExcel());
+  }
+
+  ngOnDestroy(): void {
+    try { document.body.classList.remove('page-reportes'); } catch {}
+    try { this._sub?.unsubscribe(); } catch {}
+  }
+
+  // ====== Resumen mensual
+  private monthRange(d: Date): { from: string; to: string } {
+    const y = d.getFullYear();
+    const m = d.getMonth();
+    const pad = (n:number)=>String(n).padStart(2,'0');
+    const first = new Date(y, m, 1);
+    const last = new Date(y, m + 1, 0);
+    return {
+      from: `${first.getFullYear()}-${pad(first.getMonth()+1)}-${pad(first.getDate())}`,
+      to:   `${last.getFullYear()}-${pad(last.getMonth()+1)}-${pad(last.getDate())}`
+    };
+  }
+
+  private async fetchJobsBetween(from: string, to: string): Promise<TrabajoMin[]> {
+    const size = 200; let page = 0; let collected: TrabajoMin[] = []; let total = 0;
+    for (let i=0;i<10;i++) {
+      const params = new HttpParams()
+        .set('q','')
+        .set('page', String(page))
+        .set('size', String(size))
+        .set('sortBy','fecha')
+        .set('direction','ASC')
+        .set('from', from)
+        .set('to', to)
+        .set('empresaId', String(this.empresaId()));
+      const url = `${this.apiBase}/job/search`;
+      const res = await this.http.get<JobSearchOk>(url, { params }).toPromise();
+      const items = res?.data?.items ?? [];
+      total = res?.data?.totalElements ?? items.length;
+      collected = collected.concat(items);
+      if (collected.length >= total || items.length < size) break;
+      page++;
+    }
+    // Filtro client-side por si el backend no filtró
+    const inRange = collected.filter(j => j.fecha >= from && j.fecha <= to);
+    return inRange;
+  }
+
+  async loadMonthlySummary() {
+    if (!this.empresaId()) return;
+    this.summaryLoading.set(true);
+    try {
+      const now = new Date();
+      const curr = this.monthRange(now);
+      const prevDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
+      const prev = this.monthRange(prevDate);
+
+      const [currItems, prevItems] = await Promise.all([
+        this.fetchJobsBetween(curr.from, curr.to),
+        this.fetchJobsBetween(prev.from, prev.to)
+      ]);
+  const currCount = currItems.length;
+  const prevCount = prevItems.length;
+  const total = currCount + prevCount;
+  const currPct = total > 0 ? Math.round((currCount / total) * 100) : 0;
+  const prevPct = total > 0 ? 100 - currPct : 0;
+
+      // construir arcs (dona simple de 2 porciones)
+      const arcs: Array<{ d:string; color:string; label:string; value:number; percent:number }> = [];
+      const legend: Array<{ color:string; label:string; value:number; percent:number }> = [];
+      const cx = 120, cy = 120, r = 84, ir = 50;
+      const toXY = (ang:number, rad:number) => ({ x: cx + rad*Math.cos(ang), y: cy + rad*Math.sin(ang) });
+      const entries = [
+        { label: 'Mes actual', value: currCount, percent: currPct, color: '#4f46e5' },
+        { label: 'Mes anterior', value: prevCount, percent: prevPct, color: '#94a3b8' }
+      ];
+      let acc = 0; const totalVal = (currCount + prevCount) || 1;
+      entries.forEach((e) => {
+        // Omitir segmentos de 0 para evitar paths degenerados
+        if (e.value <= 0) {
+          legend.push({ color: e.color, label: e.label, value: e.value, percent: e.percent });
+          return;
+        }
+        const start = acc / totalVal * 2*Math.PI - Math.PI/2;
+        acc += e.value;
+        const end = acc / totalVal * 2*Math.PI - Math.PI/2;
+        const sweep = 1;
+        const outerLarge = (end - start) > Math.PI ? 1 : 0;
+        // Manejo especial: segmento 100% (círculo completo). Un solo arco no puede dibujar 360°.
+        if (e.value >= totalVal) {
+          const dFull = [
+            // Borde exterior (dos medias circunferencias)
+            `M ${cx} ${cy - r}`,
+            `A ${r} ${r} 0 1 ${sweep} ${cx} ${cy + r}`,
+            `A ${r} ${r} 0 1 ${sweep} ${cx} ${cy - r}`,
+            // Borde interior (en sentido contrario)
+            `L ${cx} ${cy - ir}`,
+            `A ${ir} ${ir} 0 1 ${1 - sweep} ${cx} ${cy + ir}`,
+            `A ${ir} ${ir} 0 1 ${1 - sweep} ${cx} ${cy - ir}`,
+            'Z'
+          ].join(' ');
+          arcs.push({ d: dFull, color: e.color, label: e.label, value: e.value, percent: e.percent });
+          legend.push({ color: e.color, label: e.label, value: e.value, percent: e.percent });
+          return;
+        }
+        // Segmento normal (< 100%)
+        const p0 = toXY(start, r), p1 = toXY(end, r);
+        const q0 = toXY(end, ir), q1 = toXY(start, ir);
+        const d = [
+          `M ${p0.x} ${p0.y}`,
+          `A ${r} ${r} 0 ${outerLarge} ${sweep} ${p1.x} ${p1.y}`,
+          `L ${q0.x} ${q0.y}`,
+          `A ${ir} ${ir} 0 ${outerLarge} ${1 - sweep} ${q1.x} ${q1.y}`,
+          'Z'
+        ].join(' ');
+        arcs.push({ d, color: e.color, label: e.label, value: e.value, percent: e.percent });
+        legend.push({ color: e.color, label: e.label, value: e.value, percent: e.percent });
+      });
+      this.summaryArcs.set(arcs);
+      this.summaryLegend.set(legend);
+      const mm = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      this.summarySubtitle.set(`${mm[now.getMonth()]} vs ${mm[prevDate.getMonth()]} (por conteo)`);
+    } catch {
+      // noop suave
+    } finally {
+      this.summaryLoading.set(false);
+    }
   }
 
   canDownload = computed(() => !!this.from() && !!this.to() && !this.loading() && this.empresaId() > 0);
@@ -400,5 +557,13 @@ export class ReportesComponent {
   formatCurrency(n: number) {
     try { return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n); }
     catch { return `$${n}`; }
+  }
+
+  // ===== Recarga manual desde UI
+  reloadData() {
+    // Actualiza tanto el gráfico del período (dependiente de from/to)
+    // como el resumen mensual (mes actual vs anterior)
+    this.loadChart();
+    this.loadMonthlySummary();
   }
 }

@@ -24,8 +24,12 @@
         <div class="absolute left-0 right-0 flex justify-center pointer-events-none">
           <span class="text-sm font-semibold uppercase tracking-wide text-white">{{ moduleTitle() }}</span>
         </div>
-        <!-- Crear derecha (solo módulos con acción) -->
-        @if (showCreateAction()) {
+        <!-- Acción derecha: Excel en Reportes / Crear en otros módulos con acción -->
+        @if (showExcelAction()) {
+          <button type="button" (click)="triggerReportDownload()" class="inline-flex items-center justify-center w-9 h-9 rounded-md bg-white/15 hover:bg-white/25 transition" aria-label="Descargar Excel">
+            <i class="bi bi-file-earmark-spreadsheet"></i>
+          </button>
+        } @else if (showCreateAction()) {
           <a [routerLink]="createLink()" (click)="closeAll()" class="inline-flex items-center justify-center w-9 h-9 rounded-md bg-white/15 hover:bg-white/25 transition" aria-label="Crear">
             <i class="bi bi-plus-lg"></i>
           </a>
