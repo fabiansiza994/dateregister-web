@@ -39,7 +39,11 @@ export class App {
   const url0 = this.router.url || '';
   this.isTrabajos.set(url0.startsWith('/trabajos'));
   this.isLogin.set(
-    url0.startsWith('/login') || url0.startsWith('/register') || url0.startsWith('/verifycode')
+    url0.startsWith('/login') ||
+    url0.startsWith('/register') ||
+    url0.startsWith('/verify') ||
+    url0.startsWith('/forgot') ||
+    url0.startsWith('/recover')
   );
   this.isModules.set(url0.startsWith('/modules'));
     // Actualizar al navegar
@@ -49,7 +53,11 @@ export class App {
         const u = e.urlAfterRedirects || e.url || '';
         this.isTrabajos.set(u.startsWith('/trabajos'));
         this.isLogin.set(
-          u.startsWith('/login') || u.startsWith('/register') || u.startsWith('/verifycode')
+          u.startsWith('/login') ||
+          u.startsWith('/register') ||
+          u.startsWith('/verify') ||
+          u.startsWith('/forgot') ||
+          u.startsWith('/recover')
         );
         this.isModules.set(u.startsWith('/modules'));
         // Sync current tab and capture last direction

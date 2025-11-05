@@ -1,0 +1,4 @@
+.illustration{ background: radial-gradient(800px 400px at 30% -20%, #eef2ff 10%, #f6f7fb 60%), var(--dr-bg); }
+.illustration-overlay{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(255,255,255,.0), rgba(255,255,255,.2)); }
+.illustration-content{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:2rem; color:#0f172a; }
+.brand-mark{ width:36px; height:36px; border-radius:14px; background:#eef2ff; color:#4f46e5; }

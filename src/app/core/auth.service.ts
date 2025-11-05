@@ -1,4 +1,6 @@
 import { Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { ConfigService } from './config.service';
 
 export interface JwtClaims {
   role: string;
@@ -18,7 +20,7 @@ export interface JwtClaims {
 export class AuthService {
   private _claims = signal<JwtClaims | null>(null);
 
-  constructor() {
+  constructor(private http: HttpClient, private cfg: ConfigService) {
     this.refreshFromStorage();
   }
 
@@ -70,5 +72,17 @@ export class AuthService {
     const pad = b64.length % 4 === 2 ? '==' : b64.length % 4 === 3 ? '=' : '';
     const json = atob(b64 + pad);
     return JSON.parse(json);
+  }
+
+  // ===== Recuperación de cuenta =====
+  sendRecoveryEmail(email: string) {
+    const apiBase = this.cfg.get<string>('apiBaseUrl', '');
+    // encodeURI para mantener '@' en el path (evita %40)
+    return this.http.get(`${apiBase}/code/recoverAccount/${encodeURI(email)}`);
+  }
+
+  recoverAccount(userId: number, password: string) {
+    const apiBase = this.cfg.get<string>('apiBaseUrl', '');
+    return this.http.post(`${apiBase}/user/recoverAccount`, { userId, password });
   }
 }

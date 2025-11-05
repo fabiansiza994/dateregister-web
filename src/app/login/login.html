@@ -103,7 +103,7 @@
             <input class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" type="checkbox" id="remember" name="remember" autocomplete="on" [checked]="remember()" (change)="onRememberChange($any($event.target).checked)" />
             <label class="text-sm text-slate-700" for="remember">Recordarme</label>
           </div><br><br>
-          <a class="text-xs" routerLink="/forgot">¿Olvidaste tu contraseña?</a>
+          <a class="text-xs cursor-pointer" (click)="goForgot()">¿Olvidaste tu contraseña?</a>
         </div>
 
         <!-- Botones -->

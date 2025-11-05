@@ -6,6 +6,8 @@ import { Layout } from './layout/layout';
 export const routes: Routes = [
   // Rutas públicas
   { path: 'login', loadComponent: () => import('./login/login').then(m => m.Login) },
+  { path: 'forgot', loadComponent: () => import('./recover/forgot-password').then(m => m.ForgotPasswordComponent) },
+  { path: 'recover/:id', loadComponent: () => import('./recover/recover-account').then(m => m.RecoverAccountComponent) },
   { path: 'register', loadComponent: () => import('./register/register').then(m => m.Register) },
   { path: 'verify/:userId', loadComponent: () => import('./verifycode/verifycode').then(m => m.VerifyCodeComponent) },
   { path: 'mapa-uso', loadComponent: () => import('./usage-map/usage-map').then(m => m.UsageMap) },

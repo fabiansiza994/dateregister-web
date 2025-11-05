@@ -133,4 +133,8 @@ export class Login {
     this.error.set(null);
     // no tocamos remember(); el usuario decide
   }
+
+  goForgot() {
+    this.router.navigate(['/forgot']);
+  }
 }
