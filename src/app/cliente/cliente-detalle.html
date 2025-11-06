@@ -1,7 +1,7 @@
 <!-- Header -->
 <div class="flex flex-wrap items-center justify-between mb-6 gap-4">
   <div class="space-y-1">
-    <h3 class="text-xl font-semibold m-0">Detalle de cliente</h3>
+    <h3 class="text-xl font-semibold m-0 py-3">Detalle de cliente</h3>
     <p class="text-xs text-slate-500 m-0">Información del cliente y sus pacientes asociados</p>
   </div>
   <div>
@@ -111,32 +111,37 @@
 </div>
 }
 
-<!-- Cards mobile -->
+<!-- Lista compacta móvil -->
 <div class="md:hidden">
   @if (visibles().length === 0) {
-  <div class="rounded-lg border border-slate-300 bg-slate-50 text-center text-slate-500 px-4 py-3 text-sm">Este cliente no tiene pacientes.</div>
+    <div class="rounded-lg border border-slate-300 bg-slate-50 text-center text-slate-500 px-4 py-3 text-sm">Este cliente no tiene pacientes.</div>
   } @else {
-  <div class="grid gap-4">
-    @for (p of visibles(); track p.id) {
-    <div class="bg-white rounded-2xl shadow-card border border-slate-200/60">
-      <div class="p-4">
-        <div class="mb-2 flex items-start justify-between">
-          <div>
-            <div class="text-[11px] text-slate-500">#{{ (page()-1)*pageSize() + $index + 1 }}</div>
-            <h6 class="m-0 font-semibold flex items-center text-sm"><i class="bi bi-person text-slate-400 mr-1"></i>{{ p.nombre }} <span class="font-normal ml-1">{{ p.apellido || '' }}</span></h6>
-            <div class="text-xs text-slate-500">Documento: <span class="font-mono">{{ p.documento }}</span></div>
+    <div class="bg-white rounded-2xl shadow-card border border-slate-200/70 overflow-hidden">
+      <div>
+        @for (p of visibles(); track p.id) {
+        <div class="px-3 py-2 border-t first:border-t-0 border-slate-200/70 flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center" aria-hidden="true">
+            <i class="bi bi-person"></i>
           </div>
-          <span class="px-2 py-0.5 rounded-full text-[11px] font-medium" [class.bg-green-100]="p.estado==='ACTIVO'" [class.text-green-700]="p.estado==='ACTIVO'" [class.bg-slate-200]="p.estado!=='ACTIVO'" [class.text-slate-600]="p.estado!=='ACTIVO'">{{ p.estado }}</span>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center justify-between gap-2">
+              <div class="font-medium truncate">{{ p.nombre }} {{ p.apellido || '' }}</div>
+              <span class="px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0"
+                [class.bg-green-100]="p.estado==='ACTIVO'"
+                [class.text-green-700]="p.estado==='ACTIVO'"
+                [class.bg-slate-200]="p.estado!=='ACTIVO'"
+                [class.text-slate-600]="p.estado!=='ACTIVO'">{{ p.estado }}</span>
+            </div>
+            <div class="text-xs text-slate-500 truncate">
+              @if (p.documento) { <span class="font-mono">{{ p.documento }}</span> }
+              @if (p.telefono) { <span class="mx-1 text-slate-400">•</span> <span>Tel: {{ p.telefono }}</span> }
+              @if (p.email) { <span class="mx-1 text-slate-400">•</span> <a [href]="'mailto:' + p.email" class="text-primary hover:underline break-all">{{ p.email }}</a> }
+            </div>
+          </div>
         </div>
-        <ul class="space-y-1 mb-0 text-[11px]">
-          <li *ngIf="p.telefono" class="flex items-center"><span class="text-slate-500">Teléfono:</span><span class="ml-1">{{ p.telefono }}</span></li>
-          <li *ngIf="p.email" class="flex items-center flex-wrap"><span class="text-slate-500">Email:</span><a [href]="'mailto:' + p.email" class="ml-1 text-primary hover:underline break-all">{{ p.email }}</a></li>
-          <li *ngIf="p.direccion" class="flex items-center"><span class="text-slate-500">Dirección:</span><span class="ml-1">{{ p.direccion }}</span></li>
-        </ul>
+        }
       </div>
     </div>
-    }
-  </div>
   }
 </div>
 

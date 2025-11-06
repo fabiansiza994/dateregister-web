@@ -154,7 +154,7 @@
           <div class="flex flex-wrap gap-2">
             <button class="btn btn-outline-info btn-sm" (click)="verUsuario(u)"><i class="bi bi-eye"></i><span class="ml-1"></span></button>
             <button class="btn btn-outline-primary btn-sm" (click)="editarUsuario(u)" [disabled]="isSelf(u)" *ngIf="!isSelf(u)"><i class="bi bi-pencil"></i><span class="ml-1"></span></button>
-            <button class="btn btn-outline-danger btn-sm" (click)="openConfirm(u); sparkClick($event)" [disabled]="loading()" *ngIf="!isSelf(u)"><i class="bi bi-trash dr-shake"></i><span class="ml-1"></span></button>
+            <button class="btn btn-outline-danger btn-sm" (click)="deleteWithUndo(u); sparkClick($event)" [disabled]="loading()" *ngIf="!isSelf(u)"><i class="bi bi-trash dr-shake"></i><span class="ml-1"></span></button>
           </div>
         </td>
       </tr>
@@ -181,9 +181,16 @@
   } @else {
   <!-- Lista estilo WhatsApp (móvil) -->
   <div class="bg-white rounded-2xl shadow-card border border-slate-200/60 overflow-hidden">
-    <div class="divide-y">
+    <div>
       @for (u of visibleWithRow(); track u.id) {
-      <div class="dr-wa-item" (click)="verUsuario(u)" tabindex="0" role="button" [attr.data-user-id]="u.id">
+      <div class="dr-wa-item" appSwipeToDelete (swipeDelete)="isSelf(u) ? null : deleteWithUndo(u)" (swipeEdit)="isSelf(u) ? null : editarUsuario(u)" tabindex="0" role="button" [attr.data-user-id]="u.id">
+        <!-- Backgrounds revealed on swipe -->
+        <div class="dr-swipe-bg dr-swipe-bg-left" aria-hidden="true"><i class="bi bi-trash"></i><span>Eliminar</span></div>
+        <div class="dr-swipe-bg dr-swipe-bg-right" aria-hidden="true"><i class="bi bi-pencil"></i><span>Editar</span></div>
+        <!-- Check overlay when threshold is confirmed -->
+        <div class="dr-swipe-check" aria-hidden="true"><i class="bi bi-check-lg"></i></div>
+        <!-- Swipe content that moves with finger -->
+        <div class="dr-swipe-content" (click)="verUsuario(u)">
         <div class="dr-wa-avatar" aria-hidden="true"><i class="bi bi-person"></i></div>
         <div class="dr-wa-main">
           <div class="dr-wa-row1">
@@ -201,9 +208,10 @@
             <div class="dr-wa-actions">
               <button type="button" class="dr-wa-action is-view" aria-label="Ver" (click)="$event.stopPropagation(); verUsuario(u)"><i class="bi bi-eye"></i></button>
               <button type="button" class="dr-wa-action is-edit" aria-label="Editar" (click)="$event.stopPropagation(); editarUsuario(u)" *ngIf="!isSelf(u)"><i class="bi bi-pencil"></i></button>
-              <button type="button" class="dr-wa-action is-delete" aria-label="Eliminar" (click)="$event.stopPropagation(); openConfirm(u); sparkClick($event)" [disabled]="loading()" *ngIf="!isSelf(u)"><i class="bi bi-trash"></i></button>
+              <button type="button" class="dr-wa-action is-delete" aria-label="Eliminar" (click)="$event.stopPropagation(); deleteWithUndo(u); sparkClick($event)" [disabled]="loading()" *ngIf="!isSelf(u)"><i class="bi bi-trash"></i></button>
             </div>
           </div>
+        </div>
         </div>
       </div>
       }
@@ -212,6 +220,23 @@
   }
   }
 </div>
+
+<!-- Toast Undo eliminación (Usuarios) -->
+@if (undoOpen()) {
+  <div class="dr-undo-toast" role="status" aria-live="polite">
+    <div class="dr-undo-box">
+      <div class="dr-undo-text">
+        <i class="bi bi-trash3"></i>
+        <span>Usuario #{{ pendingDelete()?.id || '' }} eliminado.</span>
+        <small class="dr-undo-time">({{ undoSeconds() }}s)</small>
+      </div>
+      <button type="button" class="btn btn-link dr-undo-btn" (click)="undoDelete()">Deshacer</button>
+      <div class="dr-undo-progress" aria-hidden="true">
+        <div class="dr-undo-progress-bar" [style.width.%]="undoProgress() * 100"></div>
+      </div>
+    </div>
+  </div>
+}
 
 <!-- Paginador -->
 @if (total() > 10) {

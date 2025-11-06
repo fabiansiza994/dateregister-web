@@ -123,7 +123,7 @@
           <div class="flex flex-wrap gap-2">
             <button class="btn btn-outline-info btn-sm" (click)="verPaciente(p)"><i class="bi bi-eye"></i><span class="ml-1"></span></button>
             <button class="btn btn-outline-primary btn-sm" (click)="editarPaciente(p)"><i class="bi bi-pencil"></i><span class="ml-1"></span></button>
-            <button class="btn btn-outline-danger btn-sm" (click)="openConfirm(p)" [disabled]="loading()"><i class="bi bi-trash"></i><span class="ml-1"></span></button>
+            <button class="btn btn-outline-danger btn-sm" (click)="deleteWithUndo(p)" [disabled]="loading()"><i class="bi bi-trash"></i><span class="ml-1"></span></button>
           </div>
         </td>
       </tr>
@@ -139,9 +139,16 @@
   @if (loading()) { <div class="text-center py-4 text-slate-500"><span class="spinner-border spinner-border-sm mr-2"></span> Cargando…</div> } @else {
   @if (visibleWithRow().length === 0) { <div class="rounded-xl border border-slate-200/70 bg-white p-4 text-center text-slate-500">No se encontraron pacientes con el filtro aplicado.</div> } @else {
   <div class="bg-white rounded-2xl shadow-card border border-slate-200/70 overflow-hidden">
-    <div class="divide-y">
+    <div>
       @for (p of visibleWithRow(); track p.id) {
-      <div class="dr-wa-item" (click)="verPaciente(p)" tabindex="0" role="button">
+      <div class="dr-wa-item" appSwipeToDelete (swipeDelete)="deleteWithUndo(p)" (swipeEdit)="editarPaciente(p)" tabindex="0" role="button">
+        <!-- Backgrounds revealed on swipe -->
+        <div class="dr-swipe-bg dr-swipe-bg-left" aria-hidden="true"><i class="bi bi-trash"></i><span>Eliminar</span></div>
+        <div class="dr-swipe-bg dr-swipe-bg-right" aria-hidden="true"><i class="bi bi-pencil"></i><span>Editar</span></div>
+        <!-- Check overlay when threshold is confirmed -->
+        <div class="dr-swipe-check" aria-hidden="true"><i class="bi bi-check-lg"></i></div>
+        <!-- Swipe content that moves with finger -->
+        <div class="dr-swipe-content" (click)="verPaciente(p)">
         <div class="dr-wa-avatar" aria-hidden="true"><i class="bi bi-person"></i></div>
         <div class="dr-wa-main">
           <div class="dr-wa-row1">
@@ -156,9 +163,10 @@
             <div class="dr-wa-actions">
               <button type="button" class="dr-wa-action is-view" aria-label="Ver" (click)="$event.stopPropagation(); verPaciente(p)"><i class="bi bi-eye"></i></button>
               <button type="button" class="dr-wa-action is-edit" aria-label="Editar" (click)="$event.stopPropagation(); editarPaciente(p)"><i class="bi bi-pencil"></i></button>
-              <button type="button" class="dr-wa-action is-delete" aria-label="Eliminar" (click)="$event.stopPropagation(); openConfirm(p)"><i class="bi bi-trash"></i></button>
+              <button type="button" class="dr-wa-action is-delete" aria-label="Eliminar" (click)="$event.stopPropagation(); deleteWithUndo(p)"><i class="bi bi-trash"></i></button>
             </div>
           </div>
+        </div>
         </div>
       </div>
       }
@@ -211,6 +219,23 @@
           <button type="button" class="btn btn-outline-secondary" (click)="closeConfirm()" [disabled]="loading()">Cancelar</button>
           <button type="button" class="btn btn-danger" (click)="sparkClick($event, '#dc3545'); confirmDelete()" [disabled]="loading()">@if (loading()) { <span class="spinner-border spinner-border-sm mr-2"></span> } Eliminar</button>
         </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Toast Undo eliminación (Pacientes) -->
+@if (undoOpen()) {
+  <div class="dr-undo-toast" role="status" aria-live="polite">
+    <div class="dr-undo-box">
+      <div class="dr-undo-text">
+        <i class="bi bi-trash3"></i>
+        <span>Paciente #{{ pendingDelete()?.id || '' }} eliminado.</span>
+        <small class="dr-undo-time">({{ undoSeconds() }}s)</small>
+      </div>
+      <button type="button" class="btn btn-link dr-undo-btn" (click)="undoDelete()">Deshacer</button>
+      <div class="dr-undo-progress" aria-hidden="true">
+        <div class="dr-undo-progress-bar" [style.width.%]="undoProgress() * 100"></div>
       </div>
     </div>
   </div>

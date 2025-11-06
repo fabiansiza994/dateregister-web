@@ -1,4 +1,5 @@
 import { Directive, ElementRef, EventEmitter, HostBinding, HostListener, Input, NgZone, OnDestroy, OnInit, Output } from '@angular/core';
+import { HapticsService } from '../core/haptics.service';
 
 /**
  * Swipe-to-delete directive (only used in Trabajos mobile list)
@@ -12,6 +13,12 @@ import { Directive, ElementRef, EventEmitter, HostBinding, HostListener, Input, 
 })
 export class SwipeToDeleteDirective implements OnInit, OnDestroy {
   @HostBinding('class.dr-swipeable') swipeable = true;
+  // Visual state classes so CSS can react (hide opposite color, show check)
+  @HostBinding('class.dr-confirm-delete') confirmDelete = false;
+  @HostBinding('class.dr-confirm-edit') confirmEdit = false;
+  // Directional classes while dragging (avoid showing opposite color before threshold)
+  @HostBinding('class.dr-drag-left') dragLeft = false;
+  @HostBinding('class.dr-drag-right') dragRight = false;
 
   @Input() thresholdRatio = 0.6; // % of width required to trigger action
   @Output() swipeDelete = new EventEmitter<void>();
@@ -29,7 +36,7 @@ export class SwipeToDeleteDirective implements OnInit, OnDestroy {
   private moved = false;
   private lastSwipeTs = 0;
 
-  constructor(el: ElementRef<HTMLElement>, private zone: NgZone) {
+  constructor(el: ElementRef<HTMLElement>, private zone: NgZone, private haptics: HapticsService) {
     this.hostEl = el.nativeElement;
   }
 
@@ -59,6 +66,7 @@ export class SwipeToDeleteDirective implements OnInit, OnDestroy {
     this.swiping = true;
     this.lockedX = false;
     this.moved = false;
+    this.dragLeft = false; this.dragRight = false;
     this.setTransition(false);
   }
 
@@ -77,6 +85,8 @@ export class SwipeToDeleteDirective implements OnInit, OnDestroy {
         this.lockedX = true;
         // prevent page from scrolling while swiping horizontally
         this.hostEl.style.touchAction = 'none';
+        // subtle feedback when gesture locks
+        this.haptics.selection();
       } else {
         return; // allow vertical scroll until locked
       }
@@ -86,8 +96,24 @@ export class SwipeToDeleteDirective implements OnInit, OnDestroy {
   this.dx = dx;
     if (Math.abs(this.dx) > 2) this.moved = true;
 
-    // Apply transform following the finger
+  // Apply transform following the finger
     this.contentEl.style.transform = `translateX(${this.dx}px)`;
+  // Mark drag direction to hide opposite background instantly
+  if (this.dx < -8) { this.dragLeft = true; this.dragRight = false; }
+  else if (this.dx > 8) { this.dragRight = true; this.dragLeft = false; }
+  else { this.dragLeft = false; this.dragRight = false; }
+    // Toggle confirmation classes when passing threshold
+    try {
+      const width = this.hostEl.clientWidth || 1;
+      const thr = this.thresholdRatio * width;
+      const del = this.dx <= -thr;
+      const edt = this.dx >= thr;
+      if (del !== this.confirmDelete) this.confirmDelete = del;
+      if (edt !== this.confirmEdit) this.confirmEdit = edt;
+      if (!del && !edt && (this.confirmDelete || this.confirmEdit)) {
+        this.confirmDelete = false; this.confirmEdit = false;
+      }
+    } catch { /* noop */ }
     // Optional: slight reveal of bg can be handled by CSS; nothing more here
     ev.preventDefault();
   }
@@ -103,9 +129,10 @@ export class SwipeToDeleteDirective implements OnInit, OnDestroy {
 
     // Snap animation
     this.setTransition(true);
-    if (shouldDelete) {
-      // Animate off-screen for feedback, then emit and reset
+  if (shouldDelete) {
+  // Animate off-screen for feedback, then emit and reset
       this.contentEl.style.transform = `translateX(${-width}px)`;
+  this.haptics.impact('medium');
       const ts = Date.now();
       this.lastSwipeTs = ts;
       // Use zone to avoid change detection thrash
@@ -117,11 +144,14 @@ export class SwipeToDeleteDirective implements OnInit, OnDestroy {
           this.contentEl!.style.transform = 'translateX(0px)';
           // Restore touch-action
           this.hostEl.style.touchAction = '';
+          this.confirmDelete = false;
+          this.confirmEdit = false;
         }, 160);
       });
     } else if (shouldEdit) {
       // Swipe right: edit
-      this.contentEl.style.transform = `translateX(${width}px)`;
+  this.contentEl.style.transform = `translateX(${width}px)`;
+  this.haptics.impact('light');
       const ts = Date.now();
       this.lastSwipeTs = ts;
       this.zone.runOutsideAngular(() => {
@@ -129,18 +159,23 @@ export class SwipeToDeleteDirective implements OnInit, OnDestroy {
           this.zone.run(() => this.swipeEdit.emit());
           this.contentEl!.style.transform = 'translateX(0px)';
           this.hostEl.style.touchAction = '';
+          this.confirmDelete = false;
+          this.confirmEdit = false;
         }, 160);
       });
     } else {
       // Not enough: snap back
       this.contentEl.style.transform = 'translateX(0px)';
       this.hostEl.style.touchAction = '';
+      this.confirmDelete = false;
+      this.confirmEdit = false;
     }
 
     // Reset state
     this.swiping = false;
     this.lockedX = false;
     this.dx = 0;
+    this.dragLeft = false; this.dragRight = false;
   }
 
   // Prevent accidental click right after a swipe gesture

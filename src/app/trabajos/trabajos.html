@@ -180,7 +180,7 @@
           <div class="flex flex-wrap gap-2">
             <button class="btn btn-outline-info btn-sm" (click)="verTrabajo(j)"><i class="bi bi-eye"></i></button>
             <button class="btn btn-outline-primary btn-sm" (click)="editarTrabajo(j)"><i class="bi bi-pencil"></i></button>
-            <button class="btn btn-outline-danger btn-sm" (click)="openConfirm(j)" [disabled]="loading()"><i class="bi bi-trash"></i></button>
+            <button class="btn btn-outline-danger btn-sm" (click)="deleteWithUndo(j)" [disabled]="loading()"><i class="bi bi-trash"></i></button>
           </div>
         </td>
       </tr>
@@ -203,10 +203,12 @@
   <div class="bg-white rounded-2xl shadow-card border border-slate-200/60 overflow-hidden">
     <div class="divide-y">
       @for (j of visibleWithRow(); track j.id) {
-      <div class="dr-wa-item" appSwipeToDelete (swipeDelete)="openConfirm(j)" (swipeEdit)="editarTrabajo(j)" tabindex="0" role="button" [attr.data-job-id]="j.id">
+  <div class="dr-wa-item" appSwipeToDelete (swipeDelete)="deleteWithUndo(j)" (swipeEdit)="editarTrabajo(j)" tabindex="0" role="button" [attr.data-job-id]="j.id">
         <!-- Backgrounds revealed on swipe -->
         <div class="dr-swipe-bg dr-swipe-bg-left" aria-hidden="true"><i class="bi bi-trash"></i><span>Eliminar</span></div>
         <div class="dr-swipe-bg dr-swipe-bg-right" aria-hidden="true"><i class="bi bi-pencil"></i><span>Editar</span></div>
+        <!-- Check overlay when threshold is confirmed -->
+        <div class="dr-swipe-check" aria-hidden="true"><i class="bi bi-check-lg"></i></div>
         <!-- Swipe content that moves with finger -->
         <div class="dr-swipe-content" (click)="verTrabajo(j)">
           <div class="dr-wa-avatar" aria-hidden="true"
@@ -232,7 +234,7 @@
                 <div class="dr-wa-actions">
                   <button type="button" class="dr-wa-action is-view" aria-label="Ver" (click)="$event.stopPropagation(); verTrabajo(j)"><i class="bi bi-eye"></i></button>
                   <button type="button" class="dr-wa-action is-edit" aria-label="Editar" (click)="$event.stopPropagation(); editarTrabajo(j)"><i class="bi bi-pencil"></i></button>
-                  <button type="button" class="dr-wa-action is-delete" aria-label="Eliminar" (click)="$event.stopPropagation(); openConfirm(j)"><i class="bi bi-trash"></i></button>
+                  <button type="button" class="dr-wa-action is-delete" aria-label="Eliminar" (click)="$event.stopPropagation(); deleteWithUndo(j)"><i class="bi bi-trash"></i></button>
                 </div>
               </div>
             </div>
@@ -260,24 +262,20 @@
   </nav>
 }
 
-<!-- Modal Confirmación -->
-@if (confirmOpen()) {
-<div class="fixed inset-0 z-[60] flex items-center justify-center">
-  <div class="fixed inset-0 bg-black/40 z-[55] dr-fade-in" (click)="closeConfirm()"></div>
-  <div class="relative w-full max-w-md mx-auto z-[65]">
-    <div class="bg-white rounded-2xl shadow-card p-5 border border-slate-200/70 dr-sheet-up">
-      <div class="flex items-start justify-between mb-3">
-        <h5 class="font-semibold flex items-center gap-2 text-red-600 m-0"><i class="bi bi-trash"></i><span>Confirmar eliminación</span></h5>
-        <button type="button" (click)="closeConfirm()" class="btn btn-close" aria-label="Cerrar"></button>
+<!-- Toast Undo eliminación (solo Trabajos) -->
+@if (undoOpen()) {
+  <div class="dr-undo-toast" role="status" aria-live="polite">
+    <div class="dr-undo-box">
+      <div class="dr-undo-text">
+        <i class="bi bi-trash3"></i>
+        <span>Trabajo #{{ pendingDelete()?.id || '' }} eliminado.</span>
+        <small class="dr-undo-time">({{ undoSeconds() }}s)</small>
       </div>
-      <div class="space-y-2 text-sm">
-        @if (jobToDelete()) { <p class="m-0">¿Eliminar el trabajo <span class="font-semibold">#{{ jobToDelete()?.id }}</span>?</p><p class="m-0 text-slate-500 text-xs">Esta acción no se puede deshacer.</p> } @else { <p class="m-0">¿Seguro que deseas eliminar este trabajo?</p> }
-      </div>
-      <div class="flex justify-end gap-2 mt-5">
-        <button type="button" (click)="closeConfirm()" [disabled]="deleting()" class="btn btn-outline-secondary">Cancelar</button>
-        <button type="button" (click)="sparkClick($event); confirmDelete()" [disabled]="deleting()" class="btn btn-danger">@if (deleting()) { <span class="spinner-border spinner-border-sm mr-2"></span> } Eliminar</button>
+      <button type="button" class="btn btn-link dr-undo-btn" (click)="undoDelete()">Deshacer</button>
+      <!-- Progreso visual -->
+      <div class="dr-undo-progress" aria-hidden="true">
+        <div class="dr-undo-progress-bar" [style.width.%]="undoProgress() * 100"></div>
       </div>
     </div>
   </div>
-</div>
 }

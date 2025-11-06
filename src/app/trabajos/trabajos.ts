@@ -8,6 +8,7 @@ import { timeout } from 'rxjs/operators';
 import { ConfigService } from '../core/config.service';
 import { AuthService } from '../core/auth.service';
 import { SwipeToDeleteDirective } from './swipe-to-delete.directive';
+import { HapticsService } from '../core/haptics.service';
 
 interface FormaPago { id: number; formaPago: string; estado: number; }
 interface ClienteMin { id: number; nombre: string; apellido?: string | null; }
@@ -67,6 +68,23 @@ export class JobsComponent implements OnInit, OnDestroy {
   jobToDelete = signal<Trabajo | null>(null);
   deleting    = signal(false);
 
+  // Undo toast (eliminar sin modal)
+  undoOpen = signal(false);
+  pendingDelete = signal<Trabajo | null>(null);
+  private pendingDeleteIndex: number = -1;
+  private undoTimer: any = null;
+  private undoInterval: any = null;
+  private readonly UNDO_MS = 5500;
+  // Countdown state for Undo toast
+  undoRemainingMs = signal(0);
+  undoSeconds = computed(() => Math.max(0, Math.ceil(this.undoRemainingMs() / 1000)));
+  undoProgress = computed(() => {
+    const total = this.UNDO_MS;
+    const remaining = this.undoRemainingMs();
+    if (total <= 0) return 0;
+    return Math.min(1, Math.max(0, (total - remaining) / total));
+  });
+
   // Datos
   jobs = signal<Trabajo[]>([]);
   total = signal(0);
@@ -102,7 +120,8 @@ export class JobsComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private cfg: ConfigService,
     private router: Router,
-    private auth: AuthService
+    private auth: AuthService,
+    private haptics: HapticsService
   ) { this._claims.set(this.auth.claims()); }
 
   ngOnInit(): void {
@@ -129,6 +148,9 @@ export class JobsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     try { document?.body?.classList?.remove('page-trabajos'); } catch {}
+    // Limpieza de timers del flujo Undo
+    try { clearTimeout(this.undoTimer); } catch {}
+    try { clearInterval(this.undoInterval); } catch {}
   }
 
   // Helpers UI
@@ -230,6 +252,110 @@ export class JobsComponent implements OnInit, OnDestroy {
   editarTrabajo(j: Trabajo){ this.router.navigate(['/trabajos', j.id, 'editar']); }
 
   // ===== Eliminar =====
+  // Nuevo flujo: eliminar con Undo (sin modal)
+  deleteWithUndo(j: Trabajo) {
+    // Si ya hay un pendiente, confirma el anterior antes de iniciar uno nuevo
+    if (this.pendingDelete()) {
+      this.commitPendingDelete().catch(() => {/* handled inside */});
+    }
+
+    // Animación visual previa
+    try {
+      const el = document.querySelector(`[data-job-id="${j.id}"]`) as HTMLElement | null;
+      if (el) {
+        el.classList.add('dr-fly-away');
+        setTimeout(() => { /* after anim, remove visually */ }, 280);
+      }
+    } catch { /* noop */ }
+
+    // Guardar estado para poder restaurar
+    const list = this.jobs();
+    const idx = list.findIndex(x => x.id === j.id);
+  this.pendingDelete.set(j);
+    this.pendingDeleteIndex = idx >= 0 ? idx : 0;
+
+    // Eliminar optimista de la UI
+    this.jobs.update(arr => arr.filter(x => x.id !== j.id));
+    this.total.update(t => Math.max(0, t - 1));
+
+  // Mostrar toast Undo
+  this.undoOpen.set(true);
+  // Inicializar cuenta regresiva
+  this.undoRemainingMs.set(this.UNDO_MS);
+  // Haptic cue when the Undo toast appears (device only)
+  try { this.haptics.impact('medium'); } catch { /* noop */ }
+
+    // Temporizador para confirmar si no hay deshacer
+    clearTimeout(this.undoTimer);
+    this.undoTimer = setTimeout(() => { this.commitPendingDelete(); }, this.UNDO_MS);
+    // Intervalo para actualizar el contador/progreso
+    try { clearInterval(this.undoInterval); } catch {}
+    this.undoInterval = setInterval(() => {
+      const next = this.undoRemainingMs() - 100;
+      if (next <= 0) {
+        this.undoRemainingMs.set(0);
+        try { clearInterval(this.undoInterval); } catch {}
+        this.undoInterval = null;
+      } else {
+        this.undoRemainingMs.set(next);
+      }
+    }, 100);
+  }
+
+  undoDelete() {
+  if (!this.pendingDelete()) return;
+    // Cancelar commit
+    clearTimeout(this.undoTimer);
+    try { clearInterval(this.undoInterval); } catch {}
+    this.undoInterval = null;
+    // Restaurar en la posición original (si sigue vigente)
+  const job = this.pendingDelete()!;
+    const idx = this.pendingDeleteIndex;
+    this.jobs.update(arr => {
+      const a = [...arr];
+      const insertAt = Math.max(0, Math.min(idx, a.length));
+      a.splice(insertAt, 0, job);
+      return a;
+    });
+    this.total.update(t => t + 1);
+  this.pendingDelete.set(null);
+    this.pendingDeleteIndex = -1;
+    this.undoOpen.set(false);
+    this.undoRemainingMs.set(0);
+    try { this.haptics.selection(); } catch { /* noop */ }
+  }
+
+  private async commitPendingDelete() {
+    const job = this.pendingDelete();
+    const reinsertionIndex = this.pendingDeleteIndex;
+    this.pendingDelete.set(null);
+    this.pendingDeleteIndex = -1;
+    this.undoOpen.set(false);
+    clearTimeout(this.undoTimer);
+    try { clearInterval(this.undoInterval); } catch {}
+    this.undoInterval = null;
+    this.undoRemainingMs.set(0);
+    if (!job) return;
+
+    try {
+      const url = `${this.apiBase}/job/delete/${job.id}`;
+      await firstValueFrom(this.http.delete(url).pipe(timeout(12000)));
+      this.success.set('🗑️ Trabajo eliminado.');
+      try { this.haptics.notify('success'); } catch { /* noop */ }
+    } catch (e: any) {
+      // Si falló el backend, reinsertar para mantener consistencia
+      this.jobs.update(arr => {
+        const a = [...arr];
+        a.splice(Math.max(0, Math.min(reinsertionIndex, a.length)), 0, job);
+        return a;
+      });
+      this.total.update(t => t + 1);
+      const apiMsgs = e?.error?.error?.map((x: any) => x?.descError || x?.msgError)?.filter(Boolean)?.join(' | ');
+      this.error.set(apiMsgs || e?.error?.message || e?.message || 'No se pudo eliminar el trabajo.');
+      try { this.haptics.notify('error'); } catch { /* noop */ }
+    }
+  }
+
   openConfirm(j: Trabajo) {
     this.jobToDelete.set(j);
     this.confirmOpen.set(true);
@@ -271,9 +397,11 @@ export class JobsComponent implements OnInit, OnDestroy {
       }
 
       this.success.set('🗑️ Trabajo eliminado correctamente.');
+      try { this.haptics.notify('success'); } catch { /* noop */ }
     } catch (e: any) {
       if (e instanceof TimeoutError) this.error.set('La eliminación tardó demasiado. Intenta de nuevo.');
       else this.error.set(e?.error?.descError || e?.descError || 'No se pudo eliminar el trabajo.');
+      try { this.haptics.notify('error'); } catch { /* noop */ }
     } finally {
       this.deleting.set(false);
       this.closeConfirm();
@@ -300,6 +428,8 @@ export class JobsComponent implements OnInit, OnDestroy {
       if (classes.includes('btn-danger')) color = '#ef4444';
       else if (classes.includes('btn-primary')) color = '#3b82f6';
       this.spawnSparks(x, y, color);
+      // light haptic feedback on primary actions
+      try { this.haptics.impact('light'); } catch { /* noop */ }
     } catch { /* noop */ }
   }
 

@@ -24,26 +24,7 @@
 	display: inline-block;
 }
 
-/* Chispas al hacer click en botones de Crear/Confirmar (sólo en Trabajos) */
-.dr-sparks-container { pointer-events: none; }
-.dr-spark {
-	position: absolute;
-	left: 0;
-	top: 0;
-	width: 4px;
-	height: 4px;
-	border-radius: 9999px;
-	opacity: 0.95;
-	box-shadow: 0 0 6px rgba(0,0,0,0.12);
-	transform: translate(0, 0) scale(1);
-	animation: dr-spark-flight var(--d, 480ms) cubic-bezier(.2,.7,.2,1) forwards;
-}
-
-@keyframes dr-spark-flight {
-	0% { opacity: 1; transform: translate(0, 0) scale(1); }
-	60% { opacity: 0.9; }
-	100% { opacity: 0; transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(0.6); }
-}
+/* (moved to global) Chispas al hacer click y animación de salida */
 
 /* Sticky debajo del menú (usa variable dinámica --menu-h) */
 .dr-sticky-under-nav {
@@ -69,22 +50,7 @@
 .dr-search-btn-inside:hover { color: #ffffff; opacity: .9; }
 .dr-search-btn-inside:disabled { opacity: .5; }
 
-/* Paginación sticky sobre la barra inferior en móvil */
-.dr-sticky-pager {
-		position: sticky;
-		bottom: calc(5rem + .5rem); /* barra inferior (5rem) + espacio */
-		z-index: 25;
-		background: #ffffff;
-		border-radius: .75rem;
-		border: 1px solid rgba(100,116,139,.35); /* slate-500/35 */
-		box-shadow: 0 8px 30px rgba(2,6,23,.08);
-		padding: .25rem .5rem; /* pequeño acolchado alrededor del nav */
-}
-
-/* Desktop overrides */
-@media (min-width: 768px) {
-	.dr-sticky-pager { position: static !important; bottom: auto; background: transparent; box-shadow: none; border: 0; padding: 0; }
-}
+/* (moved to global) Paginación sticky */
 
 /* ========== Lista estilo WhatsApp (móvil) ========== */
 .dr-wa-item {
@@ -150,7 +116,8 @@
 	box-shadow: 0 1px 2px rgba(2,6,23,.05);
 }
 .dr-wa-action i { font-size: 16px; }
-.dr-wa-action:active { background: #f8fafc; }
+.dr-wa-action { transition: transform .12s ease, background-color .12s ease; }
+.dr-wa-action:active { background: #f8fafc; transform: scale(.96); }
 .dr-wa-action.is-view { color: #0284c7; border-color: rgba(56,189,248,.35); }
 .dr-wa-action.is-edit { color: #4f46e5; border-color: rgba(129,140,248,.35); }
 .dr-wa-action.is-delete { color: #e11d48; border-color: rgba(248,113,113,.35); }
@@ -294,17 +261,45 @@
 	position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; gap: .5rem;
 	font-weight: 700; letter-spacing: .01em; pointer-events: none;
 }
-/* Right side (reveal when swiping left): Delete */
+/* Right side (reveal when swiping left): Delete – rojo con texto blanco */
 .dr-swipe-bg-left { justify-content: flex-end; padding-right: .875rem;
-	background: linear-gradient(90deg, #fee2e2 0%, #fecaca 100%);
-	color: #991b1b; /* red-800 */
+	background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+	color: #ffffff;
+	left: auto; right: 0; width: 50%;
 }
-.dr-swipe-bg-left i { font-size: 18px; color: #dc2626; }
-.dr-swipe-bg-left span { font-size: 12px; color: #b91c1c; }
-/* Left side (reveal when swiping right): Edit */
+.dr-swipe-bg-left i { font-size: 18px; color: #ffffff; }
+.dr-swipe-bg-left span { font-size: 12px; color: #ffffff; }
+/* Left side (reveal when swiping right): Edit – azul con texto blanco */
 .dr-swipe-bg-right { justify-content: flex-start; padding-left: .875rem;
-	background: linear-gradient(90deg, rgba(var(--bs-primary-rgb, 13,110,253), .18) 0%, rgba(var(--bs-primary-rgb, 13,110,253), .32) 100%);
-	color: #083e9e;
+	background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+	color: #ffffff;
+	left: 0; right: auto; width: 50%;
 }
-.dr-swipe-bg-right i { font-size: 18px; color: var(--bs-primary, #0d6efd); }
-.dr-swipe-bg-right span { font-size: 12px; color: #0b3abf; }
+.dr-swipe-bg-right i { font-size: 18px; color: #ffffff; }
+.dr-swipe-bg-right span { font-size: 12px; color: #ffffff; }
+
+/* ===== Toast de Undo (Trabajos) ===== */
+.dr-undo-toast{
+		position: fixed; left: 50%; transform: translateX(-50%);
+		bottom: calc(72px + env(safe-area-inset-bottom));
+		z-index: 80;
+		pointer-events: none; /* deja pasar clicks fuera del toast */
+}
+.dr-undo-box{
+	pointer-events: auto;
+	display: inline-flex; align-items: center; gap: .75rem;
+	background: #ffffff; color: var(--dr-text, #0f172a);
+	border: 1px solid rgba(15,23,42,.12);
+	border-radius: .75rem; box-shadow: 0 10px 24px rgba(2,6,23,.14);
+	padding: .625rem .75rem .625rem .625rem;
+	position: relative; /* para el progress bar absoluto */
+}
+.dr-undo-text{ display: inline-flex; align-items: center; gap: .5rem; font-size: 13px; color: #0f172a; }
+.dr-undo-text i{ opacity: .8; color: #64748b; }
+.dr-undo-btn{ color: var(--bs-primary, #0d6efd) !important; font-weight: 700; text-decoration: none; padding: .25rem .5rem; }
+
+/* Cuenta regresiva (texto) */
+
+@media (min-width: 768px){
+	.dr-undo-toast{ bottom: 18px; }
+}

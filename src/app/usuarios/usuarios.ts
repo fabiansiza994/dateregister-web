@@ -7,6 +7,8 @@ import { firstValueFrom, TimeoutError } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 import { ConfigService } from '../core/config.service';
 import { AuthService } from '../core/auth.service';
+import { HapticsService } from '../core/haptics.service';
+import { SwipeToDeleteDirective } from '../trabajos/swipe-to-delete.directive';
 
 interface ApiErrorItem {
   codError?: string;
@@ -54,7 +56,7 @@ interface UserDeleteError {
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, SwipeToDeleteDirective],
   templateUrl: './usuarios.html',
   styleUrls: ['./usuarios.css'],
 })
@@ -119,6 +121,22 @@ export class UsuariosComponent implements OnInit, AfterViewInit, OnDestroy {
   confirmOpen = signal(false);
   userToDelete = signal<UsuarioLite | null>(null);
 
+  // Undo toast (eliminar sin modal)
+  undoOpen = signal(false);
+  pendingDelete = signal<UsuarioLite | null>(null);
+  private pendingDeleteIndex: number = -1;
+  private undoTimer: any = null;
+  private undoInterval: any = null;
+  private readonly UNDO_MS = 5500;
+  undoRemainingMs = signal(0);
+  undoSeconds = computed(() => Math.max(0, Math.ceil(this.undoRemainingMs() / 1000)));
+  undoProgress = computed(() => {
+    const total = this.UNDO_MS;
+    const remaining = this.undoRemainingMs();
+    if (total <= 0) return 0;
+    return Math.min(1, Math.max(0, (total - remaining) / total));
+  });
+
   // Efectos y FAB
   showCreateFab = signal(false);
   @ViewChild('createAnchor') createAnchor?: ElementRef<HTMLElement>;
@@ -131,6 +149,7 @@ export class UsuariosComponent implements OnInit, AfterViewInit, OnDestroy {
     private cfg: ConfigService,
     private router: Router,
     private auth: AuthService,
+    private haptics: HapticsService,
   ) { }
 
   ngOnInit(): void {
@@ -149,6 +168,8 @@ export class UsuariosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     try { document?.body?.classList?.remove('page-usuarios'); } catch {}
+    try { clearTimeout(this.undoTimer); } catch {}
+    try { clearInterval(this.undoInterval); } catch {}
   }
 
   // + NUEVO: ¿es el propio usuario?
@@ -320,6 +341,85 @@ export class UsuariosComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!u) return;
     await this.eliminarUsuario(u);
     this.closeConfirm();
+  }
+
+  // ===== Eliminar con Undo (sin modal) =====
+  deleteWithUndo(u: UsuarioLite) {
+    if (this.isSelf(u)) return; // seguridad extra
+    if (this.pendingDelete()) {
+      this.commitPendingDelete().catch(() => {/* handled inside */});
+    }
+    const list = this.usuarios();
+    const idx = list.findIndex(x => x.id === u.id);
+    this.pendingDelete.set(u);
+    this.pendingDeleteIndex = idx >= 0 ? idx : 0;
+    this.usuarios.update(arr => arr.filter(x => x.id !== u.id));
+    this.total.update(t => Math.max(0, t - 1));
+  this.undoOpen.set(true);
+  this.undoRemainingMs.set(this.UNDO_MS);
+  // Haptic cue when Undo toast appears (native)
+  try { this.haptics.impact('medium'); } catch {}
+    clearTimeout(this.undoTimer);
+    this.undoTimer = setTimeout(() => { this.commitPendingDelete(); }, this.UNDO_MS);
+    try { clearInterval(this.undoInterval); } catch {}
+    this.undoInterval = setInterval(() => {
+      const next = this.undoRemainingMs() - 100;
+      if (next <= 0) {
+        this.undoRemainingMs.set(0);
+        try { clearInterval(this.undoInterval); } catch {}
+        this.undoInterval = null;
+      } else {
+        this.undoRemainingMs.set(next);
+      }
+    }, 100);
+  }
+
+  undoDelete() {
+    if (!this.pendingDelete()) return;
+    clearTimeout(this.undoTimer);
+    try { clearInterval(this.undoInterval); } catch {}
+    this.undoInterval = null;
+    const item = this.pendingDelete()!;
+    const idx = this.pendingDeleteIndex;
+    this.usuarios.update(arr => {
+      const a = [...arr];
+      a.splice(Math.max(0, Math.min(idx, a.length)), 0, item);
+      return a;
+    });
+    this.total.update(t => t + 1);
+    this.pendingDelete.set(null);
+    this.pendingDeleteIndex = -1;
+    this.undoOpen.set(false);
+    this.undoRemainingMs.set(0);
+    try { this.haptics.selection(); } catch {}
+  }
+
+  private async commitPendingDelete() {
+    const item = this.pendingDelete();
+    const reinsertionIndex = this.pendingDeleteIndex;
+    this.pendingDelete.set(null);
+    this.pendingDeleteIndex = -1;
+    this.undoOpen.set(false);
+    clearTimeout(this.undoTimer);
+    try { clearInterval(this.undoInterval); } catch {}
+    this.undoInterval = null;
+    this.undoRemainingMs.set(0);
+    if (!item) return;
+    try {
+      const url = `${this.apiBase}/user/delete/${item.id}`;
+      await firstValueFrom(this.http.delete<UserDeleteOk>(url).pipe(timeout(12000)));
+      try { this.haptics.notify('success'); } catch {}
+    } catch (e: any) {
+      this.usuarios.update(arr => {
+        const a = [...arr];
+        a.splice(Math.max(0, Math.min(reinsertionIndex, a.length)), 0, item);
+        return a;
+      });
+      this.total.update(t => t + 1);
+      const apiMsgs = e?.error?.error?.map((x: any) => x?.msgError || x?.descError)?.filter(Boolean)?.join(' | ');
+      this.error.set(apiMsgs || e?.error?.message || e?.message || 'No se pudo eliminar el usuario.');
+      try { this.haptics.notify('error'); } catch {}
+    }
   }
 
   private async eliminarUsuario(u: UsuarioLite) {

@@ -25,7 +25,7 @@
   /* Color principal de la aplicación (MENÚ y topbars móviles)
      Cambia estas dos variables para actualizar el azul en TODO el sitio. */
   --bs-primary: #1a3644;            /* color */
-  --bs-primary-rgb:22,163,74;     /* r,g,b (sin espacios) */
+  --bs-primary-rgb:26,54,68;       /* r,g,b (sin espacios) – coincide con #1a3644 */
 
   /* Decoración */
   --dr-radius:18px;
@@ -308,6 +308,104 @@ select:-webkit-autofill{
 #usage-map{ height:70vh; width:100%; }
 .leaflet-container{ height:70vh; width:100%; }
 
+/* ================================================================ */
+/* ====== Micro-UX comunes: chispas click y salida de tarjetas ==== */
+/* ================================================================ */
+.dr-sparks-container { pointer-events: none; }
+.dr-spark {
+  position: absolute;
+  left: 0; top: 0;
+  width: 4px; height: 4px;
+  border-radius: 9999px; opacity: .95;
+  box-shadow: 0 0 6px rgba(0,0,0,.12);
+  transform: translate(0, 0) scale(1);
+  animation: dr-spark-flight var(--d, 480ms) cubic-bezier(.2,.7,.2,1) forwards;
+}
+@keyframes dr-spark-flight {
+  0% { opacity: 1; transform: translate(0, 0) scale(1); }
+  60% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(0.6); }
+}
+.dr-fly-away { animation: dr-fly-away .32s ease both; }
+@keyframes dr-fly-away { to { opacity: 0; transform: translateX(-10px) scale(.98); } }
+
+/* ================================================================ */
+/* ===================  Paginación sticky (móvil)  ================= */
+/* ================================================================ */
+.dr-sticky-pager{
+  position: sticky;
+  bottom: calc(5rem + .5rem);
+  z-index: 25;
+  background: #ffffff;
+  border-radius: .75rem;
+  border: 1px solid rgba(100,116,139,.35);
+  box-shadow: 0 8px 30px rgba(2,6,23,.08);
+  padding: .25rem .5rem;
+}
+
+/* ================================================================ */
+/* ===================  Swipeable list items  ===================== */
+/* ================================================================ */
+/* Make list items swipeable across modules (Clientes/Pacientes/Usuarios/Trabajos) */
+.dr-swipeable { position: relative; overflow: hidden; touch-action: pan-y; }
+/* Move spacing to the sliding content to avoid red edges showing */
+.dr-wa-item { gap: 0; padding: 0; background: transparent; }
+.dr-swipe-content{
+  position: relative; z-index: 2; background: #ffffff; will-change: transform; transition: transform .18s ease;
+  display: flex; gap: .75rem; align-items: stretch; width: 100%; flex: 1 1 auto;
+  padding: .75rem .875rem;
+}
+.dr-swipe-bg{ position:absolute; inset:0; z-index:1; display:flex; align-items:center; gap:.5rem; font-weight:700; letter-spacing:.01em; pointer-events:none; }
+/* Right side (reveal when swiping left): Delete → fondo rojo y texto blanco */
+.dr-swipe-bg-left{
+  justify-content:flex-end; padding-right:.875rem;
+  background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%); /* red-500 → red-600 */
+  color:#ffffff;
+  /* Sólo mitad derecha para que no tape el azul */
+  left: auto; right: 0; width: 50%;
+}
+.dr-swipe-bg-left i{ font-size:18px; color:#ffffff; }
+.dr-swipe-bg-left span{ font-size:12px; color:#ffffff; }
+/* Left side (reveal when swiping right): Edit → fondo azul/primario y texto blanco */
+.dr-swipe-bg-right{
+  justify-content:flex-start; padding-left:.875rem;
+  /* Azul fijo (no depende de --bs-primary-rgb para evitar tonos verdes) */
+  background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+  color:#ffffff;
+  /* Sólo mitad izquierda */
+  left: 0; right: auto; width: 50%;
+}
+.dr-swipe-bg-right i{ font-size:18px; color:#ffffff; }
+.dr-swipe-bg-right span{ font-size:12px; color:#ffffff; }
+@media (min-width: 768px){
+  .dr-sticky-pager { position: static !important; bottom: auto; background: transparent; box-shadow: none; border: 0; padding: 0; }
+}
+
+/* When crossing the threshold (set by directive), lock visual to one side and show a check */
+.dr-swipe-check{
+  position:absolute; inset:0; z-index:1; display:flex; align-items:center;
+  color:#fff; opacity:0; transform: scale(.9);
+  transition: opacity .12s ease, transform .12s ease;
+  pointer-events:none; font-size:22px;
+}
+.dr-confirm-delete .dr-swipe-check,
+.dr-confirm-edit .dr-swipe-check{ opacity:1; transform: scale(1); }
+.dr-confirm-delete .dr-swipe-bg-right{ opacity:0; }
+.dr-confirm-edit .dr-swipe-bg-left{ opacity:0; }
+.dr-confirm-delete .dr-swipe-bg-left{ left:0; right:0; width:100%; }
+.dr-confirm-edit .dr-swipe-bg-right{ left:0; right:0; width:100%; }
+/* Align the check near the action label */
+.dr-confirm-delete .dr-swipe-check{ justify-content:flex-end; padding-right:.875rem; }
+.dr-confirm-edit .dr-swipe-check{ justify-content:flex-start; padding-left:.875rem; }
+/* When confirmed, hide the label/icon on the active bg to emphasize the check */
+.dr-confirm-delete .dr-swipe-bg-left i,
+.dr-confirm-delete .dr-swipe-bg-left span,
+.dr-confirm-edit .dr-swipe-bg-right i,
+.dr-confirm-edit .dr-swipe-bg-right span{ opacity:.0; transition: opacity .12s ease; }
+
+/* While dragging, hide opposite side immediately to avoid any color peeking */
+.dr-drag-left .dr-swipe-bg-right{ opacity:0; }
+.dr-drag-right .dr-swipe-bg-left{ opacity:0; }
 
 /* ===== Fix visual para switches Bootstrap ===== */
 .form-switch .form-check-input{
@@ -372,4 +470,44 @@ select:-webkit-autofill{
   /* Reportes: mismo ajuste */
   body.page-reportes nav.sticky-top{ box-shadow: none !important; }
   body.page-reportes main{ padding-top: 0 !important; }
+}
+
+/* ================================================================ */
+/* ============  Toast de Undo – estilos globales sutiles  ========= */
+/* ================================================================ */
+.dr-undo-time{ font-size: 12px; color: #64748b; }
+.dr-undo-progress{
+  position: absolute; left: 6px; right: 6px; bottom: 4px; height: 2px;
+  background: rgba(2,6,23,.06);
+  border-radius: 9999px; overflow: hidden;
+}
+.dr-undo-progress-bar{
+  height: 100%; width: 0%;
+  background: var(--bs-primary, #0d6efd);
+  opacity: .85;
+  transition: width .1s linear;
+}
+
+/* ===== Toast de Undo: contenedor y caja (global) ===== */
+.dr-undo-toast{
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(72px + env(safe-area-inset-bottom));
+  z-index: 80;
+  pointer-events: none; /* deja pasar clicks fuera del toast */
+}
+.dr-undo-box{
+  pointer-events: auto;
+  display: inline-flex; align-items: center; gap: .75rem;
+  background: #ffffff; color: var(--dr-text, #0f172a);
+  border: 1px solid rgba(15,23,42,.12);
+  border-radius: .75rem; box-shadow: 0 10px 24px rgba(2,6,23,.14);
+  padding: .625rem .75rem .625rem .625rem;
+  position: relative; /* para el progress bar absoluto */
+}
+.dr-undo-text{ display: inline-flex; align-items: center; gap: .5rem; font-size: 13px; color: #0f172a; }
+.dr-undo-text i{ opacity: .8; color: #64748b; }
+.dr-undo-btn{ color: var(--bs-primary, #0d6efd) !important; font-weight: 700; text-decoration: none; padding: .25rem .5rem; }
+
+@media (min-width: 768px){
+  .dr-undo-toast{ bottom: 18px; }
 }

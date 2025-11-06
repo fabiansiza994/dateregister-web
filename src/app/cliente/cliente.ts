@@ -6,6 +6,8 @@ import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom, TimeoutError } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 import { ConfigService } from '../core/config.service';
+import { HapticsService } from '../core/haptics.service';
+import { SwipeToDeleteDirective } from '../trabajos/swipe-to-delete.directive';
 
 interface Cliente {
   id: number;
@@ -40,7 +42,7 @@ interface GenericOk {
 @Component({
   selector: 'app-clientes',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, SwipeToDeleteDirective],
   templateUrl: './cliente.html',
   styleUrls: ['./cliente.css']
 })
@@ -48,6 +50,21 @@ export class ClientesComponent implements OnInit, AfterViewInit, OnDestroy {
 
   confirmOpen = signal(false);
   clientToDelete = signal<Cliente | null>(null);
+  // Undo toast (eliminar sin modal)
+  undoOpen = signal(false);
+  pendingDelete = signal<Cliente | null>(null);
+  private pendingDeleteIndex: number = -1;
+  private undoTimer: any = null;
+  private undoInterval: any = null;
+  private readonly UNDO_MS = 5500;
+  undoRemainingMs = signal(0);
+  undoSeconds = computed(() => Math.max(0, Math.ceil(this.undoRemainingMs() / 1000)));
+  undoProgress = computed(() => {
+    const total = this.UNDO_MS;
+    const remaining = this.undoRemainingMs();
+    if (total <= 0) return 0;
+    return Math.min(1, Math.max(0, (total - remaining) / total));
+  });
 
   // Filtros (server-side)
   searchName = '';
@@ -104,7 +121,8 @@ export class ClientesComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private http: HttpClient,
     private cfg: ConfigService,
-    private router: Router
+    private router: Router,
+    private haptics: HapticsService
   ) { }
 
   ngOnInit(): void {
@@ -125,6 +143,8 @@ export class ClientesComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     try { document?.body?.classList?.remove('page-clientes'); } catch {}
+    try { clearTimeout(this.undoTimer); } catch {}
+    try { clearInterval(this.undoInterval); } catch {}
   }
 
   private updateCreateFab() {
@@ -157,6 +177,94 @@ export class ClientesComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!c) return;
     await this.eliminarCliente(c);     // reutiliza tu método existente
     this.closeConfirm();
+  }
+
+  // ===== Eliminar con Undo (sin modal) =====
+  deleteWithUndo(c: Cliente) {
+    if (this.pendingDelete()) {
+      this.commitPendingDelete().catch(() => {/* handled inside */});
+    }
+
+    // Guardar estado para poder restaurar
+    const list = this.clients();
+    const idx = list.findIndex(x => x.id === c.id);
+    this.pendingDelete.set(c);
+    this.pendingDeleteIndex = idx >= 0 ? idx : 0;
+
+    // Eliminar optimista de la UI
+    this.clients.update(arr => arr.filter(x => x.id !== c.id));
+    this.total.update(t => Math.max(0, t - 1));
+
+  // Mostrar toast y cuenta regresiva
+  this.undoOpen.set(true);
+  this.undoRemainingMs.set(this.UNDO_MS);
+  // Haptic cue when Undo toast appears (native devices)
+  try { this.haptics.impact('medium'); } catch {}
+
+    clearTimeout(this.undoTimer);
+    this.undoTimer = setTimeout(() => { this.commitPendingDelete(); }, this.UNDO_MS);
+    try { clearInterval(this.undoInterval); } catch {}
+    this.undoInterval = setInterval(() => {
+      const next = this.undoRemainingMs() - 100;
+      if (next <= 0) {
+        this.undoRemainingMs.set(0);
+        try { clearInterval(this.undoInterval); } catch {}
+        this.undoInterval = null;
+      } else {
+        this.undoRemainingMs.set(next);
+      }
+    }, 100);
+  }
+
+  undoDelete() {
+    if (!this.pendingDelete()) return;
+    clearTimeout(this.undoTimer);
+    try { clearInterval(this.undoInterval); } catch {}
+    this.undoInterval = null;
+    const cli = this.pendingDelete()!;
+    const idx = this.pendingDeleteIndex;
+    this.clients.update(arr => {
+      const a = [...arr];
+      a.splice(Math.max(0, Math.min(idx, a.length)), 0, cli);
+      return a;
+    });
+    this.total.update(t => t + 1);
+    this.pendingDelete.set(null);
+    this.pendingDeleteIndex = -1;
+    this.undoOpen.set(false);
+    this.undoRemainingMs.set(0);
+    try { this.haptics.selection(); } catch {}
+  }
+
+  private async commitPendingDelete() {
+    const cli = this.pendingDelete();
+    const reinsertionIndex = this.pendingDeleteIndex;
+    this.pendingDelete.set(null);
+    this.pendingDeleteIndex = -1;
+    this.undoOpen.set(false);
+    clearTimeout(this.undoTimer);
+    try { clearInterval(this.undoInterval); } catch {}
+    this.undoInterval = null;
+    this.undoRemainingMs.set(0);
+    if (!cli) return;
+
+    try {
+      if (!this.apiBase) throw new Error('Config no cargada: falta apiBaseUrl');
+      const url = `${this.apiBase}/client/delete/${cli.id}`;
+      await firstValueFrom(this.http.delete<GenericOk>(url).pipe(timeout(12000)));
+      try { this.haptics.notify('success'); } catch {}
+    } catch (e: any) {
+      // Reinserta si falló
+      this.clients.update(arr => {
+        const a = [...arr];
+        a.splice(Math.max(0, Math.min(reinsertionIndex, a.length)), 0, cli);
+        return a;
+      });
+      this.total.update(t => t + 1);
+      const apiMsgs = e?.error?.error?.map((x: any) => x?.descError || x?.msgError)?.filter(Boolean)?.join(' | ');
+      this.error.set(apiMsgs || e?.error?.message || e?.message || 'No se pudo eliminar el cliente.');
+      try { this.haptics.notify('error'); } catch {}
+    }
   }
 
   // Buscar en el servidor
