@@ -199,35 +199,40 @@
   @if (visibleWithRow().length===0) {
   <div class="rounded-lg border border-slate-300 bg-slate-50 text-center text-slate-500 px-4 py-3 text-sm">Sin resultados.</div>
   } @else {
-  <!-- Lista estilo WhatsApp -->
+  <!-- Lista estilo WhatsApp con swipe-to-delete (móvil) -->
   <div class="bg-white rounded-2xl shadow-card border border-slate-200/60 overflow-hidden">
     <div class="divide-y">
       @for (j of visibleWithRow(); track j.id) {
-      <div class="dr-wa-item" (click)="verTrabajo(j)" tabindex="0" role="button" [attr.data-job-id]="j.id">
-        <div class="dr-wa-avatar" aria-hidden="true"
-             [class.is-paid]="(j.estado||'').toUpperCase()==='PAGO'"
-             [class.is-pending]="(j.estado||'').toUpperCase()==='PENDIENTE'"
-             [class.is-canceled]="(j.estado||'').toUpperCase()==='CANCELADO'">
-          <i class="bi bi-briefcase"></i>
-        </div>
-        <div class="dr-wa-main">
-          <div class="dr-wa-row1">
-            <div class="dr-wa-title truncate">{{ j.cliente?.nombre }} {{ j.cliente?.apellido || '' }}</div>
-            <div class="dr-wa-date">{{ j.fecha }}</div>
+      <div class="dr-wa-item" appSwipeToDelete (swipeDelete)="openConfirm(j)" tabindex="0" role="button" [attr.data-job-id]="j.id">
+        <!-- Red background revealed on swipe -->
+        <div class="dr-swipe-bg" aria-hidden="true"><i class="bi bi-trash"></i><span>Eliminar</span></div>
+        <!-- Swipe content that moves with finger -->
+        <div class="dr-swipe-content" (click)="verTrabajo(j)">
+          <div class="dr-wa-avatar" aria-hidden="true"
+               [class.is-paid]="(j.estado||'').toUpperCase()==='PAGO'"
+               [class.is-pending]="(j.estado||'').toUpperCase()==='PENDIENTE'"
+               [class.is-canceled]="(j.estado||'').toUpperCase()==='CANCELADO'">
+            <i class="bi bi-briefcase"></i>
           </div>
-          <div class="dr-wa-row2">
-            <div class="dr-wa-subtitle truncate">
-              @if (sector() === 'SALUD' && j.paciente) {
-                <span class="text-slate-500">Paciente:</span> {{ j.paciente.nombre }} {{ j.paciente.apellido || '' }}
-                <span class="mx-1 text-slate-400">•</span>
-              }
-              <span class="text-slate-500">Valor:</span> {{ formatMoney(j.valorTotal) }}
+          <div class="dr-wa-main">
+            <div class="dr-wa-row1">
+              <div class="dr-wa-title truncate">{{ j.cliente?.nombre }} {{ j.cliente?.apellido || '' }}</div>
+              <div class="dr-wa-date">{{ j.fecha }}</div>
             </div>
-            <div class="dr-wa-right">
-              <div class="dr-wa-actions">
-                <button type="button" class="dr-wa-action is-view" aria-label="Ver" (click)="$event.stopPropagation(); verTrabajo(j)"><i class="bi bi-eye"></i></button>
-                <button type="button" class="dr-wa-action is-edit" aria-label="Editar" (click)="$event.stopPropagation(); editarTrabajo(j)"><i class="bi bi-pencil"></i></button>
-                <button type="button" class="dr-wa-action is-delete" aria-label="Eliminar" (click)="$event.stopPropagation(); openConfirm(j)"><i class="bi bi-trash"></i></button>
+            <div class="dr-wa-row2">
+              <div class="dr-wa-subtitle truncate">
+                @if (sector() === 'SALUD' && j.paciente) {
+                  <span class="text-slate-500">Paciente:</span> {{ j.paciente.nombre }} {{ j.paciente.apellido || '' }}
+                  <span class="mx-1 text-slate-400">•</span>
+                }
+                <span class="text-slate-500">Valor:</span> {{ formatMoney(j.valorTotal) }}
+              </div>
+              <div class="dr-wa-right">
+                <div class="dr-wa-actions">
+                  <button type="button" class="dr-wa-action is-view" aria-label="Ver" (click)="$event.stopPropagation(); verTrabajo(j)"><i class="bi bi-eye"></i></button>
+                  <button type="button" class="dr-wa-action is-edit" aria-label="Editar" (click)="$event.stopPropagation(); editarTrabajo(j)"><i class="bi bi-pencil"></i></button>
+                  <button type="button" class="dr-wa-action is-delete" aria-label="Eliminar" (click)="$event.stopPropagation(); openConfirm(j)"><i class="bi bi-trash"></i></button>
+                </div>
               </div>
             </div>
           </div>

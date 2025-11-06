@@ -29,7 +29,7 @@ nav.sticky-top { z-index: 50; }
 	left: 0; right: 0;
 	top: var(--menu-h, 3.5rem);
 	z-index: 70; /* por encima del navbar (50) y backdrop (65) */
-	background: var(--bs-primary, #0d6efd);
+	background: #142742;
 	color: #ffffff;
 	border-bottom-left-radius: .75rem;
 	border-bottom-right-radius: .75rem;

@@ -91,9 +91,9 @@
 	width: 100%;
 	display: flex;
 	align-items: stretch;
-	gap: .75rem;
-	padding: .75rem .875rem;
-	background: #ffffff;
+	gap: 0; /* el gap queda dentro de .dr-swipe-content */
+	padding: 0; /* el padding queda dentro de .dr-swipe-content */
+	background: transparent; /* evitar que se vea el fondo rojo en los bordes */
 	-webkit-tap-highlight-color: transparent;
 	cursor: pointer;
 }
@@ -282,3 +282,21 @@
 
 /* Forzar blanco en botón Sort by (texto e ícono) */
 .dr-sort-btn, .dr-sort-btn i { color: #ffffff !important; }
+
+/* ===== Swipe-to-delete (sólo móvil Trabajos) ===== */
+.dr-swipeable { position: relative; overflow: hidden; touch-action: pan-y; }
+.dr-swipe-content {
+	position: relative; z-index: 2; background: #ffffff; will-change: transform; transition: transform .18s ease;
+	display: flex; gap: .75rem; align-items: stretch; width: 100%; flex: 1 1 auto;
+	padding: .75rem .875rem; /* mover padding del item al contenido deslizante */
+}
+.dr-swipe-bg {
+	position: absolute; inset: 0; z-index: 1;
+	background: linear-gradient(90deg, #fee2e2 0%, #fecaca 100%);
+	display: flex; align-items: center; justify-content: flex-end; gap: .5rem;
+	padding-right: .875rem; color: #991b1b; /* red-800 */
+	font-weight: 700; letter-spacing: .01em;
+    pointer-events: none;
+}
+.dr-swipe-bg i { font-size: 18px; color: #dc2626; }
+.dr-swipe-bg span { font-size: 12px; color: #b91c1c; }

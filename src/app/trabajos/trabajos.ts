@@ -7,6 +7,7 @@ import { firstValueFrom, TimeoutError } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 import { ConfigService } from '../core/config.service';
 import { AuthService } from '../core/auth.service';
+import { SwipeToDeleteDirective } from './swipe-to-delete.directive';
 
 interface FormaPago { id: number; formaPago: string; estado: number; }
 interface ClienteMin { id: number; nombre: string; apellido?: string | null; }
@@ -36,7 +37,7 @@ interface JobSearchOk {
 @Component({
   selector: 'app-trabajos',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, SwipeToDeleteDirective],
   templateUrl: './trabajos.html',
   styleUrls: ['./trabajos.css']
 })
