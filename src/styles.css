@@ -22,6 +22,11 @@
   --dr-warning:#f59e0b;
   --dr-danger:#ef4444;
 
+  /* Color principal de la aplicación (MENÚ y topbars móviles)
+     Cambia estas dos variables para actualizar el azul en TODO el sitio. */
+  --bs-primary: #1a3644;            /* color */
+  --bs-primary-rgb:22,163,74;     /* r,g,b (sin espacios) */
+
   /* Decoración */
   --dr-radius:18px;
   --dr-radius-sm:12px;

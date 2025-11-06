@@ -291,12 +291,20 @@
 	padding: .75rem .875rem; /* mover padding del item al contenido deslizante */
 }
 .dr-swipe-bg {
-	position: absolute; inset: 0; z-index: 1;
-	background: linear-gradient(90deg, #fee2e2 0%, #fecaca 100%);
-	display: flex; align-items: center; justify-content: flex-end; gap: .5rem;
-	padding-right: .875rem; color: #991b1b; /* red-800 */
-	font-weight: 700; letter-spacing: .01em;
-    pointer-events: none;
+	position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; gap: .5rem;
+	font-weight: 700; letter-spacing: .01em; pointer-events: none;
 }
-.dr-swipe-bg i { font-size: 18px; color: #dc2626; }
-.dr-swipe-bg span { font-size: 12px; color: #b91c1c; }
+/* Right side (reveal when swiping left): Delete */
+.dr-swipe-bg-left { justify-content: flex-end; padding-right: .875rem;
+	background: linear-gradient(90deg, #fee2e2 0%, #fecaca 100%);
+	color: #991b1b; /* red-800 */
+}
+.dr-swipe-bg-left i { font-size: 18px; color: #dc2626; }
+.dr-swipe-bg-left span { font-size: 12px; color: #b91c1c; }
+/* Left side (reveal when swiping right): Edit */
+.dr-swipe-bg-right { justify-content: flex-start; padding-left: .875rem;
+	background: linear-gradient(90deg, rgba(var(--bs-primary-rgb, 13,110,253), .18) 0%, rgba(var(--bs-primary-rgb, 13,110,253), .32) 100%);
+	color: #083e9e;
+}
+.dr-swipe-bg-right i { font-size: 18px; color: var(--bs-primary, #0d6efd); }
+.dr-swipe-bg-right span { font-size: 12px; color: #0b3abf; }

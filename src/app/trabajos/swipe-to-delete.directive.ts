@@ -13,8 +13,9 @@ import { Directive, ElementRef, EventEmitter, HostBinding, HostListener, Input, 
 export class SwipeToDeleteDirective implements OnInit, OnDestroy {
   @HostBinding('class.dr-swipeable') swipeable = true;
 
-  @Input() thresholdRatio = 0.6; // % of width required to trigger delete
+  @Input() thresholdRatio = 0.6; // % of width required to trigger action
   @Output() swipeDelete = new EventEmitter<void>();
+  @Output() swipeEdit = new EventEmitter<void>();
 
   private hostEl: HTMLElement;
   private contentEl: HTMLElement | null = null;
@@ -81,8 +82,8 @@ export class SwipeToDeleteDirective implements OnInit, OnDestroy {
       }
     }
 
-    // Only allow swiping to the left
-    this.dx = Math.min(0, dx);
+  // Allow swiping both directions
+  this.dx = dx;
     if (Math.abs(this.dx) > 2) this.moved = true;
 
     // Apply transform following the finger
@@ -96,8 +97,9 @@ export class SwipeToDeleteDirective implements OnInit, OnDestroy {
   onTouchEnd() {
     if (!this.swiping || !this.contentEl) return;
     const width = this.hostEl.clientWidth || 1;
-    const threshold = -this.thresholdRatio * width; // negative value
-    const shouldDelete = this.dx <= threshold;
+  const thr = this.thresholdRatio * width;
+  const shouldDelete = this.dx <= -thr;
+  const shouldEdit = this.dx >= thr;
 
     // Snap animation
     this.setTransition(true);
@@ -114,6 +116,18 @@ export class SwipeToDeleteDirective implements OnInit, OnDestroy {
           // Reset back to resting position
           this.contentEl!.style.transform = 'translateX(0px)';
           // Restore touch-action
+          this.hostEl.style.touchAction = '';
+        }, 160);
+      });
+    } else if (shouldEdit) {
+      // Swipe right: edit
+      this.contentEl.style.transform = `translateX(${width}px)`;
+      const ts = Date.now();
+      this.lastSwipeTs = ts;
+      this.zone.runOutsideAngular(() => {
+        setTimeout(() => {
+          this.zone.run(() => this.swipeEdit.emit());
+          this.contentEl!.style.transform = 'translateX(0px)';
           this.hostEl.style.touchAction = '';
         }, 160);
       });

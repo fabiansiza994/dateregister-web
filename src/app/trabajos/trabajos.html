@@ -203,9 +203,10 @@
   <div class="bg-white rounded-2xl shadow-card border border-slate-200/60 overflow-hidden">
     <div class="divide-y">
       @for (j of visibleWithRow(); track j.id) {
-      <div class="dr-wa-item" appSwipeToDelete (swipeDelete)="openConfirm(j)" tabindex="0" role="button" [attr.data-job-id]="j.id">
-        <!-- Red background revealed on swipe -->
-        <div class="dr-swipe-bg" aria-hidden="true"><i class="bi bi-trash"></i><span>Eliminar</span></div>
+      <div class="dr-wa-item" appSwipeToDelete (swipeDelete)="openConfirm(j)" (swipeEdit)="editarTrabajo(j)" tabindex="0" role="button" [attr.data-job-id]="j.id">
+        <!-- Backgrounds revealed on swipe -->
+        <div class="dr-swipe-bg dr-swipe-bg-left" aria-hidden="true"><i class="bi bi-trash"></i><span>Eliminar</span></div>
+        <div class="dr-swipe-bg dr-swipe-bg-right" aria-hidden="true"><i class="bi bi-pencil"></i><span>Editar</span></div>
         <!-- Swipe content that moves with finger -->
         <div class="dr-swipe-content" (click)="verTrabajo(j)">
           <div class="dr-wa-avatar" aria-hidden="true"

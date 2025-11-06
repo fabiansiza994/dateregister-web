@@ -3,6 +3,9 @@
 .nav-btn:hover,.nav-btn.active{background-color:rgba(255,255,255,.15);color:#fff;}
 .abs-dropdown { position:absolute;z-index:40;background:#fff;color:#334155;border:1px solid rgba(100,116,139,.4);border-radius:.75rem;box-shadow:0 10px 30px rgba(16,24,40,.25);padding:.5rem;animation:fade .15s ease-in-out; }
 
+/* Forzar que el color de fondo del navbar use la variable global */
+nav.bg-primary { background: var(--bs-primary, #0d6efd) !important; }
+
 /* Asegura que el navbar quede por encima de contenido sticky (buscador) cuando se despliega en móvil */
 nav.sticky-top { z-index: 50; }
 .dd-item { display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;font-size:.875rem;font-weight:500;border-radius:.5rem;transition:.15s background-color,color; }
@@ -29,7 +32,7 @@ nav.sticky-top { z-index: 50; }
 	left: 0; right: 0;
 	top: var(--menu-h, 3.5rem);
 	z-index: 70; /* por encima del navbar (50) y backdrop (65) */
-	background: #142742;
+	background: var(--bs-primary, #0d6efd);
 	color: #ffffff;
 	border-bottom-left-radius: .75rem;
 	border-bottom-right-radius: .75rem;
