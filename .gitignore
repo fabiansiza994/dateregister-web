@@ -1,0 +1,14 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Angular build outputs
+.angular/
+/dist/
+/out-tsc/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
