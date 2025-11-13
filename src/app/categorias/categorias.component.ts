@@ -14,7 +14,10 @@ interface PendingDelete { item: CategoriaUI | null; }
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
   <div class="flex items-center justify-between">
-    <h2 style="margin:0" class="text-xl font-semibold">Categorías</h2>
+    <h2 style="margin:0" class="text-xl font-semibold flex items-center">
+      <i class="bi bi-tags-fill me-2"></i>
+      Categorías
+    </h2>
   </div>
   <div class="mt-4 card">
     <div *ngIf="errorMsg()" class="mb-2 rounded border border-red-200 bg-red-50 text-red-700 px-3 py-2 text-sm">{{ errorMsg() }}</div>
@@ -48,8 +51,8 @@ interface PendingDelete { item: CategoriaUI | null; }
           </div>
           <div class="inv-item-sub mt-1">{{ c.descripcion || 'Sin descripción' }}</div>
         </div>
-        <button class="btn btn-outline order-3" title="Eliminar" *ngIf="isAdmin()" (click)="$event.stopPropagation(); deleteItem(c)">
-          <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6 7.5a.75.75 0 0 1 .75.75v7a.75.75 0 0 1-1.5 0v-7A.75.75 0 0 1 6 7.5Zm4 .75a.75.75 0 0 0-1.5 0v7a.75.75 0 0 0 1.5 0v-7Zm3.25-.75a.75.75 0 0 1 .75.75v7a.75.75 0 0 1-1.5 0v-7a.75.75 0 0 1 .75-.75Z"/><path fill-rule="evenodd" d="M3.5 5.75A.75.75 0 0 1 4.25 5h3.86l.43-.86A1.75 1.75 0 0 1 10.14 3h-.28c.67 0 1.29.38 1.58.99l.43.86h3.88a.75.75 0 0 1 0 1.5h-.62l-.74 10.06A2.25 2.25 0 0 1 12.17 19H7.83a2.25 2.25 0 0 1-2.24-2.09L4.86 6.5h-.61a.75.75 0 0 1-.75-.75Zm2.62.75.73 9.9c.03.39.36.7.75.7h4.34c.39 0 .72-.31.75-.7l.73-9.9H6.12Z" clip-rule="evenodd"/></svg>
+        <button class="delete-btn order-3 rounded-md bg-white text-red-600 border border-red-300 hover:bg-red-50 hover:text-red-700 px-3 py-2" title="Eliminar" *ngIf="isAdmin()" (click)="$event.stopPropagation(); deleteItem(c)">
+          <svg class="h-4 w-4 trash" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6 7.5a.75.75 0 0 1 .75.75v7a.75.75 0 0 1-1.5 0v-7A.75.75 0 0 1 6 7.5Zm4 .75a.75.75 0 0 0-1.5 0v7a.75.75 0 0 0 1.5 0v-7Zm3.25-.75a.75.75 0 0 1 .75.75v7a.75.75 0 0 1-1.5 0v-7a.75.75 0 0 1 .75-.75Z"/><path fill-rule="evenodd" d="M3.5 5.75A.75.75 0 0 1 4.25 5h3.86l.43-.86A1.75 1.75 0 0 1 10.14 3h-.28c.67 0 1.29.38 1.58.99l.43.86h3.88a.75.75 0 0 1 0 1.5h-.62l-.74 10.06A2.25 2.25 0 0 1 12.17 19H7.83a2.25 2.25 0 0 1-2.24-2.09L4.86 6.5h-.61a.75.75 0 0 1-.75-.75Zm2.62.75.73 9.9c.03.39.36.7.75.7h4.34c.39 0 .72-.31.75-.7l.73-9.9H6.12Z" clip-rule="evenodd"/></svg>
         </button>
       </div>
       <div class="text-center text-xs" *ngIf="filtered().length===0">Sin resultados</div>
@@ -60,17 +63,33 @@ interface PendingDelete { item: CategoriaUI | null; }
       <span class="text-xs text-slate-500 self-center">Página {{ page + 1 }}</span>
     </div>
   </div>
-  <a routerLink="/categorias/nueva" class="fixed bottom-6 right-6 rounded-full bg-blue-600 text-white h-12 w-12 flex items-center justify-center shadow-lg hover:bg-blue-700" aria-label="Nueva categoría">
+  <a routerLink="/categorias/nueva"
+     class="fixed bottom-6 right-6 rounded-full bg-blue-600 text-white h-12 w-12 flex items-center justify-center shadow-lg hover:bg-blue-700"
+     [ngClass]="{ 'fab-spin-right': fabSpinRight, 'fab-spin-left': fabSpinLeft }"
+     (mouseenter)="onFabEnter()" (mouseleave)="onFabLeave()"
+     aria-label="Nueva categoría">
     <svg class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3.5a.75.75 0 0 1 .75.75v5h5a.75.75 0 0 1 0 1.5h-5v5a.75.75 0 0 1-1.5 0v-5h-5a.75.75 0 0 1 0-1.5h5v-5A.75.75 0 0 1 10 3.5Z"/></svg>
   </a>
   <!-- Form inline eliminado: edición y creación van a vistas separadas -->
   <div *ngIf="toast.visible" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
-    <div class="card flex items-center gap-3">
-      <span>{{ toast.message }} ({{ toast.seconds }}s)</span>
-      <button class="btn btn-outline" (click)="undoDelete()">Deshacer</button>
+    <div class="card w-[320px]">
+      <div class="flex items-center justify-between gap-3">
+        <span>{{ toast.message }} ({{ toast.seconds }}s)</span>
+        <button class="btn btn-outline" (click)="undoDelete()">Deshacer</button>
+      </div>
+      <div class="mt-2 w-full h-1.5 bg-slate-200 rounded overflow-hidden">
+        <div class="toast-progress"></div>
+      </div>
     </div>
   </div>
   `
+  ,
+  styles: [`
+    @keyframes shake { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-12deg); } 75% { transform: rotate(12deg); } }
+    .delete-btn:hover .trash { animation: shake .28s ease-in-out 1; transform-origin: 50% 10%; }
+    @keyframes toastbar { from { width: 100%; } to { width: 0%; } }
+    .toast-progress { height: 100%; background-color: #3b82f6; animation: toastbar 7s linear forwards; }
+  `]
 })
 export class CategoriasComponent implements OnInit {
   q='';
@@ -101,8 +120,8 @@ export class CategoriasComponent implements OnInit {
     this.toast.message = `Categoría "${c.nombre}" eliminada`;
     this.toast.visible = true;
     this.editing.set(false);
-    // cuenta regresiva
-    this.toast.seconds = 4;
+    // cuenta regresiva de 7s
+    this.toast.seconds = 7;
     const tick = () => {
       if(!this.toast.visible) return;
       this.toast.seconds = this.toast.seconds - 1;
@@ -215,4 +234,19 @@ export class CategoriasComponent implements OnInit {
   async prevPage(){ if(!this.canPrev()) return; this.page--; await this.performRemoteSearch(this.q); }
   isBootstrapIcon(icon?: string){ return !!icon && icon.includes('bi'); }
   isAdmin(){ return this.auth.role() === 'ADMIN'; }
+  // FAB hover spin state
+  fabSpinRight = false;
+  fabSpinLeft = false;
+  private fabTimer: any = null;
+  onFabEnter(){
+    if(this.fabTimer) { clearTimeout(this.fabTimer); this.fabTimer = null; }
+    this.fabSpinLeft = false;
+    this.fabSpinRight = false;
+    requestAnimationFrame(()=> { this.fabSpinRight = true; });
+  }
+  onFabLeave(){
+    this.fabSpinRight = false;
+    this.fabSpinLeft = true;
+    this.fabTimer = setTimeout(()=> { this.fabSpinLeft = false; this.fabTimer = null; }, 380);
+  }
 }

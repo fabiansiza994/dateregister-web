@@ -3,6 +3,7 @@ import { Routes } from '@angular/router';
 // Removed problematic type-only imports; dynamic imports provide types implicitly
 import { LoginComponent } from './auth/login.component';
 import { RoleGuard } from './core/role.guard';
+import { AdminGuard } from './core/admin.guard';
 
 export const APP_ROUTES: Routes = [
   { path: 'login', component: LoginComponent },
@@ -58,6 +59,12 @@ export const APP_ROUTES: Routes = [
       {
         path: 'ventas/:id',
         loadComponent: () => import('./ventas/venta-detail.page').then(m => m.VentaDetailPage)
+      }
+      ,
+      {
+        path: 'usuarios',
+        canActivate: [AdminGuard],
+        loadComponent: () => import('./usuarios/usuarios.component').then(m => m.UsuariosComponent)
       }
     ]
   },

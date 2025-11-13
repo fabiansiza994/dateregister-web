@@ -16,7 +16,10 @@ interface Venta { id:number; cliente:string; cantidad:number; total:number; fech
   imports: [CommonModule, FormsModule],
   template: `
   <div class="flex items-center justify-between">
-    <h2 style="margin:0" class="text-xl font-semibold">Ventas</h2>
+    <h2 style="margin:0" class="text-xl font-semibold flex items-center">
+      <i class="bi bi-receipt me-2"></i>
+      Ventas
+    </h2>
   </div>
   <div class="mt-4 grid gap-4">
     <div class="card">

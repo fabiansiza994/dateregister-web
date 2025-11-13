@@ -12,7 +12,10 @@ interface VentaHistorial { id:number; cliente:string; cantidad:number; total:num
   imports: [CommonModule, FormsModule],
   template: `
   <div class="flex items-center justify-between">
-    <h2 style="margin:0" class="text-xl font-semibold">Historial de ventas</h2>
+    <h2 style="margin:0" class="text-xl font-semibold flex items-center">
+      <i class="bi bi-receipt me-2"></i>
+      Historial de ventas
+    </h2>
   </div>
   <div class="mt-4 card">
     <div class="flex flex-wrap gap-2 items-end">

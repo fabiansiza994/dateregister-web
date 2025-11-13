@@ -55,3 +55,16 @@ body { -webkit-font-smoothing: antialiased; }
 ::-webkit-scrollbar { width:10px; height:10px; }
 ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:20px; }
 ::-webkit-scrollbar-thumb:hover { background:#94a3b8; }
+
+/* Floating action button rotation animations */
+@keyframes fab-spin-right {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes fab-spin-left {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+/* When these classes are toggled on the FAB, animate the inner icon */
+.fab-spin-right svg { animation: fab-spin-right .6s ease-out 1; }
+.fab-spin-left svg { animation: fab-spin-left .6s ease-out 1; }

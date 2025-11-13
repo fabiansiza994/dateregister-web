@@ -44,6 +44,10 @@ import { AuthService } from '../core/auth.service';
         <span class="icon">📜</span>
         <span class="label" *ngIf="!collapsed">Historial</span>
       </a>
+      <a *ngIf="isAdmin()" routerLink="/usuarios" routerLinkActive="active" [title]="collapsed ? 'Usuarios' : ''">
+        <span class="icon">👤</span>
+        <span class="label" *ngIf="!collapsed">Usuarios</span>
+      </a>
     </nav>
 
     <div class="spacer"></div>
@@ -93,6 +97,7 @@ export class SidebarComponent {
   missingLogo = false;
   private auth = inject(AuthService);
   username = this.auth.username();
+  isAdmin(){ return this.auth.role() === 'ADMIN'; }
 
   onToggle(){
     this.collapsed = !this.collapsed;

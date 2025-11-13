@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ClientService, ClientDTO } from '../core/client.service';
 import { Router, RouterLink } from '@angular/router';
 
-interface Cliente { id:number; nombre:string; email?:string; telefono?:string; }
+interface Cliente { id:number; nombre:string; email?:string; telefono?:string; estado?: string; }
 
 @Component({
   selector: 'app-clientes',
@@ -12,7 +12,10 @@ interface Cliente { id:number; nombre:string; email?:string; telefono?:string; }
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
   <div class="flex items-center justify-between">
-    <h2 style="margin:0" class="text-xl font-semibold">Clientes</h2>
+    <h2 style="margin:0" class="text-xl font-semibold flex items-center">
+      <i class="bi bi-people-fill me-2"></i>
+      Clientes
+    </h2>
   </div>
   <div class="mt-4 card">
     <div class="flex items-center gap-2">
@@ -21,9 +24,15 @@ interface Cliente { id:number; nombre:string; email?:string; telefono?:string; }
     </div>
     <div class="mt-4 inv-list">
       <div class="inv-item cursor-pointer" *ngFor="let c of filtered()" (click)="goEditPage(c.id)">
-        <div>
-          <div class="inv-item-title">{{c.nombre}}</div>
-          <div class="inv-item-sub">{{c.email || '—'}} • {{c.telefono || '—'}}</div>
+        <div class="flex items-start justify-between w-full gap-3">
+          <div class="flex items-start gap-3">
+            <i class="bi bi-person-circle text-slate-500 text-xl mt-0.5"></i>
+            <div>
+              <div class="inv-item-title">{{c.nombre}}</div>
+              <div class="inv-item-sub">{{c.email || '—'}} • {{c.telefono || '—'}}</div>
+            </div>
+          </div>
+          <span class="badge h-fit" [ngClass]="clientStatusBadge(c.estado)">{{ c.estado || '—' }}</span>
         </div>
       </div>
       <div class="text-center text-xs" *ngIf="filtered().length===0">Sin resultados</div>
@@ -34,7 +43,11 @@ interface Cliente { id:number; nombre:string; email?:string; telefono?:string; }
       <span class="text-xs text-slate-500 self-center">Página {{ page + 1 }}</span>
     </div>
   </div>
-  <a routerLink="/clientes/nuevo" class="fixed bottom-6 right-6 rounded-full bg-blue-600 text-white h-12 w-12 flex items-center justify-center shadow-lg hover:bg-blue-700" aria-label="Nuevo cliente">
+  <a routerLink="/clientes/nuevo"
+     class="fixed bottom-6 right-6 rounded-full bg-blue-600 text-white h-12 w-12 flex items-center justify-center shadow-lg hover:bg-blue-700"
+     [ngClass]="{ 'fab-spin-right': fabSpinRight, 'fab-spin-left': fabSpinLeft }"
+     (mouseenter)="onFabEnter()" (mouseleave)="onFabLeave()"
+     aria-label="Nuevo cliente">
     <svg class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3.5a.75.75 0 0 1 .75.75v5h5a.75.75 0 0 1 0 1.5h-5v5a.75.75 0 0 1-1.5 0v-5h-5a.75.75 0 0 1 0-1.5h5v-5A.75.75 0 0 1 10 3.5Z"/></svg>
   </a>
   `
@@ -74,7 +87,7 @@ export class ClientesComponent implements OnInit {
   private async load(){
     try {
       const results = await this.clientService.list(this.page, this.pageSize);
-      const mapped: Cliente[] = (results||[]).map((c:ClientDTO)=> ({ id: c.id, nombre: c.name, email: (c as any).email || '', telefono: (c as any).phone || '' }));
+      const mapped: Cliente[] = (results||[]).map((c:ClientDTO)=> ({ id: c.id, nombre: c.name, email: (c as any).email || '', telefono: (c as any).phone || '', estado: (c as any).status || c.status || '' }));
       this.items.set(mapped);
       this.lastCount = mapped.length;
       this.remoteMode = true;
@@ -85,7 +98,7 @@ export class ClientesComponent implements OnInit {
     try {
       const results = await this.clientService.search(name, this.page, this.pageSize);
       if(this.q.trim().toLowerCase() !== name.toLowerCase()) return;
-      const mapped: Cliente[] = (results||[]).map((c:ClientDTO)=> ({ id: c.id, nombre: c.name, email: (c as any).email || '', telefono: (c as any).phone || '' }));
+      const mapped: Cliente[] = (results||[]).map((c:ClientDTO)=> ({ id: c.id, nombre: c.name, email: (c as any).email || '', telefono: (c as any).phone || '', estado: (c as any).status || c.status || '' }));
       this.items.set(mapped);
       this.lastCount = mapped.length;
       this.remoteMode = true;
@@ -97,4 +110,26 @@ export class ClientesComponent implements OnInit {
   async prevPage(){ if(!this.canPrev()) return; this.page--; if(this.q.trim().length<2) await this.load(); else await this.performRemoteSearch(this.q); }
   startCreate(){ this.router.navigate(['/clientes/nuevo']); }
   goEditPage(id:number){ this.router.navigate(['/clientes', id, 'editar']); }
+  clientStatusBadge(status:any){
+    const v = String(status||'').toUpperCase();
+    if(v==='ACTIVE' || v==='ENABLED') return 'badge-success';
+    if(v==='INACTIVE' || v==='DISABLED' || v==='BANNED') return 'badge-danger';
+    if(v) return 'badge-warning';
+    return '';
+  }
+  // FAB hover spin state
+  fabSpinRight = false;
+  fabSpinLeft = false;
+  private fabTimer: any = null;
+  onFabEnter(){
+    if(this.fabTimer) { clearTimeout(this.fabTimer); this.fabTimer = null; }
+    this.fabSpinLeft = false;
+    this.fabSpinRight = false;
+    requestAnimationFrame(()=> { this.fabSpinRight = true; });
+  }
+  onFabLeave(){
+    this.fabSpinRight = false;
+    this.fabSpinLeft = true;
+    this.fabTimer = setTimeout(()=> { this.fabSpinLeft = false; this.fabTimer = null; }, 380);
+  }
 }
