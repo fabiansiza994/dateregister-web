@@ -108,31 +108,25 @@ export class ProductoFormComponent implements OnInit {
   }
 
   onPriceInputChange(raw: string){
-    // Real-time formatting preserving decimal part as typed
+    // Formato ES: '.' miles, ',' decimales. Permitir escribir con puntos como miles y coma como decimal.
     if(raw == null) raw = '';
-    const cleaned = raw.replace(/[^0-9.,]/g, '');
-    const lastComma = cleaned.lastIndexOf(',');
-    const lastDot = cleaned.lastIndexOf('.');
-    const sepIndex = Math.max(lastComma, lastDot);
-    let sep = '';
-    let intPart = cleaned;
-    let decPart = '';
-    if(sepIndex > -1){
-      sep = cleaned[sepIndex];
-      intPart = cleaned.substring(0, sepIndex); // exclude separator
-      decPart = cleaned.substring(sepIndex+1).replace(/[^0-9]/g,'');
-    }
-    // parse integer part
-    const intDigits = intPart.replace(/[^0-9]/g,'');
-    const intNumber = intDigits ? parseInt(intDigits,10) : 0;
+    // Mantener solo dígitos, puntos y comas
+    let cleaned = raw.replace(/[^0-9.,]/g, '');
+    // Separar por la primera coma como separador decimal; los puntos son miles
+    const commaIndex = cleaned.indexOf(',');
+    let intPartRaw = commaIndex >= 0 ? cleaned.substring(0, commaIndex) : cleaned;
+    let decPartRaw = commaIndex >= 0 ? cleaned.substring(commaIndex + 1) : '';
+    // Quitar puntos y cualquier otro no-dígito del entero
+    const intDigits = intPartRaw.replace(/[^0-9]/g, '');
+    const intNumber = intDigits ? parseInt(intDigits, 10) : 0;
     const formattedInt = intDigits ? new Intl.NumberFormat('es-ES').format(intNumber) : '';
-    // limit decimal part to 2 digits but don't force trimming until blur
+    // Limitar decimales a 2, sólo dígitos
+    let decPart = decPartRaw.replace(/[^0-9]/g, '');
     if(decPart.length > 2) decPart = decPart.substring(0,2);
-    // compose visual
-    const visual = formattedInt + (sep ? sep + decPart : '');
-    this.precioView = visual;
-    // numeric value
-    const numeric = sep ? parseFloat(intNumber + '.' + decPart) : intNumber;
+    // Componer visual usando coma como decimal si hay parte decimal
+    this.precioView = formattedInt + (commaIndex >= 0 && decPart.length > 0 ? ',' + decPart : (commaIndex >= 0 ? ',' : ''));
+    // Valor numérico: usar punto para decimal en el número
+    const numeric = decPart.length > 0 ? parseFloat(intNumber + '.' + decPart) : intNumber;
     this.model.precio = isNaN(numeric) ? 0 : numeric;
   }
 

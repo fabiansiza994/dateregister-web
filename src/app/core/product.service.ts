@@ -1,9 +1,10 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { API_BASE } from './api.config';
 
-const API_URL = 'http://localhost:8081/products';
-const SEARCH_URL = 'http://localhost:8081/products/search';
+const API_URL = `${API_BASE}/products`;
+const SEARCH_URL = `${API_BASE}/products/search`;
 
 export interface ProductCategory { id: number; name?: string; }
 export interface ProductDTO {
@@ -20,6 +21,7 @@ export interface ProductDTO {
 
 interface ApiListResponse { data: ProductDTO[]; message?: string; }
 interface ApiItemResponse { data: ProductDTO; message?: string; }
+interface ApiDeleteResponse { data?: any; message?: string; dataResponse?: { idTx?: string; response?: string }; error?: Array<{ codError?: string; descError?: string; msgError?: string }>; }
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {
@@ -49,9 +51,18 @@ export class ProductService {
     return res?.data || null;
   }
 
-  async remove(id: number): Promise<boolean> {
-    const res = await firstValueFrom(this.http.delete<ApiItemResponse>(`${API_URL}/${id}`));
-    return !!res?.data;
+  async remove(id: number): Promise<{ ok: boolean; message?: string }> {
+    try {
+      const res = await firstValueFrom(this.http.delete<ApiDeleteResponse>(`${API_URL}/${id}`));
+      const success = res?.dataResponse?.response === 'SUCCESS' || (res as any)?.status === 'SUCCESS' || !!res?.data;
+      if (success) return { ok: true, message: res?.message };
+      const err = res?.error?.[0];
+      const msg = err?.descError || err?.msgError || res?.message || 'No se pudo eliminar el producto.';
+      return { ok: false, message: msg };
+    } catch (e: any) {
+      const msg = e?.error?.error?.[0]?.descError || e?.error?.message || e?.message || 'Error de red eliminando producto.';
+      return { ok: false, message: msg };
+    }
   }
 
   async search(name: string, page = 0, size = 10): Promise<ProductDTO[]> {

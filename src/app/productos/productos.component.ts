@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CategoryService } from '../core/category.service';
+import { AuthService } from '../core/auth.service';
 
 interface ProductoUI { id:number; nombre:string; categoria:string; categoriaId?:number; precio:number; stock:number; status:string; image?: string; }
 interface PendingDelete { item: ProductoUI | null; }
@@ -18,6 +19,7 @@ interface PendingDelete { item: ProductoUI | null; }
     <h2 class="m-0 text-xl font-semibold">Productos</h2>
   </div>
   <div class="mt-4 card">
+    <div *ngIf="errorMsg()" class="mb-2 rounded border border-red-200 bg-red-50 text-red-700 px-3 py-2 text-sm">{{ errorMsg() }}</div>
     <div class="relative">
       <svg class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
         <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 3.478 9.8l3.611 3.611a.75.75 0 1 0 1.06-1.06l-3.61-3.612A5.5 5.5 0 0 0 9 3.5Zm-4 5.5a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clip-rule="evenodd"/>
@@ -55,7 +57,7 @@ interface PendingDelete { item: ProductoUI | null; }
           </div>
           <div class="text-xs text-slate-600 mt-1">{{p.categoria}} • $ {{ formatPrecio(p.precio) }} • stock {{p.stock}}</div>
         </div>
-        <button class="btn btn-outline" title="Eliminar" (click)="$event.stopPropagation(); deleteItem(p)">
+        <button *ngIf="isAdmin()" class="btn btn-outline" title="Eliminar" (click)="$event.stopPropagation(); deleteItem(p)">
           <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6 7.5a.75.75 0 0 1 .75.75v7a.75.75 0 0 1-1.5 0v-7A.75.75 0 0 1 6 7.5Zm4 .75a.75.75 0 0 0-1.5 0v7a.75.75 0 0 0 1.5 0v-7Zm3.25-.75a.75.75 0 0 1 .75.75v7a.75.75 0 0 1-1.5 0v-7a.75.75 0 0 1 .75-.75Z"/><path fill-rule="evenodd" d="M3.5 5.75A.75.75 0 0 1 4.25 5h3.86l.43-.86A1.75 1.75 0 0 1 10.14 3h-.28c.67 0 1.29.38 1.58.99l.43.86h3.88a.75.75 0 0 1 0 1.5h-.62l-.74 10.06A2.25 2.25 0 0 1 12.17 19H7.83a2.25 2.25 0 0 1-2.24-2.09L4.86 6.5h-.61a.75.75 0 0 1-.75-.75Zm2.62.75.73 9.9c.03.39.36.7.75.7h4.34c.39 0 .72-.31.75-.7l.73-9.9H6.12Z" clip-rule="evenodd"/></svg>
         </button>
       </div>
@@ -85,6 +87,7 @@ export class ProductosComponent implements OnInit {
   categorias = signal<{id:number; nombre:string}[]>([]);
   toast = { visible: false, message: '', timeoutId: 0 as any, seconds: 0 };
   pendingDelete: PendingDelete = { item: null };
+  errorMsg = signal<string>('');
   // pagination state for remote search
   page = 0;
   pageSize = 10;
@@ -95,7 +98,7 @@ export class ProductosComponent implements OnInit {
   filtered = computed(()=> this.items());
 
 
-  constructor(private productService: ProductService, private categoryService: CategoryService, private router: Router){}
+  constructor(private productService: ProductService, private categoryService: CategoryService, private router: Router, private auth: AuthService){}
 
   async ngOnInit(){ await this.load(); }
   private searchTimer: any = null;
@@ -213,7 +216,11 @@ export class ProductosComponent implements OnInit {
   goEditPage(id:number){ this.router.navigate(['/productos', id, 'editar']); }
   formatPrecio(v:number){ return new Intl.NumberFormat('es-ES', { minimumFractionDigits:0 }).format(v); }
 
+  isAdmin(){ return this.auth.role() === 'ADMIN'; }
+
   deleteItem(p: ProductoUI){
+    if(!this.isAdmin()) return;
+    this.errorMsg.set('');
     const current = this.items();
     this.items.set(current.filter(x => x.id !== p.id));
     this.pendingDelete.item = p;
@@ -235,8 +242,16 @@ export class ProductosComponent implements OnInit {
     this.toast.visible = false;
     if(!p) return;
     this.pendingDelete.item = null;
-    try { await this.productService.remove(p.id); }
-    catch { this.items.set([p, ...this.items()]); }
+    try {
+      const result = await this.productService.remove(p.id);
+      if(!result.ok){
+        this.items.set([p, ...this.items()]);
+        this.errorMsg.set(result.message || 'No se pudo eliminar el producto.');
+      }
+    } catch(e:any) {
+      this.items.set([p, ...this.items()]);
+      this.errorMsg.set((e?.message as string) || 'Error inesperado eliminando el producto.');
+    }
   }
 
   undoDelete(){

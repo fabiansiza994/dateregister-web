@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { SalesService } from '../core/sales.service';
 import { Router } from '@angular/router';
 
-interface VentaHistorial { id:number; cliente:string; cantidad:number; total:number; fecha:string; }
+interface VentaHistorial { id:number; cliente:string; cantidad:number; total:number; fecha:string; status?: string; }
 
 @Component({
   selector: 'app-historial-ventas',
@@ -23,9 +23,12 @@ interface VentaHistorial { id:number; cliente:string; cantidad:number; total:num
     </div>
     <div class="mt-4 inv-list">
       <div class="inv-item cursor-pointer" *ngFor="let v of filtered()" (click)="goToDetail(v.id)">
-        <div>
-          <div class="inv-item-title">#{{v.id}} • {{v.cliente}} ({{v.cantidad}} ítems)</div>
-          <div class="inv-item-sub">{{v.fecha}} • $ {{v.total | number:'1.0-0'}}</div>
+        <div class="flex items-start justify-between w-full gap-3">
+          <div>
+            <div class="inv-item-title">#{{v.id}} • {{v.cliente}} ({{v.cantidad}} ítems)</div>
+            <div class="inv-item-sub">{{v.fecha}} • $ {{v.total | number:'1.0-0'}}</div>
+          </div>
+          <span class="badge h-fit" [ngClass]="statusBadgeClass(v.status)">{{ (v.status || '—') }}</span>
         </div>
       </div>
       <div class="text-center text-xs" *ngIf="filtered().length===0">Sin resultados</div>
@@ -63,7 +66,8 @@ export class HistorialVentasComponent {
       cliente: (s.client && (s.client.name || s.client.fullName || (s.client.firstName+' '+(s.client.lastName||''))))?.trim() || 'Cliente desconocido',
       cantidad: s.productList ? s.productList.reduce((a:number,p:any)=> a + (p.quantity||0), 0) : 0,
       total: s.total || 0,
-      fecha: (s.date || s.createdAt || '').slice(0,10)
+      fecha: (s.date || s.createdAt || '').slice(0,10),
+      status: s.status || s.state || s.responseStatus || 'PENDANT'
     }));
     this.items.set(mapped);
     this.lastCount = mapped.length;
@@ -76,4 +80,11 @@ export class HistorialVentasComponent {
   async next(){ if(!this.hasNext()) return; this.page++; await this.reload(); }
   async prev(){ if(!this.canPrev()) return; this.page--; await this.reload(); }
   goToDetail(id:number){ this.router.navigate(['/ventas', id]); }
+  statusBadgeClass(status:any){
+    const v = String(status||'').toUpperCase();
+    if(v==='SUCCESS' || v==='COMPLETED' || v==='COMPLETE' || v==='PAID') return 'badge-success';
+    if(v==='PENDANT' || v==='PENDING' || v==='IN_PROGRESS') return 'badge-warning';
+    if(v==='CANCELLED' || v==='FAILED' || v==='REJECTED') return 'badge-danger';
+    return '';
+  }
 }

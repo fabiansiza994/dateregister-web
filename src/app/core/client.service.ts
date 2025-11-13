@@ -1,11 +1,12 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { API_BASE } from './api.config';
 
-const CLIENTS_LIST_URL = 'http://localhost:8081/clients/list';
-const CLIENTS_CREATE_URL = 'http://localhost:8081/clients/create';
-const CLIENTS_UPDATE_URL = 'http://localhost:8081/clients/update';
-const CLIENTS_BASE_URL = 'http://localhost:8081/clients';
+const CLIENTS_BASE_URL = `${API_BASE}/clients`;
+const CLIENTS_LIST_URL = `${CLIENTS_BASE_URL}/list`;
+const CLIENTS_CREATE_URL = `${CLIENTS_BASE_URL}/create`;
+const CLIENTS_UPDATE_URL = `${CLIENTS_BASE_URL}/update`;
 
 export interface ClientDTO { id: number; name: string; email?: string; phone?: string; status?: string; }
 

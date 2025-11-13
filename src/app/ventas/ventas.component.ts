@@ -8,7 +8,7 @@ import { Router } from '@angular/router';
 
 // Venta listing UI interface removed; ventas ahora sólo registra nuevas ventas.
 interface SaleLine { id:number; name:string; price:number; quantity:number; stock:number; }
-interface Venta { id:number; cliente:string; cantidad:number; total:number; fecha:string; }
+interface Venta { id:number; cliente:string; cantidad:number; total:number; fecha:string; status?: string; }
 
 @Component({
   selector: 'app-ventas',
@@ -78,12 +78,15 @@ interface Venta { id:number; cliente:string; cantidad:number; total:number; fech
         <input class="input" placeholder="Buscar por cliente" [(ngModel)]="q">
       </div>
       <div class="mt-4 inv-list">
-        <div class="inv-item cursor-pointer" *ngFor="let v of filtered()" (click)="goToDetail(v.id)">
-          <div>
-            <div class="inv-item-title">{{v.cliente}} ({{v.cantidad}} ítems)</div>
-            <div class="inv-item-sub">{{v.fecha}} • $ {{v.total | number:'1.0-0'}}</div>
-          </div>
-        </div>
+            <div class="inv-item cursor-pointer" *ngFor="let v of filtered()" (click)="goToDetail(v.id)">
+              <div class="flex items-start justify-between w-full gap-3">
+                <div>
+                  <div class="inv-item-title">{{v.cliente}} ({{v.cantidad}} ítems)</div>
+                  <div class="inv-item-sub">{{v.fecha}} • $ {{v.total | number:'1.0-0'}}</div>
+                </div>
+                <span class="badge h-fit" [ngClass]="statusBadgeClass(v.status)">{{ (v.status || '—') }}</span>
+              </div>
+            </div>
         <div class="text-center text-xs" *ngIf="filtered().length===0">Sin resultados</div>
       </div>
       <div class="mt-3 flex items-center gap-2 justify-end text-xs">
@@ -204,7 +207,8 @@ export class VentasComponent {
       cliente: (s.client && (s.client.name || s.client.fullName || s.client.firstName+' '+(s.client.lastName||'')))?.trim() || 'Cliente desconocido',
       cantidad: s.productList ? s.productList.reduce((a:number,p:any)=> a + (p.quantity||0), 0) : 0,
       total: s.total || 0,
-      fecha: (s.date || s.createdAt || '').slice(0,10)
+      fecha: (s.date || s.createdAt || '').slice(0,10),
+      status: s.status || s.state || s.responseStatus || 'PENDANT'
     }));
     this.items.set(mapped);
     this.lastSalesCount = mapped.length;
@@ -214,4 +218,11 @@ export class VentasComponent {
   async nextSales(){ if(!this.hasNextSales()) return; this.salesPage++; await this.loadSales(); }
   async prevSales(){ if(!this.canPrevSales()) return; this.salesPage--; await this.loadSales(); }
   goToDetail(id: number){ this.router.navigate(['/ventas', id]); }
+  statusBadgeClass(status:any){
+    const v = String(status||'').toUpperCase();
+    if(v==='SUCCESS' || v==='COMPLETED' || v==='COMPLETE' || v==='PAID') return 'badge-success';
+    if(v==='PENDANT' || v==='PENDING' || v==='IN_PROGRESS') return 'badge-warning';
+    if(v==='CANCELLED' || v==='FAILED' || v==='REJECTED') return 'badge-danger';
+    return '';
+  }
 }

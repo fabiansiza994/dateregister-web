@@ -1,9 +1,11 @@
 import { Injectable, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { AuthService } from './auth.service';
+import { API_BASE } from './api.config';
 
-const SALES_URL = 'http://localhost:8081/sales';
-const SALES_LIST_URL = 'http://localhost:8081/sales/list';
+const SALES_URL = `${API_BASE}/sales`;
+const SALES_LIST_URL = `${SALES_URL}/list`;
 
 export interface SaleProductInput {
   id: number;
@@ -25,7 +27,7 @@ interface ApiSaleResponse { data?: any; message?: string; dataResponse?: { respo
 export class SalesService {
   loading = signal(false);
   lastError = signal<string>('');
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private auth: AuthService) {}
 
   async create(req: SaleCreateRequest): Promise<{ ok:boolean; message?: string }> {
     this.loading.set(true); this.lastError.set('');
@@ -79,6 +81,27 @@ export class SalesService {
       const msg = e?.error?.error?.[0]?.descError || e?.message || 'Error obteniendo detalle de la venta.';
       this.lastError.set(msg);
       return null;
+    } finally { this.loading.set(false); }
+  }
+
+  // Reversar (marcar como REJECTED) una venta específica
+  async reverse(id: number): Promise<{ ok: boolean; message?: string }>{
+    if(id == null){ return { ok:false, message: 'ID inválido' }; }
+    const token = this.auth.token();
+    if(!token){ this.lastError.set('No hay token de autenticación'); return { ok:false, message:'No hay token' }; }
+    this.loading.set(true); this.lastError.set('');
+    try {
+  // Endpoint para reversar
+  const url = `${SALES_URL}/${id}/status/REJECTED`;
+      const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' });
+      const res: any = await firstValueFrom(this.http.patch(url, {}, { headers }));
+      // Intentar leer mensaje si viene en algún campo común
+      const msg = res?.message || res?.dataResponse?.response || 'Venta reversada';
+      return { ok:true, message: msg };
+    } catch(e:any){
+      const msg = e?.error?.error?.[0]?.descError || e?.message || 'Error revirtiendo la venta';
+      this.lastError.set(msg);
+      return { ok:false, message: msg };
     } finally { this.loading.set(false); }
   }
 }

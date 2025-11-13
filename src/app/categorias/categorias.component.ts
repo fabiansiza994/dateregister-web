@@ -2,6 +2,7 @@ import { Component, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CategoryService } from '../core/category.service';
+import { AuthService } from '../core/auth.service';
 import { Router, RouterLink } from '@angular/router';
 
 interface CategoriaUI { id:number; nombre:string; descripcion:string; codigo:string; estado:string; icon?: string; }
@@ -47,7 +48,7 @@ interface PendingDelete { item: CategoriaUI | null; }
           </div>
           <div class="inv-item-sub mt-1">{{ c.descripcion || 'Sin descripción' }}</div>
         </div>
-        <button class="btn btn-outline order-3" title="Eliminar" (click)="$event.stopPropagation(); deleteItem(c)">
+        <button class="btn btn-outline order-3" title="Eliminar" *ngIf="isAdmin()" (click)="$event.stopPropagation(); deleteItem(c)">
           <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6 7.5a.75.75 0 0 1 .75.75v7a.75.75 0 0 1-1.5 0v-7A.75.75 0 0 1 6 7.5Zm4 .75a.75.75 0 0 0-1.5 0v7a.75.75 0 0 0 1.5 0v-7Zm3.25-.75a.75.75 0 0 1 .75.75v7a.75.75 0 0 1-1.5 0v-7a.75.75 0 0 1 .75-.75Z"/><path fill-rule="evenodd" d="M3.5 5.75A.75.75 0 0 1 4.25 5h3.86l.43-.86A1.75 1.75 0 0 1 10.14 3h-.28c.67 0 1.29.38 1.58.99l.43.86h3.88a.75.75 0 0 1 0 1.5h-.62l-.74 10.06A2.25 2.25 0 0 1 12.17 19H7.83a2.25 2.25 0 0 1-2.24-2.09L4.86 6.5h-.61a.75.75 0 0 1-.75-.75Zm2.62.75.73 9.9c.03.39.36.7.75.7h4.34c.39 0 .72-.31.75-.7l.73-9.9H6.12Z" clip-rule="evenodd"/></svg>
         </button>
       </div>
@@ -92,6 +93,7 @@ export class CategoriasComponent implements OnInit {
   cancel(){}
   async save(){}
   deleteItem(c: CategoriaUI){
+    if(!this.isAdmin()){ this.errorMsg.set('Acción restringida a ADMIN.'); return; }
     this.errorMsg.set('');
     const current = this.items();
     this.items.set(current.filter(x => x.id !== c.id));
@@ -114,6 +116,13 @@ export class CategoriasComponent implements OnInit {
     const c = this.pendingDelete.item;
     this.toast.visible = false;
     if(!c) return;
+    if(!this.isAdmin()){
+      // Restaurar si alguien intenta forzar la eliminación sin permisos
+      this.items.set(c ? [c, ...this.items()] : this.items());
+      this.pendingDelete.item = null;
+      this.errorMsg.set('Acción restringida a ADMIN.');
+      return;
+    }
     this.pendingDelete.item = null;
     try {
       const result = await this.categoryService.remove(c.id);
@@ -135,7 +144,7 @@ export class CategoriasComponent implements OnInit {
     if(c){ this.items.set([c, ...this.items()]); this.pendingDelete.item = null; }
   }
 
-  constructor(private categoryService: CategoryService, private router: Router){}
+  constructor(private categoryService: CategoryService, private router: Router, private auth: AuthService){}
 
   async ngOnInit(){ await this.load(); }
 
@@ -205,4 +214,5 @@ export class CategoriasComponent implements OnInit {
   async nextPage(){ if(!this.hasNext()) return; this.page++; await this.performRemoteSearch(this.q); }
   async prevPage(){ if(!this.canPrev()) return; this.page--; await this.performRemoteSearch(this.q); }
   isBootstrapIcon(icon?: string){ return !!icon && icon.includes('bi'); }
+  isAdmin(){ return this.auth.role() === 'ADMIN'; }
 }

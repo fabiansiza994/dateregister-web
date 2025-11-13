@@ -1,9 +1,10 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { API_BASE } from './api.config';
 
-const API_URL = 'http://localhost:8081/category';
-const SEARCH_URL = 'http://localhost:8081/category/search';
+const API_URL = `${API_BASE}/category`;
+const SEARCH_URL = `${API_BASE}/category/search`;
 
 export interface CategoryDTO {
   id?: number;

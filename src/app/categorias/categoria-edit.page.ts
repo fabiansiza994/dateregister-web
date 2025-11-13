@@ -2,6 +2,7 @@ import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AuthService } from '../core/auth.service';
 import { CategoryService, CategoryDTO } from '../core/category.service';
 
 @Component({
@@ -31,7 +32,7 @@ import { CategoryService, CategoryDTO } from '../core/category.service';
       <div class="mt-4 flex gap-2">
         <button class="btn btn-primary" (click)="save()" [disabled]="loading">Guardar</button>
         <button class="btn btn-outline" (click)="cancel()" [disabled]="loading">Cancelar</button>
-        <button class="btn btn-outline" (click)="remove()" [disabled]="loading">Eliminar</button>
+        <button *ngIf="isAdmin()" class="btn btn-outline" (click)="remove()" [disabled]="loading">Eliminar</button>
       </div>
       <div class="text-xs text-red-600 mt-2" *ngIf="error">{{ error }}</div>
     </div>
@@ -55,7 +56,7 @@ export class CategoriaEditPage {
     'bi-router','bi-safe','bi-scooter','bi-shop','bi-sliders','bi-snow','bi-speedometer','bi-star',
     'bi-tablet','bi-tag','bi-tools','bi-trophy','bi-truck','bi-tv-fill','bi-umbrella','bi-wallet'
   ];
-  constructor(private route: ActivatedRoute, private categoryService: CategoryService, private router: Router){ this.init(); }
+  constructor(private route: ActivatedRoute, private categoryService: CategoryService, private router: Router, private auth: AuthService){ this.init(); }
   private async init(){
     this.id = Number(this.route.snapshot.paramMap.get('id')) || 0;
     if(!this.id){ this.router.navigateByUrl('/categorias'); return; }
@@ -78,6 +79,7 @@ export class CategoriaEditPage {
     this.loading=false;
   }
   async remove(){
+    if(!this.isAdmin()) { this.error='No autorizado'; return; }
     if(!confirm('¿Eliminar categoría?')) return;
     this.loading=true;
     const res = await this.categoryService.remove(this.id);
@@ -86,4 +88,5 @@ export class CategoriaEditPage {
     else { this.error = res.message || 'Error eliminando'; }
   }
   cancel(){ this.router.navigateByUrl('/categorias'); }
+  isAdmin(){ return this.auth.role() === 'ADMIN'; }
 }

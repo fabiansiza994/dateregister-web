@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { API_BASE } from './api.config';
 
 export interface LoginResponse {
   dataResponse?: { idTx?: string; response?: string };
@@ -8,7 +9,7 @@ export interface LoginResponse {
   message?: string;
 }
 
-const API_URL = 'http://localhost:8081';
+const API_URL = API_BASE;
 
 export type Role = 'ADMIN' | 'VENDEDOR' | 'SUPERVISOR';
 
@@ -17,7 +18,21 @@ export class AuthService {
   private _role = signal<Role | null>(null);
   private _token = signal<string | null>(null);
   private _username = signal<string | null>(null);
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    // Eagerly hydrate from localStorage so UI has role/token on first render (after refresh)
+    try {
+      const t = localStorage.getItem('inventra-token');
+      if (t) this._token.set(t);
+      const rawRole = (localStorage.getItem('inventra-role') || '').toString();
+      if (rawRole) {
+        const upper = rawRole.toUpperCase();
+        const role: Role = upper.includes('ADMIN') ? 'ADMIN' : upper.includes('SUPERVISOR') ? 'SUPERVISOR' : 'VENDEDOR';
+        this._role.set(role);
+      }
+      const u = localStorage.getItem('inventra-username');
+      if (u) this._username.set(u);
+    } catch {}
+  }
 
   async login(user: string, pass: string): Promise<boolean> {
     const body = { username: user, password: pass };
@@ -45,7 +60,18 @@ export class AuthService {
   }
   role(): Role | null {
     if (this._role()) return this._role();
-    try { const r = (localStorage.getItem('inventra-role') || '') as Role; if (r) this._role.set(r); return r || null; } catch { return null; }
+    try {
+      const raw = (localStorage.getItem('inventra-role') || '').toString();
+      let role: Role | null = null;
+      if (raw) {
+        const upper = raw.toUpperCase();
+        role = upper.includes('ADMIN') ? 'ADMIN' : upper.includes('SUPERVISOR') ? 'SUPERVISOR' : 'VENDEDOR';
+        this._role.set(role);
+      }
+      return role;
+    } catch {
+      return null;
+    }
   }
   username(): string | null {
     if (this._username()) return this._username();
