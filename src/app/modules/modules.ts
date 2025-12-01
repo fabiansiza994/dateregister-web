@@ -46,23 +46,14 @@ export class Modules implements AfterViewInit {
   async ngAfterViewInit(): Promise<void> {
     // Asegura que los cards estén en el DOM
     setTimeout(async () => {
-      const hasOneKey   = `mop:hasOne:${this.empresaId()}`;
       const userKeyPart = `${this.empresa()}:${this.user()}`;
 
-      // 1) Si es ADMIN y aún no tiene métodos → forzar flujo de pagos y salir
-      if (this.role() === 'ADMIN' && localStorage.getItem(hasOneKey) !== '1') {
-        //this.tour.startAdminPaymentEnforcedTour(this.role(), userKeyPart);
-        // Igual enviamos ping de uso (pero no bloqueamos)
-        this.safePingOncePerSession();
-        return;
-      }
+      // 1) Tour normal (sin tour forzado de formas de pago)
+      this.tour.startModulesTour(this.role(), this.sector(), userKeyPart, () => {
+        // Nudge opcional eliminado a pedido
+      });
 
-      // 2) Tour normal + nudge
-      //this.tour.startModulesTour(this.role(), this.sector(), userKeyPart, () => {
-       // this.tour.startPaymentNudge(this.role(), userKeyPart);
-     // });
-
-      // 3) Ping de uso (una sola vez por sesión)
+      // 2) Ping de uso (una sola vez por sesión)
       this.safePingOncePerSession();
     }, 200);
   }

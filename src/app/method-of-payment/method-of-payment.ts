@@ -273,11 +273,7 @@ export class MethodOfPaymentComponent implements OnInit, AfterViewInit {
     const user = this._claims()?.sub ?? this._claims()?.usuario ?? 'user';
     const empresa = this._claims()?.empresa ?? 'empresa';
     const userKeyPart = `${empresa}:${user}`;
-    const pendingKey = `tour:payments:pending:${userKeyPart}`;
-
-    // Si venimos del paso 1 del tour forzado, continúa aquí (bloqueado)
-    if (localStorage.getItem(pendingKey) === '1') {
-      this.tour.startPaymentPageEnforcedTour(userKeyPart, this.empresaId());
-    }
+    // Flujo forzado de tour de pagos eliminado; limpiamos claves antiguas si existen
+    try { localStorage.removeItem(`tour:payments:pending:${userKeyPart}`); } catch {}
   }
 }

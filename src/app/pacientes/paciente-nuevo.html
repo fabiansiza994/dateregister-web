@@ -91,7 +91,7 @@
 
               <!-- Dirección -->
               <div class="md:col-span-12">
-                <label class="text-sm font-medium text-slate-700">Dirección</label>
+                <label class="text-sm font-medium text-slate-700">Dirección <span class="text-red-600">*</span></label>
                 <input type="text" class="form-control"
                        [class.is-invalid]="fieldErrors()['direccion']"
                        [ngModel]="model().direccion"

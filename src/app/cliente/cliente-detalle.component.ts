@@ -1,7 +1,8 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { HttpBackend, HttpClient } from '@angular/common/http';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { firstValueFrom, TimeoutError } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 import { ConfigService } from '../core/config.service';
@@ -28,6 +29,9 @@ interface ClienteDetalle {
   telefono?: string;
   estado: string;
   pacientes: Paciente[];
+  razonSocial?: string;
+  rut?: string | null;            // URL o null si no existe
+  camaraComercio?: string | null; // URL o null si no existe
 }
 
 interface DetailOk {
@@ -50,6 +54,14 @@ export class ClienteDetalleComponent implements OnInit {
 
   cliente = signal<ClienteDetalle | null>(null);
   pacientes = signal<Paciente[]>([]);
+  // Modal PDF preview
+  pdfModalOpen = signal(false);
+  pdfModalUrl = signal<string | null>(null); // original URL (API)
+  pdfModalTitle = signal<string>('Documento');
+  pdfLoading = signal(false);
+  pdfError = signal<string | null>(null);
+  pdfObjectUrl: string | null = null; // blob object URL
+  pdfSanitizedUrl = signal<SafeResourceUrl | null>(null);
 
   sector = computed(() => (this._claims()?.sector ?? '').toUpperCase());
 
@@ -68,10 +80,12 @@ export class ClienteDetalleComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
+    private httpBackend: HttpBackend,
     private cfg: ConfigService,
     private route: ActivatedRoute,
     private router: Router,
-    private auth: AuthService
+    private auth: AuthService,
+    private sanitizer: DomSanitizer
   ) {   this._claims.set(this.auth.claims());}
 
   ngOnInit(): void {
@@ -120,6 +134,45 @@ export class ClienteDetalleComponent implements OnInit {
 
   // Navegación
   volver() { this.router.navigate(['/clientes']); }
+
+  // Abrir modal PDF
+  openPdf(url: string | null, title: string) {
+    if (!url) return;
+    this.pdfModalTitle.set(title);
+    this.pdfModalUrl.set(url);
+    this.pdfModalOpen.set(true);
+    this.loadPdfBlob(url);
+  }
+  closePdf() {
+    if (!this.loading()) {
+      this.pdfModalOpen.set(false);
+      this.pdfModalUrl.set(null);
+      this.pdfError.set(null);
+      this.pdfSanitizedUrl.set(null);
+      if (this.pdfObjectUrl) { URL.revokeObjectURL(this.pdfObjectUrl); this.pdfObjectUrl = null; }
+    }
+  }
+
+  private async loadPdfBlob(url: string) {
+    this.pdfLoading.set(true);
+    this.pdfError.set(null);
+    // revoke previous
+    if (this.pdfObjectUrl) { URL.revokeObjectURL(this.pdfObjectUrl); this.pdfObjectUrl = null; }
+    try {
+      // Usar HttpClient sin interceptores para evitar adjuntar token (S3 falla con Authorization)
+      const nakedHttp = new HttpClient(this.httpBackend);
+      const blob = await firstValueFrom(nakedHttp.get(url, { responseType: 'blob' }).pipe(timeout(15000)));
+      if (blob.type && blob.type !== 'application/pdf') {
+        throw new Error('El recurso no es un PDF válido');
+      }
+      this.pdfObjectUrl = URL.createObjectURL(blob);
+      this.pdfSanitizedUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfObjectUrl));
+    } catch (e: any) {
+      this.pdfError.set(e?.message || 'No se pudo cargar el documento');
+    } finally {
+      this.pdfLoading.set(false);
+    }
+  }
 
   // Paginación
   goToPage(n: number) {

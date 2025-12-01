@@ -76,14 +76,16 @@
           <div class="prose prose-sm max-w-none" [innerHTML]="job()?.descripcionLabor"></div>
         </div>
 
-        @if (job()?.foto1 || job()?.foto2 || job()?.foto3 || job()?.foto4) {
+        @if (job()?.foto1 || job()?.foto2 || job()?.foto3 || job()?.foto4 || job()?.foto5 || job()?.foto6) {
         <div class="md:col-span-12">
           <div class="text-xs text-slate-500 mb-2">Evidencias</div>
           <div class="flex flex-wrap gap-3">
-            @if (job()?.foto1) { <a [href]="job()?.foto1" target="_blank" rel="noopener"><img [src]="job()?.foto1" alt="foto1" class="rounded-lg border border-slate-200" style="width:180px; height:120px; object-fit:cover;"></a> }
-            @if (job()?.foto2) { <a [href]="job()?.foto2" target="_blank" rel="noopener"><img [src]="job()?.foto2" alt="foto2" class="rounded-lg border border-slate-200" style="width:180px; height:120px; object-fit:cover;"></a> }
-            @if (job()?.foto3) { <a [href]="job()?.foto3" target="_blank" rel="noopener"><img [src]="job()?.foto3" alt="foto3" class="rounded-lg border border-slate-200" style="width:180px; height:120px; object-fit:cover;"></a> }
-            @if (job()?.foto4) { <a [href]="job()?.foto4" target="_blank" rel="noopener"><img [src]="job()?.foto4" alt="foto4" class="rounded-lg border border-slate-200" style="width:180px; height:120px; object-fit:cover;"></a> }
+            @if (job()?.foto1) { <a href="#" (click)="$event.preventDefault(); openLightbox(job()?.foto1!)"><img [src]="job()?.foto1" alt="foto1" class="rounded-lg border border-slate-200 hover:shadow" style="width:180px; height:120px; object-fit:cover;"></a> }
+            @if (job()?.foto2) { <a href="#" (click)="$event.preventDefault(); openLightbox(job()?.foto2!)"><img [src]="job()?.foto2" alt="foto2" class="rounded-lg border border-slate-200 hover:shadow" style="width:180px; height:120px; object-fit:cover;"></a> }
+            @if (job()?.foto3) { <a href="#" (click)="$event.preventDefault(); openLightbox(job()?.foto3!)"><img [src]="job()?.foto3" alt="foto3" class="rounded-lg border border-slate-200 hover:shadow" style="width:180px; height:120px; object-fit:cover;"></a> }
+            @if (job()?.foto4) { <a href="#" (click)="$event.preventDefault(); openLightbox(job()?.foto4!)"><img [src]="job()?.foto4" alt="foto4" class="rounded-lg border border-slate-200 hover:shadow" style="width:180px; height:120px; object-fit:cover;"></a> }
+            @if (job()?.foto5) { <a href="#" (click)="$event.preventDefault(); openLightbox(job()?.foto5!)"><img [src]="job()?.foto5" alt="foto5" class="rounded-lg border border-slate-200 hover:shadow" style="width:180px; height:120px; object-fit:cover;"></a> }
+            @if (job()?.foto6) { <a href="#" (click)="$event.preventDefault(); openLightbox(job()?.foto6!)"><img [src]="job()?.foto6" alt="foto6" class="rounded-lg border border-slate-200 hover:shadow" style="width:180px; height:120px; object-fit:cover;"></a> }
           </div>
         </div>
         }
@@ -106,3 +108,31 @@
 
   }
 </div>
+
+@if (lightboxOpen()) {
+  <div class="lightbox-overlay" (wheel)="onWheelLightbox($event)" (click)="closeLightbox()">
+    <div class="lightbox-toolbar" (click)="$event.stopPropagation()">
+      <button type="button" class="btn btn-light" (click)="zoomOut()" [disabled]="zoom()<=1"><i class="bi bi-zoom-out"></i></button>
+      <button type="button" class="btn btn-light" (click)="zoomIn()"><i class="bi bi-zoom-in"></i></button>
+      <button type="button" class="btn btn-light" (click)="resetZoom()"><i class="bi bi-aspect-ratio"></i></button>
+      <button type="button" class="btn btn-light" (click)="closeLightbox()"><i class="bi bi-x"></i></button>
+    </div>
+    <div class="lightbox-stage" (click)="$event.stopPropagation()">
+      <img
+        [src]="lightboxSrc() || ''"
+        alt="evidencia"
+        class="lightbox-image"
+        [style.transform]="'translate(' + posX() + 'px,' + posY() + 'px) scale(' + zoom() + ')'"
+        [style.cursor]="zoom()>1 ? 'grab' : 'zoom-in'"
+        (mousedown)="onLightboxMouseDown($event)"
+        (mousemove)="onLightboxMouseMove($event)"
+        (mouseup)="onLightboxMouseUp()"
+        (mouseleave)="onLightboxMouseLeave()"
+        (dblclick)="onLightboxDblClick()"
+        (touchstart)="onLightboxTouchStart($event)"
+        (touchmove)="onLightboxTouchMove($event)"
+        (touchend)="onLightboxTouchEnd($event)"
+      />
+    </div>
+  </div>
+}

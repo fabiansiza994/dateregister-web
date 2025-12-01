@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -71,6 +71,8 @@ interface TrabajoDetail {
   foto2?: string | null;
   foto3?: string | null;
   foto4?: string | null;
+  foto5?: string | null;
+  foto6?: string | null;
   estado?: EstadoValue | string;
 }
 
@@ -103,6 +105,18 @@ export class JobDetailComponent implements OnInit {
 
   // ===== Derived
   id = signal<number | null>(null);
+
+  // ===== Lightbox state =====
+  lightboxOpen = signal(false);
+  lightboxSrc = signal<string | null>(null);
+  zoom = signal(1);
+  posX = signal(0);
+  posY = signal(0);
+  private panning = false;
+  private lastX = 0;
+  private lastY = 0;
+  private pinchStartDist = 0;
+  private pinchStartZoom = 1;
 
   private apiBase = '';
 
@@ -325,4 +339,116 @@ export class JobDetailComponent implements OnInit {
 
   backToList() { this.router.navigate(['/trabajos']); }
   goToEdit() { const id = this.id(); if (id) this.router.navigate(['/trabajos', id, 'editar']); }
+
+  // ========= Lightbox methods =========
+  openLightbox(src: string) {
+    if (!src) return;
+    this.lightboxSrc.set(src);
+    this.lightboxOpen.set(true);
+    this.zoom.set(1);
+    this.posX.set(0);
+    this.posY.set(0);
+    // prevent background scroll (best-effort)
+    try { document.body.style.overflow = 'hidden'; } catch {}
+  }
+
+  closeLightbox() {
+    this.lightboxOpen.set(false);
+    this.lightboxSrc.set(null);
+    this.zoom.set(1);
+    this.posX.set(0);
+    this.posY.set(0);
+    try { document.body.style.overflow = ''; } catch {}
+  }
+
+  zoomIn() { this.setZoom(this.zoom() + 0.2); }
+  zoomOut() { this.setZoom(this.zoom() - 0.2); }
+  resetZoom() { this.zoom.set(1); this.posX.set(0); this.posY.set(0); }
+
+  private setZoom(next: number) {
+    const clamped = Math.max(1, Math.min(next, 5));
+    // If decreasing to 1, also reset pan
+    const prev = this.zoom();
+    this.zoom.set(clamped);
+    if (clamped === 1 && prev !== 1) { this.posX.set(0); this.posY.set(0); }
+  }
+
+  onWheelLightbox(ev: WheelEvent) {
+    if (!this.lightboxOpen()) return;
+    ev.preventDefault();
+    const delta = ev.deltaY > 0 ? -0.15 : 0.15;
+    this.setZoom(this.zoom() + delta);
+  }
+
+  onLightboxMouseDown(ev: MouseEvent) {
+    if (this.zoom() <= 1) return;
+    this.panning = true;
+    this.lastX = ev.clientX;
+    this.lastY = ev.clientY;
+    ev.preventDefault();
+  }
+
+  onLightboxMouseMove(ev: MouseEvent) {
+    if (!this.panning) return;
+    const dx = ev.clientX - this.lastX;
+    const dy = ev.clientY - this.lastY;
+    this.lastX = ev.clientX;
+    this.lastY = ev.clientY;
+    this.posX.set(this.posX() + dx);
+    this.posY.set(this.posY() + dy);
+  }
+
+  onLightboxMouseUp() { this.panning = false; }
+  onLightboxMouseLeave() { this.panning = false; }
+
+  onLightboxDblClick() {
+    // toggle between 1 and 2.5x
+    if (this.zoom() > 1) this.resetZoom(); else this.setZoom(2.5);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEsc() { if (this.lightboxOpen()) this.closeLightbox(); }
+
+  // Touch support
+  onLightboxTouchStart(ev: TouchEvent) {
+    if (!this.lightboxOpen()) return;
+    if (ev.touches.length === 2) {
+      ev.preventDefault();
+      const [t1, t2] = [ev.touches[0], ev.touches[1]];
+      this.pinchStartDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      this.pinchStartZoom = this.zoom();
+    } else if (ev.touches.length === 1 && this.zoom() > 1) {
+      this.panning = true;
+      this.lastX = ev.touches[0].clientX;
+      this.lastY = ev.touches[0].clientY;
+    }
+  }
+
+  onLightboxTouchMove(ev: TouchEvent) {
+    if (!this.lightboxOpen()) return;
+    if (ev.touches.length === 2 && this.pinchStartDist > 0) {
+      ev.preventDefault();
+      const [t1, t2] = [ev.touches[0], ev.touches[1]];
+      const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      const ratio = dist / this.pinchStartDist;
+      this.setZoom(this.pinchStartZoom * ratio);
+    } else if (ev.touches.length === 1 && this.panning) {
+      const dx = ev.touches[0].clientX - this.lastX;
+      const dy = ev.touches[0].clientY - this.lastY;
+      this.lastX = ev.touches[0].clientX;
+      this.lastY = ev.touches[0].clientY;
+      this.posX.set(this.posX() + dx);
+      this.posY.set(this.posY() + dy);
+    }
+  }
+
+  onLightboxTouchEnd(_ev: TouchEvent) {
+    if (!this.lightboxOpen()) return;
+    if (_ev.touches.length < 2) {
+      this.pinchStartDist = 0;
+    }
+    if (_ev.touches.length === 0) {
+      this.panning = false;
+    }
+  }
 }

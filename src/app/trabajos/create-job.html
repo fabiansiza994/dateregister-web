@@ -106,128 +106,39 @@
           <div class="text-xs text-slate-500 mt-1">Usa negrita, listas, enlaces, etc. (se guardará como HTML).</div>
         </div>
 
-        <div class="md:col-span-12">
-          @if (isEdit() && (existingPhotos.foto1 || existingPhotos.foto2 || existingPhotos.foto3 || existingPhotos.foto4)) {
-            <div class="text-xs text-slate-500 mb-2">Evidencias actuales</div>
-            <div class="flex flex-wrap gap-3 mb-3">
-              @if (existingPhotos.foto1) {
-                <div class="rounded-lg border border-slate-200 overflow-hidden relative group">
-                  <img [src]="existingPhotos.foto1" alt="foto1"
-                       class="block"
-                       style="width:180px; height:120px; object-fit:cover; cursor: pointer;"
-                       (click)="armReplace('foto1')"
-                       [style.opacity]="replaceTarget() === 'foto1' ? 0.4 : 1">
-                  @if (replaceTarget() === 'foto1') {
-                    <div class="absolute inset-0 flex items-center justify-center">
-                      <button type="button" class="btn btn-primary btn-xs" (click)="openReplace('foto1')">Reemplazar</button>
-                    </div>
-                  }
-                  <div class="p-2 flex items-center gap-2 text-xs bg-white border-t border-slate-200">
-                    <button type="button" class="btn btn-outline-danger btn-xs" (click)="openConfirm('foto1')">
-                      <i class="bi bi-trash"></i> 
-                    </button>
-                  </div>
-                  <input id="replace-foto1" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto1')">
-                </div>
-              }
-              @if (existingPhotos.foto2) {
-                <div class="rounded-lg border border-slate-200 overflow-hidden relative group">
-                  <img [src]="existingPhotos.foto2" alt="foto2"
-                       class="block"
-                       style="width:180px; height:120px; object-fit:cover; cursor: pointer;"
-                       (click)="armReplace('foto2')"
-                       [style.opacity]="replaceTarget() === 'foto2' ? 0.4 : 1">
-                  @if (replaceTarget() === 'foto2') {
-                    <div class="absolute inset-0 flex items-center justify-center">
-                      <button type="button" class="btn btn-primary btn-xs" (click)="openReplace('foto2')">Reemplazar</button>
-                    </div>
-                  }
-                  <div class="p-2 flex items-center gap-2 text-xs bg-white border-t border-slate-200">
-                    <button type="button" class="btn btn-outline-danger btn-xs" (click)="openConfirm('foto2')">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </div>
-                  <input id="replace-foto2" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto2')">
-                </div>
-              }
-              @if (existingPhotos.foto3) {
-                <div class="rounded-lg border border-slate-200 overflow-hidden relative group">
-                  <img [src]="existingPhotos.foto3" alt="foto3"
-                       class="block"
-                       style="width:180px; height:120px; object-fit:cover; cursor: pointer;"
-                       (click)="armReplace('foto3')"
-                       [style.opacity]="replaceTarget() === 'foto3' ? 0.4 : 1">
-                  @if (replaceTarget() === 'foto3') {
-                    <div class="absolute inset-0 flex items-center justify-center">
-                      <button type="button" class="btn btn-primary btn-xs" (click)="openReplace('foto3')">Reemplazar</button>
-                    </div>
-                  }
-                  <div class="p-2 flex items-center gap-2 text-xs bg-white border-t border-slate-200">
-                    <button type="button" class="btn btn-outline-danger btn-xs" (click)="openConfirm('foto3')">
-                      <i class="bi bi-trash"></i> 
-                    </button>
-                  </div>
-                  <input id="replace-foto3" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto3')">
-                </div>
-              }
-              @if (existingPhotos.foto4) {
-                <div class="rounded-lg border border-slate-200 overflow-hidden relative group">
-                  <img [src]="existingPhotos.foto4" alt="foto4"
-                       class="block"
-                       style="width:180px; height:120px; object-fit:cover; cursor: pointer;"
-                       (click)="armReplace('foto4')"
-                       [style.opacity]="replaceTarget() === 'foto4' ? 0.4 : 1">
-                  @if (replaceTarget() === 'foto4') {
-                    <div class="absolute inset-0 flex items-center justify-center">
-                      <button type="button" class="btn btn-primary btn-xs" (click)="openReplace('foto4')">Reemplazar</button>
-                    </div>
-                  }
-                  <div class="p-2 flex items-center gap-2 text-xs bg-white border-t border-slate-200">
-                    <button type="button" class="btn btn-outline-danger btn-xs" (click)="openConfirm('foto4')">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </div>
-                  <input id="replace-foto4" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto4')">
-                </div>
-              }
-            </div>
-          }
-        </div>
+        <div class="md:col-span-12"></div>
 
         <!-- Fotos: UI moderna tipo dropzone / tarjeta -->
         <div class="md:col-span-12">
           <label class="text-sm font-medium text-slate-700">
-            Evidencias (hasta 4 fotos)
+            Evidencias (hasta 6 fotos)
             <span class="text-slate-500 font-normal text-xs ml-2" *ngIf="isEdit()">disponibles: {{ getFreeSlotsCount() }}</span>
           </label>
-          @if (!isEdit() || getFreeSlotsCount() > 0) {
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-2">
-            <!-- Foto 1 -->
-            @if (isSlotFree('foto1')) {
+            <!-- Slot 1 -->
+            @if (hasSlotContent('foto1')) {
             <div class="relative rounded-xl border border-slate-200/70 bg-slate-50/40 p-3 flex flex-col items-center justify-center text-center hover:border-primary/60 transition-colors"
                  (drop)="onDrop($event, 'foto1')" (dragover)="onDragOver($event, 'foto1')" (dragleave)="onDragLeave($event, 'foto1')"
                  [ngClass]="{'border-primary': dragging['foto1'], 'bg-primary/5': dragging['foto1']}">
               <input id="file-foto1" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto1')">
-    <label for="file-foto1" class="cursor-pointer w-full"
-      [attr.draggable]="previews.foto1 ? true : null"
-      (dragstart)="startReorder($event, 'foto1')" (dragend)="endReorder()">
-                @if (!previews.foto1) {
-                  <div class="py-6 flex flex-col items-center gap-2 text-slate-500">
-                    <i class="bi bi-image text-3xl"></i>
-                    <div class="text-sm"><span class="text-primary">Subir imagen</span> o arrastrar aquí</div>
-                    <div class="text-xs">JPG, PNG o HEIC • máx 10MB</div>
-                  </div>
-                } @else {
-                  <div class="w-full">
-                    <img [src]="previews.foto1" alt="foto1" class="w-full h-36 object-cover rounded-lg border border-slate-200">
-                  </div>
-                }
+              <label for="file-foto1" class="cursor-pointer w-full"
+                [attr.draggable]="previews.foto1 ? true : null"
+                (dragstart)="startReorder($event, 'foto1')" (dragend)="endReorder()">
+                @if (previews.foto1) { <div class="w-full"><img [src]="previews.foto1" alt="foto1" class="w-full h-36 object-cover rounded-lg border border-slate-200"></div> }
+                @if (!previews.foto1 && existingPhotos.foto1 && !markedForDelete.has('foto1')) { <div class="w-full"><img [src]="existingPhotos.foto1" alt="foto1" class="w-full h-36 object-cover rounded-lg border border-slate-200"></div> }
               </label>
               @if (previews.foto1) {
                 <div class="mt-2 flex gap-2">
-                  <a class="btn btn-light btn-sm" [href]="previews.foto1" target="_blank" rel="noopener"><i class="bi bi-eye"></i> Ver</a>
+                  <button type="button" class="btn btn-light btn-sm" (click)="openLightbox(previews.foto1!)"><i class="bi bi-eye"></i> Ver</button>
                   <button type="button" class="btn btn-outline-danger btn-sm" (click)="clearPhoto('foto1')"><i class="bi bi-trash"></i></button>
                 </div>
+              }
+              @if (!previews.foto1 && existingPhotos.foto1 && !markedForDelete.has('foto1')) {
+                <div class="mt-2 flex gap-2">
+                  <button type="button" class="btn btn-outline-primary btn-sm" (click)="armReplace('foto1')"><i class="bi bi-arrow-repeat"></i> Reemplazar</button>
+                  <button type="button" class="btn btn-outline-danger btn-sm" (click)="openConfirm('foto1')"><i class="bi bi-trash"></i></button>
+                </div>
+                <input id="replace-foto1" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto1')">
               }
               @if (readingProgress['foto1']) {
                 <div class="w-full mt-2">
@@ -239,32 +150,30 @@
             </div>
             }
 
-            <!-- Foto 2 -->
-            @if (isSlotFree('foto2')) {
+            <!-- Slot 2 -->
+            @if (hasSlotContent('foto2')) {
             <div class="relative rounded-xl border border-slate-200/70 bg-slate-50/40 p-3 flex flex-col items-center justify-center text-center hover:border-primary/60 transition-colors"
                  (drop)="onDrop($event, 'foto2')" (dragover)="onDragOver($event, 'foto2')" (dragleave)="onDragLeave($event, 'foto2')"
                  [ngClass]="{'border-primary': dragging['foto2'], 'bg-primary/5': dragging['foto2']}">
               <input id="file-foto2" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto2')">
-    <label for="file-foto2" class="cursor-pointer w-full"
-      [attr.draggable]="previews.foto2 ? true : null"
-      (dragstart)="startReorder($event, 'foto2')" (dragend)="endReorder()">
-                @if (!previews.foto2) {
-                  <div class="py-6 flex flex-col items-center gap-2 text-slate-500">
-                    <i class="bi bi-image text-3xl"></i>
-                    <div class="text-sm"><span class="text-primary">Subir imagen</span> o arrastrar aquí</div>
-                    <div class="text-xs">JPG, PNG o HEIC • máx 10MB</div>
-                  </div>
-                } @else {
-                  <div class="w-full">
-                    <img [src]="previews.foto2" alt="foto2" class="w-full h-36 object-cover rounded-lg border border-slate-200">
-                  </div>
-                }
+              <label for="file-foto2" class="cursor-pointer w-full"
+                [attr.draggable]="previews.foto2 ? true : null"
+                (dragstart)="startReorder($event, 'foto2')" (dragend)="endReorder()">
+                @if (previews.foto2) { <div class="w-full"><img [src]="previews.foto2" alt="foto2" class="w-full h-36 object-cover rounded-lg border border-slate-200"></div> }
+                @if (!previews.foto2 && existingPhotos.foto2 && !markedForDelete.has('foto2')) { <div class="w-full"><img [src]="existingPhotos.foto2" alt="foto2" class="w-full h-36 object-cover rounded-lg border border-slate-200"></div> }
               </label>
               @if (previews.foto2) {
                 <div class="mt-2 flex gap-2">
-                  <a class="btn btn-light btn-sm" [href]="previews.foto2" target="_blank" rel="noopener"><i class="bi bi-eye"></i> Ver</a>
+                  <button type="button" class="btn btn-light btn-sm" (click)="openLightbox(previews.foto2!)"><i class="bi bi-eye"></i> Ver</button>
                   <button type="button" class="btn btn-outline-danger btn-sm" (click)="clearPhoto('foto2')"><i class="bi bi-trash"></i></button>
                 </div>
+              }
+              @if (!previews.foto2 && existingPhotos.foto2 && !markedForDelete.has('foto2')) {
+                <div class="mt-2 flex gap-2">
+                  <button type="button" class="btn btn-outline-primary btn-sm" (click)="armReplace('foto2')"><i class="bi bi-arrow-repeat"></i> Reemplazar</button>
+                  <button type="button" class="btn btn-outline-danger btn-sm" (click)="openConfirm('foto2')"><i class="bi bi-trash"></i></button>
+                </div>
+                <input id="replace-foto2" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto2')">
               }
               @if (readingProgress['foto2']) {
                 <div class="w-full mt-2">
@@ -276,32 +185,30 @@
             </div>
             }
 
-            <!-- Foto 3 -->
-            @if (isSlotFree('foto3')) {
+            <!-- Slot 3 -->
+            @if (hasSlotContent('foto3')) {
             <div class="relative rounded-xl border border-slate-200/70 bg-slate-50/40 p-3 flex flex-col items-center justify-center text-center hover:border-primary/60 transition-colors"
                  (drop)="onDrop($event, 'foto3')" (dragover)="onDragOver($event, 'foto3')" (dragleave)="onDragLeave($event, 'foto3')"
                  [ngClass]="{'border-primary': dragging['foto3'], 'bg-primary/5': dragging['foto3']}">
               <input id="file-foto3" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto3')">
-    <label for="file-foto3" class="cursor-pointer w-full"
-      [attr.draggable]="previews.foto3 ? true : null"
-      (dragstart)="startReorder($event, 'foto3')" (dragend)="endReorder()">
-                @if (!previews.foto3) {
-                  <div class="py-6 flex flex-col items-center gap-2 text-slate-500">
-                    <i class="bi bi-image text-3xl"></i>
-                    <div class="text-sm"><span class="text-primary">Subir imagen</span> o arrastrar aquí</div>
-                    <div class="text-xs">JPG, PNG o HEIC • máx 10MB</div>
-                  </div>
-                } @else {
-                  <div class="w-full">
-                    <img [src]="previews.foto3" alt="foto3" class="w-full h-36 object-cover rounded-lg border border-slate-200">
-                  </div>
-                }
+              <label for="file-foto3" class="cursor-pointer w-full"
+                [attr.draggable]="previews.foto3 ? true : null"
+                (dragstart)="startReorder($event, 'foto3')" (dragend)="endReorder()">
+                @if (previews.foto3) { <div class="w-full"><img [src]="previews.foto3" alt="foto3" class="w-full h-36 object-cover rounded-lg border border-slate-200"></div> }
+                @if (!previews.foto3 && existingPhotos.foto3 && !markedForDelete.has('foto3')) { <div class="w-full"><img [src]="existingPhotos.foto3" alt="foto3" class="w-full h-36 object-cover rounded-lg border border-slate-200"></div> }
               </label>
               @if (previews.foto3) {
                 <div class="mt-2 flex gap-2">
-                  <a class="btn btn-light btn-sm" [href]="previews.foto3" target="_blank" rel="noopener"><i class="bi bi-eye"></i> Ver</a>
+                  <button type="button" class="btn btn-light btn-sm" (click)="openLightbox(previews.foto3!)"><i class="bi bi-eye"></i> Ver</button>
                   <button type="button" class="btn btn-outline-danger btn-sm" (click)="clearPhoto('foto3')"><i class="bi bi-trash"></i></button>
                 </div>
+              }
+              @if (!previews.foto3 && existingPhotos.foto3 && !markedForDelete.has('foto3')) {
+                <div class="mt-2 flex gap-2">
+                  <button type="button" class="btn btn-outline-primary btn-sm" (click)="armReplace('foto3')"><i class="bi bi-arrow-repeat"></i> Reemplazar</button>
+                  <button type="button" class="btn btn-outline-danger btn-sm" (click)="openConfirm('foto3')"><i class="bi bi-trash"></i></button>
+                </div>
+                <input id="replace-foto3" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto3')">
               }
               @if (readingProgress['foto3']) {
                 <div class="w-full mt-2">
@@ -313,32 +220,30 @@
             </div>
             }
 
-            <!-- Foto 4 -->
-            @if (isSlotFree('foto4')) {
+            <!-- Slot 4 -->
+            @if (hasSlotContent('foto4')) {
             <div class="relative rounded-xl border border-slate-200/70 bg-slate-50/40 p-3 flex flex-col items-center justify-center text-center hover:border-primary/60 transition-colors"
                  (drop)="onDrop($event, 'foto4')" (dragover)="onDragOver($event, 'foto4')" (dragleave)="onDragLeave($event, 'foto4')"
                  [ngClass]="{'border-primary': dragging['foto4'], 'bg-primary/5': dragging['foto4']}">
               <input id="file-foto4" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto4')">
-    <label for="file-foto4" class="cursor-pointer w-full"
-      [attr.draggable]="previews.foto4 ? true : null"
-      (dragstart)="startReorder($event, 'foto4')" (dragend)="endReorder()">
-                @if (!previews.foto4) {
-                  <div class="py-6 flex flex-col items-center gap-2 text-slate-500">
-                    <i class="bi bi-image text-3xl"></i>
-                    <div class="text-sm"><span class="text-primary">Subir imagen</span> o arrastrar aquí</div>
-                    <div class="text-xs">JPG, PNG o HEIC • máx 10MB</div>
-                  </div>
-                } @else {
-                  <div class="w-full">
-                    <img [src]="previews.foto4" alt="foto4" class="w-full h-36 object-cover rounded-lg border border-slate-200">
-                  </div>
-                }
+              <label for="file-foto4" class="cursor-pointer w-full"
+                [attr.draggable]="previews.foto4 ? true : null"
+                (dragstart)="startReorder($event, 'foto4')" (dragend)="endReorder()">
+                @if (previews.foto4) { <div class="w-full"><img [src]="previews.foto4" alt="foto4" class="w-full h-36 object-cover rounded-lg border border-slate-200"></div> }
+                @if (!previews.foto4 && existingPhotos.foto4 && !markedForDelete.has('foto4')) { <div class="w-full"><img [src]="existingPhotos.foto4" alt="foto4" class="w-full h-36 object-cover rounded-lg border border-slate-200"></div> }
               </label>
               @if (previews.foto4) {
                 <div class="mt-2 flex gap-2">
-                  <a class="btn btn-light btn-sm" [href]="previews.foto4" target="_blank" rel="noopener"><i class="bi bi-eye"></i> Ver</a>
+                  <button type="button" class="btn btn-light btn-sm" (click)="openLightbox(previews.foto4!)"><i class="bi bi-eye"></i> Ver</button>
                   <button type="button" class="btn btn-outline-danger btn-sm" (click)="clearPhoto('foto4')"><i class="bi bi-trash"></i></button>
                 </div>
+              }
+              @if (!previews.foto4 && existingPhotos.foto4 && !markedForDelete.has('foto4')) {
+                <div class="mt-2 flex gap-2">
+                  <button type="button" class="btn btn-outline-primary btn-sm" (click)="armReplace('foto4')"><i class="bi bi-arrow-repeat"></i> Reemplazar</button>
+                  <button type="button" class="btn btn-outline-danger btn-sm" (click)="openConfirm('foto4')"><i class="bi bi-trash"></i></button>
+                </div>
+                <input id="replace-foto4" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto4')">
               }
               @if (readingProgress['foto4']) {
                 <div class="w-full mt-2">
@@ -349,16 +254,97 @@
               }
             </div>
             }
-          </div>
-          <div class="text-xs text-slate-500 mt-2">
-            Consejo: fotos horizontales se ven mejor. Acepta hasta 4 archivos.
-            @if (isEdit()) {
-              <span class="ml-1">Puedes añadir {{ getFreeSlotsCount() }} más.</span>
+
+            <!-- Slot 5 -->
+            @if (hasSlotContent('foto5')) {
+            <div class="relative rounded-xl border border-slate-200/70 bg-slate-50/40 p-3 flex flex-col items-center justify-center text-center hover:border-primary/60 transition-colors"
+                 (drop)="onDrop($event, 'foto5')" (dragover)="onDragOver($event, 'foto5')" (dragleave)="onDragLeave($event, 'foto5')"
+                 [ngClass]="{'border-primary': dragging['foto5'], 'bg-primary/5': dragging['foto5']}">
+              <input id="file-foto5" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto5')">
+              <label for="file-foto5" class="cursor-pointer w-full"
+                [attr.draggable]="previews.foto5 ? true : null"
+                (dragstart)="startReorder($event, 'foto5')" (dragend)="endReorder()">
+                @if (previews.foto5) { <div class="w-full"><img [src]="previews.foto5" alt="foto5" class="w-full h-36 object-cover rounded-lg border border-slate-200"></div> }
+                @if (!previews.foto5 && existingPhotos.foto5 && !markedForDelete.has('foto5')) { <div class="w-full"><img [src]="existingPhotos.foto5" alt="foto5" class="w-full h-36 object-cover rounded-lg border border-slate-200"></div> }
+              </label>
+              @if (previews.foto5) {
+                <div class="mt-2 flex gap-2">
+                  <button type="button" class="btn btn-light btn-sm" (click)="openLightbox(previews.foto5!)"><i class="bi bi-eye"></i> Ver</button>
+                  <button type="button" class="btn btn-outline-danger btn-sm" (click)="clearPhoto('foto5')"><i class="bi bi-trash"></i></button>
+                </div>
+              }
+              @if (!previews.foto5 && existingPhotos.foto5 && !markedForDelete.has('foto5')) {
+                <div class="mt-2 flex gap-2">
+                  <button type="button" class="btn btn-outline-primary btn-sm" (click)="armReplace('foto5')"><i class="bi bi-arrow-repeat"></i> Reemplazar</button>
+                  <button type="button" class="btn btn-outline-danger btn-sm" (click)="openConfirm('foto5')"><i class="bi bi-trash"></i></button>
+                </div>
+                <input id="replace-foto5" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto5')">
+              }
+              @if (readingProgress['foto5']) {
+                <div class="w-full mt-2">
+                  <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                    <div class="h-1.5 bg-primary transition-[width] duration-200" [style.width.%]="readingProgress['foto5'] || 0"></div>
+                  </div>
+                </div>
+              }
+            </div>
+            }
+
+            <!-- Slot 6 -->
+            @if (hasSlotContent('foto6')) {
+            <div class="relative rounded-xl border border-slate-200/70 bg-slate-50/40 p-3 flex flex-col items-center justify-center text-center hover:border-primary/60 transition-colors"
+                 (drop)="onDrop($event, 'foto6')" (dragover)="onDragOver($event, 'foto6')" (dragleave)="onDragLeave($event, 'foto6')"
+                 [ngClass]="{'border-primary': dragging['foto6'], 'bg-primary/5': dragging['foto6']}">
+              <input id="file-foto6" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto6')">
+              <label for="file-foto6" class="cursor-pointer w-full"
+                [attr.draggable]="previews.foto6 ? true : null"
+                (dragstart)="startReorder($event, 'foto6')" (dragend)="endReorder()">
+                @if (previews.foto6) { <div class="w-full"><img [src]="previews.foto6" alt="foto6" class="w-full h-36 object-cover rounded-lg border border-slate-200"></div> }
+                @if (!previews.foto6 && existingPhotos.foto6 && !markedForDelete.has('foto6')) { <div class="w-full"><img [src]="existingPhotos.foto6" alt="foto6" class="w-full h-36 object-cover rounded-lg border border-slate-200"></div> }
+              </label>
+              @if (previews.foto6) {
+                <div class="mt-2 flex gap-2">
+                  <button type="button" class="btn btn-light btn-sm" (click)="openLightbox(previews.foto6!)"><i class="bi bi-eye"></i> Ver</button>
+                  <button type="button" class="btn btn-outline-danger btn-sm" (click)="clearPhoto('foto6')"><i class="bi bi-trash"></i></button>
+                </div>
+              }
+              @if (!previews.foto6 && existingPhotos.foto6 && !markedForDelete.has('foto6')) {
+                <div class="mt-2 flex gap-2">
+                  <button type="button" class="btn btn-outline-primary btn-sm" (click)="armReplace('foto6')"><i class="bi bi-arrow-repeat"></i> Reemplazar</button>
+                  <button type="button" class="btn btn-outline-danger btn-sm" (click)="openConfirm('foto6')"><i class="bi bi-trash"></i></button>
+                </div>
+                <input id="replace-foto6" type="file" class="sr-only" accept="image/*" (change)="onFileChange($event, 'foto6')">
+              }
+              @if (readingProgress['foto6']) {
+                <div class="w-full mt-2">
+                  <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                    <div class="h-1.5 bg-primary transition-[width] duration-200" [style.width.%]="readingProgress['foto6'] || 0"></div>
+                  </div>
+                </div>
+              }
+            </div>
+            }
+            <!-- Tile "+" para añadir más (solo si hay espacios libres) -->
+            @if (getFreeSlotsCount() > 0) {
+            <div class="relative rounded-xl border-2 border-dashed border-slate-300/80 bg-slate-50/50 p-3 flex flex-col items-center justify-center text-center hover:border-primary/60 hover:bg-primary/5 transition-colors"
+                 (drop)="!isProcessingAny() && onAddDrop($event)" (dragover)="$event.preventDefault()">
+              <input id="file-add" type="file" class="sr-only" accept="image/*" multiple (change)="onAddInputChange($event)" [disabled]="isProcessingAny()">
+              <label for="file-add" class="w-full py-8 flex flex-col items-center gap-2"
+                     [ngClass]="{'cursor-not-allowed opacity-60': isProcessingAny(), 'cursor-pointer': !isProcessingAny()}"
+                     [attr.aria-disabled]="isProcessingAny()">
+                <i class="bi bi-plus-circle text-3xl text-slate-500" [class.text-primary]="!isProcessingAny()"></i>
+                <div class="text-sm text-slate-600" *ngIf="!isProcessingAny()"><span class="text-primary">Añadir fotos</span> o arrastrar aquí</div>
+                <div class="text-sm text-slate-600" *ngIf="isProcessingAny()">Procesando imagen… espera para añadir la siguiente</div>
+                <div class="text-xs text-slate-500">Espacios disponibles: {{ getFreeSlotsCount() }}</div>
+              </label>
+            </div>
             }
           </div>
-          } @else {
-            <div class="mt-2 text-xs text-slate-500">Ya alcanzaste el máximo (4). Elimina o reemplaza alguna evidencia para habilitar más espacios.</div>
-          }
+          <div class="text-xs text-slate-500 mt-2">
+            Consejo: fotos horizontales se ven mejor. Acepta hasta 6 archivos.
+            @if (isEdit()) { <span class="ml-1">Disponibles: {{ getFreeSlotsCount() }}</span> }
+            @if (!isEdit() && getFreeSlotsCount() === 0) { <span class="ml-1">Ya alcanzaste el máximo (6).</span> }
+          </div>
         </div>
 
         @if (progress() > 0) {
@@ -405,6 +391,33 @@
         <button type="button" (click)="closeCancelConfirm()" [disabled]="loading()" class="btn btn-light">Seguir editando</button>
         <button type="button" (click)="proceedCancel()" [disabled]="loading()" class="btn btn-outline-danger">Descartar</button>
       </div>
+    </div>
+  </div>
+}
+
+<!-- Lightbox para previews en creación -->
+@if (lightboxOpen()) {
+  <div class="lightbox-overlay" (wheel)="onWheelLightbox($event)" (click)="closeLightbox()">
+    <div class="lightbox-toolbar" (click)="$event.stopPropagation()">
+      <button type="button" class="btn btn-light" (click)="zoomOut()" [disabled]="zoom()<=1"><i class="bi bi-zoom-out"></i></button>
+      <button type="button" class="btn btn-light" (click)="zoomIn()"><i class="bi bi-zoom-in"></i></button>
+      <button type="button" class="btn btn-light" (click)="resetZoom()"><i class="bi bi-aspect-ratio"></i></button>
+      <button type="button" class="btn btn-light" (click)="closeLightbox()"><i class="bi bi-x"></i></button>
+    </div>
+    <div class="lightbox-stage" (click)="$event.stopPropagation()">
+      <img [src]="lightboxSrc() || ''" alt="preview"
+           class="lightbox-image"
+           [style.transform]="'translate(' + posX() + 'px,' + posY() + 'px) scale(' + zoom() + ')'"
+           [style.cursor]="zoom()>1 ? 'grab' : 'zoom-in'"
+           (mousedown)="onLightboxMouseDown($event)"
+           (mousemove)="onLightboxMouseMove($event)"
+           (mouseup)="onLightboxMouseUp()"
+           (mouseleave)="onLightboxMouseLeave()"
+           (dblclick)="onLightboxDblClick()"
+           (touchstart)="onLightboxTouchStart($event)"
+           (touchmove)="onLightboxTouchMove($event)"
+           (touchend)="onLightboxTouchEnd($event)"
+      />
     </div>
   </div>
 }

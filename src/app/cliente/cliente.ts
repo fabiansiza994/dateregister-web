@@ -6,6 +6,7 @@ import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom, TimeoutError } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 import { ConfigService } from '../core/config.service';
+import { TourService } from '../core/tour.service';
 import { HapticsService } from '../core/haptics.service';
 import { SwipeToDeleteDirective } from '../trabajos/swipe-to-delete.directive';
 
@@ -122,7 +123,8 @@ export class ClientesComponent implements OnInit, AfterViewInit, OnDestroy {
     private http: HttpClient,
     private cfg: ConfigService,
     private router: Router,
-    private haptics: HapticsService
+    private haptics: HapticsService,
+    private tour: TourService
   ) { }
 
   ngOnInit(): void {
@@ -134,7 +136,11 @@ export class ClientesComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     // calcular visibilidad inicial del botón crear
-    setTimeout(() => this.updateCreateFab(), 0);
+    setTimeout(() => {
+      this.updateCreateFab();
+  // Coach desactivado globalmente; dejar llamada normal (no force) o eliminar
+  // this.tour.startMobileSwipeCoach();
+    }, 0);
   }
 
   @HostListener('window:scroll')

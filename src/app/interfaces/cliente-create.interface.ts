@@ -5,6 +5,7 @@ export interface ClientCreateRequest {
     direccion?: string;
     telefono?: string;
     identificacion?: string;
+    razonSocial?: string; // nuevo campo opcional
     empresa: { id: number };
     usuario: { id: number };
     pacientes: any[]; // ajusta si luego defines un tipo
@@ -20,6 +21,7 @@ export interface ClientCreateOk {
         direccion?: string;
         telefono?: string;
         identificacion?: string;
+        razonSocial?: string;
         estado: 'ACTIVO' | 'INACTIVO';
         pacientes: any[];
     };

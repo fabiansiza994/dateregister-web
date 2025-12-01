@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -9,6 +9,7 @@ import { ConfigService } from '../core/config.service';
 import { AuthService } from '../core/auth.service';
 import { SwipeToDeleteDirective } from './swipe-to-delete.directive';
 import { HapticsService } from '../core/haptics.service';
+import { TourService } from '../core/tour.service';
 
 interface FormaPago { id: number; formaPago: string; estado: number; }
 interface ClienteMin { id: number; nombre: string; apellido?: string | null; }
@@ -42,7 +43,7 @@ interface JobSearchOk {
   templateUrl: './trabajos.html',
   styleUrls: ['./trabajos.css']
 })
-export class JobsComponent implements OnInit, OnDestroy {
+export class JobsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private readonly _claims = signal<any | null>(null);
   sector = computed(() => (this._claims()?.sector ?? '').toUpperCase());
@@ -121,7 +122,8 @@ export class JobsComponent implements OnInit, OnDestroy {
     private cfg: ConfigService,
     private router: Router,
     private auth: AuthService,
-    private haptics: HapticsService
+    private haptics: HapticsService,
+    private tour: TourService
   ) { this._claims.set(this.auth.claims()); }
 
   ngOnInit(): void {
@@ -144,6 +146,11 @@ export class JobsComponent implements OnInit, OnDestroy {
       }
     } catch { /* noop */ }
     this.loadPage();
+  }
+
+  ngAfterViewInit(): void {
+    // Lanzar tutorial de swipe en móvil
+    setTimeout(() => this.tour.startMobileSwipeCoach(), 0);
   }
 
   ngOnDestroy(): void {

@@ -9,3 +9,37 @@
   outline: none;
   box-shadow: 0 0 0 .25rem rgba(124,58,237,.15);
 }
+
+/* Lightbox */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overscroll-behavior: contain;
+}
+.lightbox-stage {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox-image {
+  max-width: 90vw;
+  max-height: 90vh;
+  user-select: none;
+  -webkit-user-drag: none;
+  transition: transform 120ms ease-out;
+}
+.lightbox-toolbar {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+}

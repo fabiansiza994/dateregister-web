@@ -42,6 +42,7 @@ export class ClienteNuevoComponent implements OnInit {
         direccion: '',
         telefono: '',
         identificacion: '',
+        razonSocial: '',
         empresa: { id: 0 },   // se setea en ngOnInit con claims
         usuario: { id: 0 },   // se setea en ngOnInit con claims
         pacientes: []
@@ -50,6 +51,10 @@ export class ClienteNuevoComponent implements OnInit {
     // Estado UI
     loading = signal(false);
     errorGlobal = signal<string | null>(null);
+    uploadPct = signal<number | null>(null); // progreso global de envío
+    // progreso individual por archivo (solo si se adjuntan)
+    rutPct = signal<number>(0);
+    camaraPct = signal<number>(0);
 
     // Errores por campo (mapeados desde backend)
     fieldErrors = signal<Record<string, string>>({});
@@ -110,9 +115,60 @@ export class ClienteNuevoComponent implements OnInit {
 
             const url = `${this.apiBase}/client/create`;
 
-            const res = await firstValueFrom(
-                this.http.post<ClientCreateOk>(url, this.model()).pipe(timeout(10000))
-            );
+            // Construir multipart/form-data: parte JSON 'cliente' y opcionalmente PDFs
+            const clientePayload = { ...this.model() };
+            const jsonStr = JSON.stringify(clientePayload);
+            const jsonBlob = new Blob([jsonStr], { type: 'application/json' });
+            const jsonSize = jsonBlob.size;
+            const rutSize = this._rutFile ? this._rutFile.size : 0;
+            const camaraSize = this._camaraFile ? this._camaraFile.size : 0;
+            const fd = new FormData();
+            fd.append('cliente', jsonBlob);
+            if (this._rutFile) fd.append('rut', this._rutFile, this._rutFile.name);
+            if (this._camaraFile) fd.append('camaraComercio', this._camaraFile, this._camaraFile.name);
+
+                        this.uploadPct.set(0);
+                        this.rutPct.set(0);
+                        this.camaraPct.set(0);
+                        const res = await new Promise<ClientCreateOk>((resolve, reject) => {
+                                this.http.post<ClientCreateOk>(url, fd, { observe: 'events', reportProgress: true })
+                                    .pipe(timeout(30000))
+                                    .subscribe({
+                                        next: ev => {
+                                            if (ev.type === 1 /* UploadProgress */) {
+                                                if (typeof ev.total === 'number' && ev.total > 0) {
+                                                    const loaded = ev.loaded;
+                                                    const pct = Math.min(100, Math.round(loaded * 100 / ev.total));
+                                                    this.uploadPct.set(pct);
+                                                    // per-file progress approximation (order: json, rut, camara)
+                                                    if (rutSize > 0) {
+                                                        const rutLoaded = Math.max(0, loaded - jsonSize);
+                                                        const rPct = Math.min(100, Math.max(0, Math.round(rutLoaded * 100 / rutSize)));
+                                                        this.rutPct.set(rPct);
+                                                    }
+                                                    if (camaraSize > 0) {
+                                                        const camLoaded = Math.max(0, loaded - jsonSize - rutSize);
+                                                        const cPct = Math.min(100, Math.max(0, Math.round(camLoaded * 100 / camaraSize)));
+                                                        this.camaraPct.set(cPct);
+                                                    }
+                                                } else {
+                                                    // indeterminado, animar con pseudo progreso
+                                                    const curr = this.uploadPct() ?? 0;
+                                                    this.uploadPct.set(Math.min(95, curr + 5));
+                                                    if (rutSize > 0 && this.rutPct() < 95) this.rutPct.set(Math.min(95, this.rutPct() + 5));
+                                                    if (camaraSize > 0 && this.camaraPct() < 95) this.camaraPct.set(Math.min(95, this.camaraPct() + 5));
+                                                }
+                                            } else if (ev.type === 4 /* Response */) {
+                                                if (rutSize > 0) this.rutPct.set(100);
+                                                if (camaraSize > 0) this.camaraPct.set(100);
+                                                this.uploadPct.set(100);
+                                                resolve(ev.body as ClientCreateOk);
+                                            }
+                                        },
+                                        error: e => reject(e),
+                                        complete: () => { /* noop */ }
+                                    });
+                        });
 
             // Algunos backends responden 200 pero con response="ERROR"
             if (res?.dataResponse?.response === 'ERROR') {
@@ -157,6 +213,11 @@ export class ClienteNuevoComponent implements OnInit {
 
         } finally {
             this.loading.set(false);
+            setTimeout(() => {
+                this.uploadPct.set(null);
+                this.rutPct.set(0);
+                this.camaraPct.set(0);
+            }, 600);
         }
     }
 
@@ -179,4 +240,56 @@ export class ClienteNuevoComponent implements OnInit {
             return true;
         }
     }
+
+    // ===== Archivos PDF nuevos =====
+    _rutFile: File | null = null;
+    _camaraFile: File | null = null;
+    rutDragOver = signal(false);
+    camaraDragOver = signal(false);
+
+    onPickRut(ev: Event) {
+        const input = ev.target as HTMLInputElement;
+        const f = input.files?.[0];
+        if (!f) { this._rutFile = null; return; }
+        if (f.type !== 'application/pdf') {
+            this.setFieldError('rut', 'Debe ser un PDF.');
+            this._rutFile = null;
+            return;
+        }
+        this.clearFieldError('rut');
+        this._rutFile = f;
+    }
+    onRutDrop(ev: DragEvent) {
+        ev.preventDefault(); this.rutDragOver.set(false);
+        const f = ev.dataTransfer?.files?.[0];
+        if (!f) return;
+        if (f.type !== 'application/pdf') { this.setFieldError('rut', 'Debe ser un PDF.'); return; }
+        this.clearFieldError('rut'); this._rutFile = f;
+    }
+    onRutDrag(ev: DragEvent) { ev.preventDefault(); this.rutDragOver.set(true); }
+    onRutLeave(ev: DragEvent) { ev.preventDefault(); this.rutDragOver.set(false); }
+    clearRut() { this._rutFile = null; this.clearFieldError('rut'); }
+
+    onPickCamara(ev: Event) {
+        const input = ev.target as HTMLInputElement;
+        const f = input.files?.[0];
+        if (!f) { this._camaraFile = null; return; }
+        if (f.type !== 'application/pdf') {
+            this.setFieldError('camaraComercio', 'Debe ser un PDF.');
+            this._camaraFile = null;
+            return;
+        }
+        this.clearFieldError('camaraComercio');
+        this._camaraFile = f;
+    }
+    onCamaraDrop(ev: DragEvent) {
+        ev.preventDefault(); this.camaraDragOver.set(false);
+        const f = ev.dataTransfer?.files?.[0];
+        if (!f) return;
+        if (f.type !== 'application/pdf') { this.setFieldError('camaraComercio', 'Debe ser un PDF.'); return; }
+        this.clearFieldError('camaraComercio'); this._camaraFile = f;
+    }
+    onCamaraDrag(ev: DragEvent) { ev.preventDefault(); this.camaraDragOver.set(true); }
+    onCamaraLeave(ev: DragEvent) { ev.preventDefault(); this.camaraDragOver.set(false); }
+    clearCamara() { this._camaraFile = null; this.clearFieldError('camaraComercio'); }
 }

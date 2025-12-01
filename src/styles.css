@@ -293,11 +293,88 @@ select:-webkit-autofill{
 /* ====================================================================== */
 /* =========================   DRIVER.JS   ============================== */
 /* ====================================================================== */
-.driver-overlay{ z-index:1990 !important; }
+.driver-overlay{ z-index:1990 !important; /* quitamos blur para no difuminar el elemento enfocado */ background: rgba(2,6,23,.55) !important; }
 .driver-stage,
 .driver-popover,
 .driver-highlighted-element,
 .driver-fix-stacking{ z-index:1995 !important; }
+
+/* Estilo del popover (panel) */
+.driver-popover {
+  background: radial-gradient(120% 120% at 10% -10%, rgba(255,255,255,.95) 0%, #ffffff 55%) !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(15,23,42,.10) !important;
+  box-shadow: 0 20px 60px rgba(2,6,23,.18), 0 10px 24px rgba(2,6,23,.08) !important;
+  border-radius: 16px !important;
+  padding: 14px 14px 12px 14px !important;
+}
+.driver-popover .driver-popover-title {
+  font-weight: 800 !important;
+  font-size: 15px !important;
+  letter-spacing: .2px !important;
+  color: #0f172a !important;
+}
+.driver-popover .driver-popover-description {
+  font-size: 13px !important;
+  color: #334155 !important;
+}
+
+/* Botones */
+.driver-popover .driver-popover-navigation-btns button {
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  padding: 8px 12px !important;
+}
+.driver-popover .driver-popover-next-btn {
+  background: #2563eb !important; /* azul */
+  color: #fff !important;
+  border: 1px solid rgba(37,99,235,.2) !important;
+}
+.driver-popover .driver-popover-next-btn:hover { filter: brightness(1.05); }
+.driver-popover .driver-popover-prev-btn,
+.driver-popover .driver-popover-close-btn {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(15,23,42,.08) !important;
+}
+.driver-popover .driver-popover-prev-btn:hover,
+.driver-popover .driver-popover-close-btn:hover { background: #eef2f7 !important; }
+
+/* Progreso (si está activo) */
+.driver-popover .driver-popover-progress-text { color: #475569 !important; font-weight: 700 !important; font-size: 11px !important; }
+
+/* Destacado alrededor del elemento */
+.driver-highlighted-element {
+  box-shadow: 0 0 0 4px rgba(37,99,235,.25), 0 0 0 10px rgba(255,255,255,.85) !important;
+  border-radius: 14px !important;
+}
+.driver-stage { border-radius: 16px !important; box-shadow: 0 0 0 2px rgba(15,23,42,.12) inset !important; }
+
+/* Puntero de la viñeta (flecha) */
+.driver-popover .driver-popover-arrow-side-left .driver-popover-arrow { border-right-color: #ffffff !important; }
+.driver-popover .driver-popover-arrow-side-right .driver-popover-arrow { border-left-color: #ffffff !important; }
+.driver-popover .driver-popover-arrow-side-top .driver-popover-arrow { border-bottom-color: #ffffff !important; }
+.driver-popover .driver-popover-arrow-side-bottom .driver-popover-arrow { border-top-color: #ffffff !important; }
+
+/* Animación sutil de aparición */
+.driver-popover { animation: dr-popover-in .18s ease-out both; }
+@keyframes dr-popover-in { from { opacity: .0; transform: translateY(4px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+/* Tamaños y tap-targets en móvil */
+@media (max-width: 640px) {
+  .driver-popover { padding: 16px 14px !important; border-radius: 14px !important; }
+  .driver-popover .driver-popover-title { font-size: 16px !important; }
+  .driver-popover .driver-popover-description { font-size: 14px !important; }
+  .driver-popover .driver-popover-navigation-btns button { font-size: 13px !important; padding: 10px 14px !important; border-radius: 12px !important; }
+}
+
+/* Elevar dropdowns/modales propios cuando el tour lo requiera */
+.tour-elevate .dropdown-menu,
+.tour-elevate .modal,
+.tour-elevate [role="dialog"],
+.tour-elevate .abs-dropdown,
+.tour-elevate .mobile-menu-overlay { z-index: 1996 !important; position: relative; }
 
 /* Evita transforms/filters que interfieran con el highlight del tour */
 .navbar, .navbar *{ transform:none !important; filter:none !important; }

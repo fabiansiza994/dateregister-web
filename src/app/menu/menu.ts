@@ -245,26 +245,27 @@ export class Menu implements AfterViewInit {
     return map[m] || m.toUpperCase();
   });
 
+  // Efecto para recalcular altura y bloquear scroll del body cuando el menú móvil se abre
+  // Debe crearse en contexto de inyección (campo/constructor), no en hooks del ciclo de vida
+  private readonly _heightEffect = effect(() => {
+    // Dependencias que pueden cambiar la altura
+    this.showIOSTip();
+    const isOpen = this.mobileOpen();
+    // Pequeño defer para permitir el reflow
+    setTimeout(() => this.updateMenuHeight(), 50);
+
+    // Bloquear scroll del body cuando el menú móvil está abierto
+    try {
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    } catch { /* noop */ }
+  });
+
   // ===== Altura dinámica del menú para sticky de filtros =====
   ngAfterViewInit(): void {
     // Actualizar inmediatamente y al redimensionar
     this.updateMenuHeight();
     setTimeout(() => this.updateMenuHeight(), 0);
     window.addEventListener('resize', this._onResize);
-
-    // Recalcular cuando cambien elementos que alteren la altura (tip iOS, menús, etc.)
-    effect(() => {
-      // Dependencias que pueden cambiar la altura
-      this.showIOSTip();
-      const isOpen = this.mobileOpen();
-      // Pequeño defer para permitir el reflow
-      setTimeout(() => this.updateMenuHeight(), 50);
-
-      // Bloquear scroll del body cuando el menú móvil está abierto
-      try {
-        document.body.style.overflow = isOpen ? 'hidden' : '';
-      } catch { /* noop */ }
-    });
   }
 
   private _onResize = () => this.updateMenuHeight();

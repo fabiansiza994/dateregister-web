@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, HostListener } from '@angular/core';
+import { Component, OnInit, signal, computed, HostListener, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpEventType, HttpHeaders } from '@angular/common/http';
@@ -12,7 +12,7 @@ import { ClientPickerComponent } from '../shared/client-picker.component';
 import { PatientPickerComponent } from '../shared/patient-picker.component';
 import { FlatpickrDirective } from '../shared/flatpickr.directive';
 
-type FotoKey = 'foto1' | 'foto2' | 'foto3' | 'foto4';
+type FotoKey = 'foto1' | 'foto2' | 'foto3' | 'foto4' | 'foto5' | 'foto6';
 
 /** === Estados (extiende tu tipo original) === */
 export type JobEstado =
@@ -84,6 +84,8 @@ interface JobDetail {
   foto2?: string | null;
   foto3?: string | null;
   foto4?: string | null;
+  foto5?: string | null;
+  foto6?: string | null;
 }
 
 interface JobDetailOk {
@@ -156,6 +158,10 @@ export class CreateJobComponent implements OnInit {
   readingProgress: Partial<Record<FotoKey, number>> = {};
   private progressIntervals: Partial<Record<FotoKey, number>> = {};
   private readonly slotOrder: FotoKey[] = ['foto1', 'foto2', 'foto3', 'foto4'];
+  // extendido a 6 slots
+  // Nota: mantenemos compatibilidad con orden natural
+  // (declaramos nuevamente para evitar efectos colaterales)
+  private get allSlots(): FotoKey[] { return ['foto1','foto2','foto3','foto4','foto5','foto6']; }
   draggingSlot: FotoKey | null = null;
 
   loading = signal(false);
@@ -185,12 +191,26 @@ export class CreateJobComponent implements OnInit {
   // Confirmación de cancelar con cambios
   cancelConfirmOpen = signal(false);
 
+  // ===== Lightbox (preview en página de creación) =====
+  lightboxOpen = signal(false);
+  lightboxSrc = signal<string | null>(null);
+  zoom = signal(1);
+  posX = signal(0);
+  posY = signal(0);
+  private panning = false;
+  private lastX = 0;
+  private lastY = 0;
+  private pinchStartDist = 0;
+  private pinchStartZoom = 1;
+
   constructor(
     private http: HttpClient,
     private cfg: ConfigService,
     private router: Router,
     private auth: AuthService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private zone: NgZone,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
@@ -293,36 +313,44 @@ export class CreateJobComponent implements OnInit {
 
     // Leer siempre para generar preview y, si aplica, comprimir
     const reader = new FileReader();
-    // Arrancar barra enseguida para feedback inmediato
-    this.readingProgress[key] = 3;
-    reader.onloadstart = () => { this.readingProgress[key] = 5; };
+    // Arrancar barra enseguida para feedback inmediato (en zona)
+    this.readingProgress[key] = 3; this.cdr.detectChanges();
+    reader.onloadstart = () => {
+      this.readingProgress[key] = 5; this.cdr.detectChanges();
+    };
     reader.onprogress = (e: ProgressEvent<FileReader>) => {
       if (e.lengthComputable && e.total > 0) this.readingProgress[key] = Math.min(85, Math.max(10, Math.round((e.loaded / e.total) * 80)));
       else this.readingProgress[key] = 25;
+      this.cdr.detectChanges();
     };
     reader.onerror = () => {
       this.error.set('No se pudo leer la imagen.');
       delete this.files[key]; delete this.previews[key];
       this.clearProgress(key);
+      this.cdr.detectChanges();
     };
     reader.onload = async () => {
       try {
         const dataUrl = reader.result as string;
         // Preparar fase de compresión
         this.readingProgress[key] = Math.max(this.readingProgress[key] || 0, 88);
+        this.cdr.detectChanges();
         this.startCompressionTicker(key);
         // Intentar comprimir si es JPEG grande
         const { outFile, outDataUrl } = await this.compressIfNeeded(file, dataUrl);
         this.files[key] = outFile;
         this.previews[key] = outDataUrl;
+        this.cdr.detectChanges();
       } catch (e) {
         // Fallback a lo leído
         this.files[key] = file;
         this.previews[key] = reader.result as string;
+        this.cdr.detectChanges();
       } finally {
         this.stopCompressionTicker(key);
         this.readingProgress[key] = 100;
-        setTimeout(() => { this.clearProgress(key); }, 400);
+        this.cdr.detectChanges();
+        setTimeout(() => { this.clearProgress(key); this.cdr.detectChanges(); }, 400);
       }
     };
     reader.readAsDataURL(file);
@@ -378,6 +406,7 @@ export class CreateJobComponent implements OnInit {
       const curr = this.readingProgress[key] || 90;
       // Subimos lentamente hasta 97 para indicar actividad mientras el CPU trabaja
       this.readingProgress[key] = Math.min(97, curr + 1);
+      this.cdr.detectChanges();
     }, 120);
     this.progressIntervals[key] = id as unknown as number;
   }
@@ -434,7 +463,7 @@ export class CreateJobComponent implements OnInit {
   endReorder() { this.draggingSlot = null; }
 
   private isFotoKey(x: any): x is FotoKey {
-    return x === 'foto1' || x === 'foto2' || x === 'foto3' || x === 'foto4';
+    return x === 'foto1' || x === 'foto2' || x === 'foto3' || x === 'foto4' || x === 'foto5' || x === 'foto6';
   }
 
   private swapSlots(a: FotoKey, b: FotoKey) {
@@ -462,13 +491,57 @@ export class CreateJobComponent implements OnInit {
     this.processFile(files[0], primary);
 
     // 2) los demás van a los slots vacíos en orden
-    const empties = this.slotOrder.filter(k => this.isSlotFree(k) && !this.files[k] && !this.previews[k] && k !== primary);
+    const empties = this.allSlots.filter(k => this.isSlotFree(k) && !this.files[k] && !this.previews[k] && k !== primary);
     let i = 1;
     for (const slot of empties) {
       if (i >= files.length) break;
       this.processFile(files[i], slot);
       i++;
     }
+  }
+
+  // Devuelve el primer slot libre disponible
+  getFirstFreeSlot(): FotoKey | null {
+    for (const k of this.allSlots) {
+      if (this.isSlotFree(k) && !this.files[k] && !this.previews[k]) return k;
+    }
+    return null;
+  }
+
+  // ¿Debe mostrarse una tarjeta para este slot? (existe preview, archivo nuevo o foto existente no marcada para eliminar)
+  hasSlotContent(key: FotoKey): boolean {
+    // Mostrar la tarjeta también si está procesando (para que se vea la barra)
+    return !!(this.previews[key]
+      || this.files[key]
+      || (this.existingPhotos[key] && !this.markedForDelete.has(key))
+      || (this.readingProgress[key] !== undefined)
+    );
+  }
+
+  isProcessingAny(): boolean {
+    return Object.keys(this.readingProgress || {}).length > 0;
+  }
+
+  // Input del tile "+" para añadir varias imágenes a los primeros slots libres
+  onAddInputChange(ev: Event) {
+    const input = ev.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    if (this.isProcessingAny()) { input.value = ''; return; }
+    const first = this.getFirstFreeSlot();
+    if (!first) { input.value = ''; return; }
+    this.assignFiles(input.files, first);
+    // limpiar para permitir la misma selección consecutiva si el usuario desea
+    input.value = '';
+  }
+
+  // Soporta soltar archivos sobre el tile "+"
+  onAddDrop(ev: DragEvent) {
+    ev.preventDefault();
+    const dt = ev.dataTransfer;
+    if (!dt || !dt.files || dt.files.length === 0) return;
+    const first = this.getFirstFreeSlot();
+    if (!first) return;
+    this.assignFiles(dt.files, first);
   }
 
   // Determina si un slot está disponible para nuevas cargas
@@ -479,7 +552,7 @@ export class CreateJobComponent implements OnInit {
 
   // Cantidad de slots disponibles actualmente (considera edición y reemplazos)
   getFreeSlotsCount(): number {
-    return this.slotOrder.filter(k => this.isSlotFree(k) && !this.files[k] && !this.previews[k]).length;
+    return this.allSlots.filter(k => this.isSlotFree(k) && !this.files[k] && !this.previews[k]).length;
   }
 
   // UI acciones existentes
@@ -667,6 +740,8 @@ export class CreateJobComponent implements OnInit {
         foto2: j.foto2 || undefined,
         foto3: j.foto3 || undefined,
         foto4: j.foto4 || undefined,
+        foto5: j.foto5 || undefined,
+        foto6: j.foto6 || undefined,
       };
     } catch (e: any) {
       this.error.set(e?.error?.message || e?.message || 'Error al cargar el trabajo.');
@@ -691,7 +766,7 @@ export class CreateJobComponent implements OnInit {
 
       const fd = new FormData();
       fd.append('payload', new Blob([JSON.stringify(this.form)], { type: 'application/json' }));
-      (['foto1', 'foto2', 'foto3', 'foto4'] as FotoKey[]).forEach(k => { if (this.files[k]) fd.append(k, this.files[k]!); });
+      (['foto1', 'foto2', 'foto3', 'foto4', 'foto5', 'foto6'] as FotoKey[]).forEach(k => { if (this.files[k]) fd.append(k, this.files[k]!); });
 
       this.loading.set(true);
       this.progress.set(0);
@@ -753,16 +828,18 @@ export class CreateJobComponent implements OnInit {
 
       const fd = new FormData();
       // Flags de eliminación esperadas por el backend (solo si no hay reemplazo en ese slot)
-      const eliminarFoto1 = this.markedForDelete.has('foto1') && !this.files['foto1'];
-      const eliminarFoto2 = this.markedForDelete.has('foto2') && !this.files['foto2'];
-      const eliminarFoto3 = this.markedForDelete.has('foto3') && !this.files['foto3'];
-      const eliminarFoto4 = this.markedForDelete.has('foto4') && !this.files['foto4'];
+        const eliminarFoto1 = this.markedForDelete.has('foto1') && !this.files['foto1'];
+        const eliminarFoto2 = this.markedForDelete.has('foto2') && !this.files['foto2'];
+        const eliminarFoto3 = this.markedForDelete.has('foto3') && !this.files['foto3'];
+        const eliminarFoto4 = this.markedForDelete.has('foto4') && !this.files['foto4'];
+        const eliminarFoto5 = this.markedForDelete.has('foto5') && !this.files['foto5'];
+        const eliminarFoto6 = this.markedForDelete.has('foto6') && !this.files['foto6'];
 
-  const payload = { ...this.form, id: this.form.id, eliminarFoto1, eliminarFoto2, eliminarFoto3, eliminarFoto4 };
+      const payload = { ...this.form, id: this.form.id, eliminarFoto1, eliminarFoto2, eliminarFoto3, eliminarFoto4, eliminarFoto5, eliminarFoto6 };
   fd.append('payload', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
   // Enviar también 'fecha' como campo plano por compatibilidad con el backend (algunos endpoints leen directo del form-data)
   if (this.form.fecha) fd.append('fecha', this.form.fecha);
-      (['foto1', 'foto2', 'foto3', 'foto4'] as FotoKey[]).forEach(k => { if (this.files[k]) fd.append(k, this.files[k]!); });
+      (['foto1', 'foto2', 'foto3', 'foto4', 'foto5', 'foto6'] as FotoKey[]).forEach(k => { if (this.files[k]) fd.append(k, this.files[k]!); });
 
       this.loading.set(true);
       this.progress.set(0);
@@ -857,4 +934,79 @@ export class CreateJobComponent implements OnInit {
     this.router.navigate(['/trabajos']);
   }
   closeCancelConfirm() { if (!this.loading()) this.cancelConfirmOpen.set(false); }
+
+  // ===== Lightbox methods =====
+  openLightbox(src: string) {
+    if (!src) return;
+    this.lightboxSrc.set(src);
+    this.lightboxOpen.set(true);
+    this.zoom.set(1);
+    this.posX.set(0);
+    this.posY.set(0);
+    try { document.body.style.overflow = 'hidden'; } catch {}
+  }
+  closeLightbox() {
+    this.lightboxOpen.set(false);
+    this.lightboxSrc.set(null);
+    this.zoom.set(1); this.posX.set(0); this.posY.set(0);
+    try { document.body.style.overflow = ''; } catch {}
+  }
+  zoomIn() { this.setZoom(this.zoom() + 0.2); }
+  zoomOut() { this.setZoom(this.zoom() - 0.2); }
+  resetZoom() { this.zoom.set(1); this.posX.set(0); this.posY.set(0); }
+  private setZoom(next: number) {
+    const clamped = Math.max(1, Math.min(next, 5));
+    const prev = this.zoom();
+    this.zoom.set(clamped);
+    if (clamped === 1 && prev !== 1) { this.posX.set(0); this.posY.set(0); }
+  }
+  onWheelLightbox(ev: WheelEvent) {
+    if (!this.lightboxOpen()) return; ev.preventDefault();
+    const delta = ev.deltaY > 0 ? -0.15 : 0.15;
+    this.setZoom(this.zoom() + delta);
+  }
+  onLightboxMouseDown(ev: MouseEvent) {
+    if (this.zoom() <= 1) return;
+    this.panning = true; this.lastX = ev.clientX; this.lastY = ev.clientY; ev.preventDefault();
+  }
+  onLightboxMouseMove(ev: MouseEvent) {
+    if (!this.panning) return;
+    const dx = ev.clientX - this.lastX; const dy = ev.clientY - this.lastY;
+    this.lastX = ev.clientX; this.lastY = ev.clientY;
+    this.posX.set(this.posX() + dx); this.posY.set(this.posY() + dy);
+  }
+  onLightboxMouseUp() { this.panning = false; }
+  onLightboxMouseLeave() { this.panning = false; }
+  onLightboxDblClick() { if (this.zoom() > 1) this.resetZoom(); else this.setZoom(2.5); }
+  @HostListener('document:keydown.escape') onEscLightbox() { if (this.lightboxOpen()) this.closeLightbox(); }
+  onLightboxTouchStart(ev: TouchEvent) {
+    if (!this.lightboxOpen()) return;
+    if (ev.touches.length === 2) {
+      ev.preventDefault();
+      const [t1, t2] = [ev.touches[0], ev.touches[1]];
+      this.pinchStartDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      this.pinchStartZoom = this.zoom();
+    } else if (ev.touches.length === 1 && this.zoom() > 1) {
+      this.panning = true; this.lastX = ev.touches[0].clientX; this.lastY = ev.touches[0].clientY;
+    }
+  }
+  onLightboxTouchMove(ev: TouchEvent) {
+    if (!this.lightboxOpen()) return;
+    if (ev.touches.length === 2 && this.pinchStartDist > 0) {
+      ev.preventDefault();
+      const [t1, t2] = [ev.touches[0], ev.touches[1]];
+      const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      const ratio = dist / this.pinchStartDist;
+      this.setZoom(this.pinchStartZoom * ratio);
+    } else if (ev.touches.length === 1 && this.panning) {
+      const dx = ev.touches[0].clientX - this.lastX; const dy = ev.touches[0].clientY - this.lastY;
+      this.lastX = ev.touches[0].clientX; this.lastY = ev.touches[0].clientY;
+      this.posX.set(this.posX() + dx); this.posY.set(this.posY() + dy);
+    }
+  }
+  onLightboxTouchEnd(ev: TouchEvent) {
+    if (!this.lightboxOpen()) return;
+    if (ev.touches.length < 2) this.pinchStartDist = 0;
+    if (ev.touches.length === 0) this.panning = false;
+  }
 }

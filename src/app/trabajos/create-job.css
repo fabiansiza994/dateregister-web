@@ -20,3 +20,9 @@
 .dr-fab-wrap { position: fixed; right: .75rem; bottom: calc(5rem + .75rem); z-index: 45; display: flex; flex-direction: column; gap: .5rem; }
 .dr-fab { display: inline-flex; align-items: center; justify-content: center; padding: .6rem .9rem; border-radius: 9999px; box-shadow: 0 8px 20px rgba(2,6,23,.18); }
 .dr-fab .bi { font-size: 1rem; }
+
+/* Lightbox overlay for image previews */
+.lightbox-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+.lightbox-stage { position: relative; max-width: 90vw; max-height: 90vh; display: flex; align-items: center; justify-content: center; }
+.lightbox-image { max-width: 90vw; max-height: 90vh; user-select: none; -webkit-user-drag: none; transition: transform 120ms ease-out; }
+.lightbox-toolbar { position: fixed; top: 12px; right: 12px; display: flex; gap: 8px; }

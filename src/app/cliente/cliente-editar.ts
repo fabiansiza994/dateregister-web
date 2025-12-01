@@ -16,6 +16,9 @@ interface Cliente {
   direccion?: string;
   telefono?: string;
   estado: string; // 'ACTIVO' | 'INACTIVO'
+  razonSocial?: string;
+  rut?: string | null; // URL o null
+  camaraComercio?: string | null; // URL o null
 }
 
 @Component({
@@ -32,6 +35,21 @@ export class ClienteEditarComponent implements OnInit {
   error = signal<string | null>(null); // error global
   fieldErrors = signal<Record<string, string>>({}); // errores por campo
   cliente = signal<Cliente | null>(null);
+  // archivos nuevos seleccionados
+  rutFile = signal<File | null>(null);
+  camaraFile = signal<File | null>(null);
+  // flags de eliminación / reemplazo
+  removeRut = signal(false);
+  removeCamara = signal(false);
+  // progreso de subida (0..100)
+  uploadPct = signal(0);
+  // progreso por archivo individual (solo si se envía)
+  rutPct = signal(0);
+  camaraPct = signal(0);
+  // Modal PDF preview (para archivos existentes antes de reemplazar)
+  pdfModalOpen = signal(false);
+  pdfModalUrl = signal<string | null>(null);
+  pdfModalTitle = signal<string>('Documento');
 
   private apiBase = '';
   private _initialSnapshot: string | null = null;
@@ -91,48 +109,100 @@ export class ClienteEditarComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
     this.fieldErrors.set({});
+    this.uploadPct.set(0);
+    this.rutPct.set(0);
+    this.camaraPct.set(0);
 
     try {
       const url = `${this.apiBase}/client/update/${c.id}`;
-      const payload = {
+
+      // Semántica:
+      // - Si se selecciona archivo nuevo => propiedad JSON se envía null + archivo en FormData
+      // - Si se marca eliminar sin archivo => propiedad JSON null y sin archivo
+      // - Si se mantiene => se envía valor original (URL/string)
+      const jsonPayload = {
         identificacion: c.identificacion?.trim(),
         nombre: c.nombre?.trim(),
         apellido: (c.apellido ?? '').trim(),
         email: (c.email ?? '').trim(),
         direccion: (c.direccion ?? '').trim(),
         telefono: (c.telefono ?? '').trim(),
-        estado: c.estado
+        estado: c.estado,
+        razonSocial: (c.razonSocial ?? '').trim() || null,
+        rut: (this.removeRut() || this.rutFile()) ? null : (c.rut ?? null),
+        camaraComercio: (this.removeCamara() || this.camaraFile()) ? null : (c.camaraComercio ?? null)
       };
 
-      const res = await firstValueFrom(
-        this.http.put<{
-          dataResponse?: { response?: 'SUCCESS' | 'ERROR' };
-          error?: Array<{ descError?: string; msgError?: string }>;
-          message?: string;
-        }>(url, payload).pipe(timeout(10000))
-      );
+      // Preparar tamaños para cálculo de progreso por archivo (aproximado).
+      const jsonStr = JSON.stringify(jsonPayload);
+      const jsonBlob = new Blob([jsonStr], { type: 'application/json' });
+      const jsonSize = jsonBlob.size;
+      const rutSize = this.rutFile() ? this.rutFile()!.size : 0;
+      const camaraSize = this.camaraFile() ? this.camaraFile()!.size : 0;
 
-      if (res?.dataResponse?.response === 'ERROR') {
-        // Mapear errores por campo
-        const arr = res?.error ?? [];
+      const fd = new FormData();
+      fd.append('cliente', jsonBlob);
+      if (this.rutFile()) fd.append('rut', this.rutFile()!, this.rutFile()!.name);
+      if (this.camaraFile()) fd.append('camaraComercio', this.camaraFile()!, this.camaraFile()!.name);
+
+      const body = await new Promise<any>((resolve, reject) => {
+        this.http.request<any>('PUT', url, {
+          body: fd,
+          reportProgress: true,
+          observe: 'events'
+        }).pipe(timeout(30000)).subscribe({
+          next: ev => {
+            // 1 = UploadProgress, 4 = Response
+            if ((ev as any).type === 1) {
+              const e = ev as any;
+              if (typeof e.total === 'number' && e.total > 0) {
+                const loaded = e.loaded;
+                const pct = Math.min(100, Math.round((loaded * 100) / e.total));
+                this.uploadPct.set(pct);
+                // Progreso por archivo (orden: JSON, rut, camara). Ignora cabeceras multipart.
+                if (rutSize > 0) {
+                  const rutLoaded = Math.max(0, loaded - jsonSize);
+                  const rutPct = Math.min(100, Math.max(0, Math.round((rutLoaded * 100) / rutSize)));
+                  this.rutPct.set(rutPct);
+                }
+                if (camaraSize > 0) {
+                  const camaraLoaded = Math.max(0, loaded - jsonSize - rutSize);
+                  const camaraPct = Math.min(100, Math.max(0, Math.round((camaraLoaded * 100) / camaraSize)));
+                  this.camaraPct.set(camaraPct);
+                }
+              } else {
+                // Indeterminado: avanzar barras de forma suave.
+                const curr = this.uploadPct();
+                this.uploadPct.set(Math.min(95, curr + 5));
+                if (rutSize > 0 && this.rutPct() < 95) this.rutPct.set(Math.min(95, this.rutPct() + 5));
+                if (camaraSize > 0 && this.camaraPct() < 95) this.camaraPct.set(Math.min(95, this.camaraPct() + 5));
+              }
+            } else if ((ev as any).type === 4) {
+              // asegurar barras al 100%
+              if (rutSize > 0) this.rutPct.set(100);
+              if (camaraSize > 0) this.camaraPct.set(100);
+              this.uploadPct.set(100);
+              resolve((ev as any).body);
+            }
+          },
+          error: err => reject(err),
+          complete: () => {}
+        });
+      });
+
+      if (body?.dataResponse?.response === 'ERROR') {
+        const arr = body?.error ?? [];
         if (arr.length > 0) {
           const map: Record<string, string> = {};
-          arr.forEach(it => {
+          arr.forEach((it: any) => {
             const field = (it?.msgError ?? '').trim() || 'global';
             const msg   = (it?.descError ?? 'Error').trim();
-            if (field === 'global') {
-              this.error.set(msg);
-            } else {
-              map[field] = msg;
-            }
+            if (field === 'global') this.error.set(msg); else map[field] = msg;
           });
           this.fieldErrors.set(map);
-          // ejemplo recibido:
-          // [{ codError:"E400", descError:"El apellido es obligatorio", msgError:"apellido" }]
-          return; // no navegamos si hay errores
+          return; // detener
         }
-        // si no hay array de errores, mostrar un genérico
-        throw new Error(res?.message || 'Actualización rechazada');
+        throw new Error(body?.message || 'Actualización rechazada');
       }
 
       // éxito
@@ -140,9 +210,14 @@ export class ClienteEditarComponent implements OnInit {
 
     } catch (e: any) {
       if (e instanceof TimeoutError) this.error.set('La actualización tardó demasiado. Intenta de nuevo.');
-      else this.error.set(e?.descError || e?.error?.descError || 'No se pudo actualizar el cliente');
+      else this.error.set(e?.descError || e?.error?.descError || e?.message || 'No se pudo actualizar el cliente');
     } finally {
       this.loading.set(false);
+      setTimeout(() => {
+        this.uploadPct.set(0);
+        this.rutPct.set(0);
+        this.camaraPct.set(0);
+      }, 1200);
     }
   }
 
@@ -153,6 +228,52 @@ export class ClienteEditarComponent implements OnInit {
     const fe = { ...this.fieldErrors() };
     delete fe['estado'];
     this.fieldErrors.set(fe);
+  }
+
+  // Selección de PDFs
+  onPickRut(ev: Event) {
+    const file = (ev.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf') { this.error.set('El archivo RUT debe ser PDF'); return; }
+    this.rutFile.set(file);
+    this.removeRut.set(false);
+  }
+  onPickCamara(ev: Event) {
+    const file = (ev.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf') { this.error.set('El archivo Cámara de Comercio debe ser PDF'); return; }
+    this.camaraFile.set(file);
+    this.removeCamara.set(false);
+  }
+  clearRut() { this.rutFile.set(null); this.removeRut.set(true); }
+  clearCamara() { this.camaraFile.set(null); this.removeCamara.set(true); }
+  keepRut() { this.removeRut.set(false); this.rutFile.set(null); }
+  keepCamara() { this.removeCamara.set(false); this.camaraFile.set(null); }
+  openPdf(url: string | null, title: string) { if (!url) return; this.pdfModalTitle.set(title); this.pdfModalUrl.set(url); this.pdfModalOpen.set(true); }
+  closePdf() { if (!this.loading()) { this.pdfModalOpen.set(false); this.pdfModalUrl.set(null); } }
+
+  // Drag & drop helpers
+  rutDragOver = signal(false);
+  camaraDragOver = signal(false);
+  onRutDrag(e: DragEvent) { e.preventDefault(); this.rutDragOver.set(true); }
+  onRutLeave(e: DragEvent) { e.preventDefault(); this.rutDragOver.set(false); }
+  onRutDrop(e: DragEvent) {
+    e.preventDefault();
+    this.rutDragOver.set(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf') { this.error.set('El archivo RUT debe ser PDF'); return; }
+    this.rutFile.set(file); this.removeRut.set(false);
+  }
+  onCamaraDrag(e: DragEvent) { e.preventDefault(); this.camaraDragOver.set(true); }
+  onCamaraLeave(e: DragEvent) { e.preventDefault(); this.camaraDragOver.set(false); }
+  onCamaraDrop(e: DragEvent) {
+    e.preventDefault();
+    this.camaraDragOver.set(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf') { this.error.set('El archivo Cámara de Comercio debe ser PDF'); return; }
+    this.camaraFile.set(file); this.removeCamara.set(false);
   }
 
   volver() { this.router.navigate(['/clientes']); }
@@ -172,9 +293,9 @@ export class ClienteEditarComponent implements OnInit {
   private hasChanges(): boolean {
     try {
       if (!this._initialSnapshot) return false;
-      return this._initialSnapshot !== JSON.stringify(this.cliente());
-    } catch {
-      return true;
-    }
+      const baseChanged = this._initialSnapshot !== JSON.stringify(this.cliente());
+      const fileChanged = !!(this.rutFile() || this.camaraFile() || this.removeRut() || this.removeCamara());
+      return baseChanged || fileChanged;
+    } catch { return true; }
   }
 }

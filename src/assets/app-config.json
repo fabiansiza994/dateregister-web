@@ -1,4 +1,7 @@
 {
-  "apiBaseUrlProd": "http://localhost:8081",
-  "apiBaseUrl": "https://srvdataregisterapp-1-0-0.onrender.com"
+  "apiBaseUrl": "http://localhost:8081",
+  "apiBaseUrlPRod": "https://dataregisterapp.com/api",
+  "toursEnabled": false,
+  "toursAlwaysRun": false,
+  "swipeCoachEnabled": false
 }

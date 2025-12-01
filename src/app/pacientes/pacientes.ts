@@ -8,6 +8,7 @@ import { timeout } from 'rxjs/operators';
 import { ConfigService } from '../core/config.service';
 import { HapticsService } from '../core/haptics.service';
 import { SwipeToDeleteDirective } from '../trabajos/swipe-to-delete.directive';
+import { TourService } from '../core/tour.service';
 
 @Component({
   selector: 'app-pacientes',
@@ -104,7 +105,8 @@ export class Pacientes implements OnInit, AfterViewInit, OnDestroy {
     private http: HttpClient,
     private cfg: ConfigService,
     private router: Router,
-    private haptics: HapticsService
+    private haptics: HapticsService,
+    private tour: TourService
   ) { }
 
   ngOnInit(): void {
@@ -113,7 +115,13 @@ export class Pacientes implements OnInit, AfterViewInit, OnDestroy {
     this.apiBase = this.cfg.get<string>('apiBaseUrl', '');
     this.loadPage();
   }
-  ngAfterViewInit(): void { setTimeout(() => this.updateCreateFab(), 0); }
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      this.updateCreateFab();
+      // Coach robot para explicar swipe en móvil
+      this.tour.startMobileSwipeCoach();
+    }, 0);
+  }
   ngOnDestroy(): void {
     try { document?.body?.classList?.remove('page-pacientes'); } catch {}
     try { clearTimeout(this.undoTimer); } catch {}

@@ -13,7 +13,7 @@
       <!-- Fila móvil: hamburguesa izquierda, iniciales centradas, crear derecha -->
       <div class="flex sm:hidden items-center justify-between w-full relative">
         <!-- Hamburguesa izquierda -->
-        <button type="button" (click)="toggleMobile()" [attr.aria-expanded]="mobileOpen()" aria-controls="mainMenu" aria-label="Abrir menú"
+        <button id="mobileMenuToggle" type="button" (click)="toggleMobile()" [attr.aria-expanded]="mobileOpen()" aria-controls="mainMenu" aria-label="Abrir menú"
           class="inline-flex items-center justify-center w-9 h-9 rounded-md bg-white/15 hover:bg-white/25 transition">
           <span class="sr-only">Menú</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5">
@@ -66,16 +66,17 @@
         </li>
         @if (role() === 'ADMIN') {
         <li class="relative" #adminDropdown>
-          <button type="button" data-dd-toggle (click)="toggleAdmin()" [attr.aria-expanded]="adminOpen()" class="nav-btn"><i class="bi bi-shield-lock"></i><span>Admin</span>
+          <!-- Añadimos id="adminMenu" para tours -->
+          <button id="adminMenu" type="button" data-dd-toggle (click)="toggleAdmin()" [attr.aria-expanded]="adminOpen()" class="nav-btn"><i class="bi bi-shield-lock"></i><span>Admin</span>
             <svg viewBox="0 0 24 24" class="w-4 h-4 ml-1 transition-transform" [class.rotate-180]="adminOpen()"><path fill="currentColor" d="M7 10l5 5 5-5H7z"/></svg>
           </button>
           @if (adminOpen()) {
             <!-- Dropdown: posicionar debajo del botón -->
             <ul class="abs-dropdown left-0 top-full mt-2 w-48">
-              <li><a routerLink="/usuarios" (click)="closeAll()" class="dd-item"><i class="bi bi-people"></i><span>Usuarios</span></a></li>
-              <li><a routerLink="/formas-pago" (click)="closeAll()" class="dd-item"><i class="bi bi-cash-coin"></i><span>Formas de pago</span></a></li>
-              <li><a routerLink="/grupos" (click)="closeAll()" class="dd-item"><i class="bi bi-diagram-3"></i><span>Grupos</span></a></li>
-              <li><a routerLink="/configuracion" (click)="closeAll()" class="dd-item"><i class="bi bi-gear"></i><span>Configuración</span></a></li>
+              <li><a id="menu-usuarios" routerLink="/usuarios" (click)="closeAll()" class="dd-item"><i class="bi bi-people"></i><span>Usuarios</span></a></li>
+              <li><a id="menu-pagos" routerLink="/formas-pago" (click)="closeAll()" class="dd-item"><i class="bi bi-cash-coin"></i><span>Formas de pago</span></a></li>
+              <li><a id="menu-grupos" routerLink="/grupos" (click)="closeAll()" class="dd-item"><i class="bi bi-diagram-3"></i><span>Grupos</span></a></li>
+              <li><a id="menu-configuracion" routerLink="/configuracion" (click)="closeAll()" class="dd-item"><i class="bi bi-gear"></i><span>Configuración</span></a></li>
             </ul>
           }
         </li>
@@ -124,10 +125,10 @@
             <a routerLink="/trabajos" routerLinkActive="active" class="mob-link" (click)="closeAll()">Trabajos</a>
             <a routerLink="/reportes" routerLinkActive="active" class="mob-link" (click)="closeAll()">Reportes</a>
             @if (sector() === 'SALUD') {<a routerLink="/pacientes" routerLinkActive="active" class="mob-link" (click)="closeAll()">Pacientes</a>}
-            @if (role() === 'ADMIN') {<a routerLink="/usuarios" class="mob-link" (click)="closeAll()">Usuarios</a>}
-            @if (role() === 'ADMIN') {<a routerLink="/formas-pago" class="mob-link" (click)="closeAll()">Formas de pago</a>}
-            @if (role() === 'ADMIN') {<a routerLink="/grupos" class="mob-link" (click)="closeAll()">Grupos</a>}
-            @if (role() === 'ADMIN') {<a routerLink="/configuracion" class="mob-link" (click)="closeAll()">Configuración</a>}
+            @if (role() === 'ADMIN') {<a id="mob-usuarios" routerLink="/usuarios" class="mob-link" (click)="closeAll()">Usuarios</a>}
+            @if (role() === 'ADMIN') {<a id="mob-pagos" routerLink="/formas-pago" class="mob-link" (click)="closeAll()">Formas de pago</a>}
+            @if (role() === 'ADMIN') {<a id="mob-grupos" routerLink="/grupos" class="mob-link" (click)="closeAll()">Grupos</a>}
+            @if (role() === 'ADMIN') {<a id="mob-configuracion" routerLink="/configuracion" class="mob-link" (click)="closeAll()">Configuración</a>}
             <a routerLink="/perfil" class="mob-link col-span-2" (click)="closeAll()">Mi perfil</a>
             @if (role() === 'ADMIN') {
              <a routerLink="/suscripcion" class="mob-link col-span-2" (click)="closeAll()">Mi suscripción</a>

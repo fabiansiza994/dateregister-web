@@ -9,6 +9,7 @@ import { ConfigService } from '../core/config.service';
 import { AuthService } from '../core/auth.service';
 import { HapticsService } from '../core/haptics.service';
 import { SwipeToDeleteDirective } from '../trabajos/swipe-to-delete.directive';
+import { TourService } from '../core/tour.service';
 
 interface ApiErrorItem {
   codError?: string;
@@ -150,6 +151,7 @@ export class UsuariosComponent implements OnInit, AfterViewInit, OnDestroy {
     private router: Router,
     private auth: AuthService,
     private haptics: HapticsService,
+    private tour: TourService,
   ) { }
 
   ngOnInit(): void {
@@ -163,7 +165,11 @@ export class UsuariosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     // diferir para permitir render
-    setTimeout(() => this.updateFabVisibility(), 0);
+    setTimeout(() => {
+      this.updateFabVisibility();
+      // Coach robot para explicar swipe en móvil
+      this.tour.startMobileSwipeCoach();
+    }, 0);
   }
 
   ngOnDestroy(): void {
